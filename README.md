@@ -192,8 +192,25 @@ heroku restart
    ```
 
 5. **Run the application**
+
+   **Option A: Development server (recommended for development)**
+   ```bash
+   python run_dev.py
+   ```
+
+   **Option B: Flexible startup script**
+   ```bash
+   python start.py --mode dev --debug
+   ```
+
+   **Option C: Direct Flask run**
    ```bash
    python src/app.py
+   ```
+
+   **Option D: Production mode with Gunicorn (local testing)**
+   ```bash
+   gunicorn wsgi:application --bind 0.0.0.0:5000 --workers 2 --timeout 120
    ```
 
 ### Development Database Options
@@ -240,6 +257,9 @@ CFMA/
 │   │   └── integration_service.py # Integration orchestration
 │   ├── templates/             # HTML templates
 │   └── utils.py               # Utility functions
+├── wsgi.py                    # WSGI entry point for production
+├── run_dev.py                 # Development server script
+├── start.py                   # Flexible startup script
 ├── requirements.txt           # Python dependencies
 ├── Procfile                  # Heroku deployment configuration
 ├── env.example               # Environment variables template

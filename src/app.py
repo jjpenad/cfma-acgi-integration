@@ -37,10 +37,11 @@ def create_app():
     
     return app
 
-# Create the app instance for gunicorn
+# Create the app instance for WSGI servers
 app = create_app()
 
 if __name__ == '__main__':
+    # This is for direct execution (development)
     app.run(
         host=Config.HOST,
         port=Config.PORT,
