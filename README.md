@@ -87,7 +87,7 @@ heroku logs --tail
 | `ADMIN_USERNAME` | Yes | Admin login username | `admin` |
 | `ADMIN_PASSWORD` | Yes | Admin login password | `admin123` |
 | `DATABASE_TYPE` | Yes | Database type: `in_memory`, `local`, `postgres` | `in_memory` |
-| `DATABASE_URL` | Auto | PostgreSQL URL (set by Heroku) | - |
+| `DATABASE_URL` | Auto | PostgreSQL URL (set by Heroku, automatically converted from `postgres://` to `postgresql://`) | - |
 | `DEBUG` | No | Enable debug mode | `false` |
 | `SESSION_COOKIE_SECURE` | Yes | Secure cookies for HTTPS | `true` |
 | `HUBSPOT_API_KEY` | No | HubSpot API key | - |

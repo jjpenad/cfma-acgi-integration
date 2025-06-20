@@ -11,7 +11,13 @@ logger = logging.getLogger(__name__)
 def get_database_url():
     """Get database URL based on environment configuration"""
     if Config.USE_POSTGRES:
-        return Config.DATABASE_URL
+        # Handle Heroku PostgreSQL URL conversion
+        # Heroku provides postgres:// but SQLAlchemy expects postgresql://
+        database_url = Config.DATABASE_URL
+        if database_url and database_url.startswith('postgres://'):
+            database_url = database_url.replace('postgres://', 'postgresql://', 1)
+            logger.info("Converted Heroku postgres:// URL to postgresql:// for SQLAlchemy compatibility")
+        return database_url
     elif Config.USE_LOCAL_DB:
         return Config.LOCAL_DATABASE_URL
     else:

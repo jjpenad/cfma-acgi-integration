@@ -31,6 +31,7 @@
 ### 4. Database
 - [x] SQLAlchemy models defined
 - [x] PostgreSQL connection support
+- [x] **Automatic Heroku URL conversion** (postgres:// → postgresql://)
 - [x] Database initialization function
 - [x] User model for authentication
 - [x] AppState model for configuration storage

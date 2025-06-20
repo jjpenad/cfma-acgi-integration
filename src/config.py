@@ -22,6 +22,8 @@ class Config:
     DATABASE_TYPE = os.environ.get('DATABASE_TYPE', 'in_memory').lower()
     
     # Heroku PostgreSQL
+    # Note: Heroku provides DATABASE_URL with postgres:// but SQLAlchemy expects postgresql://
+    # This conversion is handled automatically in models.py
     USE_POSTGRES = DATABASE_TYPE == 'postgres'
     DATABASE_URL = os.environ.get('DATABASE_URL')
     
