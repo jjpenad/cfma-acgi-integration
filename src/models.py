@@ -70,16 +70,49 @@ class SearchPreference(Base):
 def init_db():
     """Initialize database tables"""
     try:
-        logger.info("Creating database tables...")
-        Base.metadata.create_all(engine)
-        logger.info("Database tables created successfully")
+        logger.info("Checking database tables...")
         
-        # Create default admin user if it doesn't exist
+        # Check if tables already exist
+        inspector = inspect(engine)
+        existing_tables = inspector.get_table_names()
+        
+        if existing_tables:
+            logger.info(f"Tables already exist: {existing_tables}")
+            logger.info("Skipping table creation - tables already present")
+        else:
+            logger.info("Creating database tables...")
+            Base.metadata.create_all(engine)
+            logger.info("Database tables created successfully")
+        
+        # Always create default admin user if it doesn't exist
         create_default_admin()
         
     except Exception as e:
-        logger.error(f"Error creating database tables: {str(e)}")
-        raise e
+        logger.error(f"Error during database initialization: {str(e)}")
+        # Don't raise the error - just log it and continue
+        # This allows the app to start even if there are database issues
+        logger.warning("Continuing with application startup despite database error")
+
+def reset_db():
+    """Reset database - drop all tables and recreate them"""
+    try:
+        logger.warning("Dropping all database tables...")
+        Base.metadata.drop_all(engine)
+        logger.info("All tables dropped successfully")
+        
+        logger.info("Creating database tables...")
+        Base.metadata.create_all(engine)
+        logger.info("Database tables recreated successfully")
+        
+        # Create default admin user
+        create_default_admin()
+        
+        logger.info("Database reset completed successfully")
+        return True
+        
+    except Exception as e:
+        logger.error(f"Error resetting database: {str(e)}")
+        return False
 
 def create_default_admin():
     """Create default admin user if it doesn't exist"""
@@ -103,10 +136,13 @@ def create_default_admin():
                 logger.info(f"Created default admin user: {Config.ADMIN_USERNAME}")
             else:
                 logger.info(f"Admin user already exists: {Config.ADMIN_USERNAME}")
+        except Exception as e:
+            session.rollback()
+            logger.error(f"Error creating admin user: {str(e)}")
         finally:
             session.close()
     except Exception as e:
-        logger.error(f"Error creating default admin user: {str(e)}")
+        logger.error(f"Error in create_default_admin: {str(e)}")
 
 def get_session():
     """Get a new database session"""

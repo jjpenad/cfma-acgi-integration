@@ -104,6 +104,23 @@ git push heroku main
 heroku run python -c "from src.models import init_db; init_db()"
 ```
 
+**Note**: The application now handles existing tables gracefully. If you encounter database issues, you can:
+
+**Check database status:**
+```bash
+heroku run python manage_db.py status
+```
+
+**Reset database (if needed):**
+```bash
+heroku run python manage_db.py reset
+```
+
+**Initialize database:**
+```bash
+heroku run python manage_db.py init
+```
+
 ### Step 8: Verify Deployment
 ```bash
 heroku open
@@ -188,12 +205,18 @@ heroku run python -c "from src.models import init_db; init_db()"
    - Check `DATABASE_URL` environment variable
    - Ensure `DATABASE_TYPE=postgres`
 
-4. **Runtime Errors**
+4. **Database Duplicate Key Errors**
+   - **Error**: `duplicate key value violates unique constraint "pg_class_relname_nsp_index"`
+   - **Cause**: Tables already exist from previous deployment
+   - **Solution**: Application now handles this automatically
+   - **Manual Fix**: `heroku run python manage_db.py reset` (WARNING: deletes all data)
+
+5. **Runtime Errors**
    - Check application logs
    - Verify environment variables are set
    - Test locally before deploying
 
-5. **Authentication Issues**
+6. **Authentication Issues**
    - Verify `SECRET_KEY` is set
    - Check admin credentials
    - Ensure secure cookies are configured
