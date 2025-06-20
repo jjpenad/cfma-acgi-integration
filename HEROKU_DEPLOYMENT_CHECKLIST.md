@@ -13,13 +13,14 @@
 
 ### 2. Dependencies
 - [x] Flask 2.3.3
-- [x] SQLAlchemy 2.0.21
+- [x] SQLAlchemy 2.0.32 (compatible with Python 3.11+)
 - [x] requests 2.31.0
 - [x] APScheduler 3.10.4
 - [x] python-dotenv 1.0.0
 - [x] Werkzeug 2.3.7
 - [x] psycopg2-binary 2.9.7 (PostgreSQL adapter)
 - [x] gunicorn 21.2.0 (WSGI server)
+- [x] Python 3.11.18 (specified in runtime.txt for Heroku compatibility)
 
 ### 3. Configuration
 - [x] Environment-based configuration
@@ -176,17 +177,23 @@ heroku run python -c "from src.models import init_db; init_db()"
    - Verify Python version compatibility
    - Check build logs: `heroku logs --tail`
 
-2. **Database Connection Errors**
+2. **SQLAlchemy Python 3.13 Compatibility Error**
+   - **Error**: `AssertionError: Class <class 'sqlalchemy.sql.elements.SQLCoreOperations'> directly inherits TypingOnly`
+   - **Cause**: SQLAlchemy 2.0.21 is not compatible with Python 3.13
+   - **Solution**: Use Python 3.11.18 (specified in runtime.txt) and SQLAlchemy 2.0.32+
+   - **Fix**: `heroku config:set PYTHON_VERSION=3.11.18` or use runtime.txt
+
+3. **Database Connection Errors**
    - Verify PostgreSQL addon is provisioned
    - Check `DATABASE_URL` environment variable
    - Ensure `DATABASE_TYPE=postgres`
 
-3. **Runtime Errors**
+4. **Runtime Errors**
    - Check application logs
    - Verify environment variables are set
    - Test locally before deploying
 
-4. **Authentication Issues**
+5. **Authentication Issues**
    - Verify `SECRET_KEY` is set
    - Check admin credentials
    - Ensure secure cookies are configured
