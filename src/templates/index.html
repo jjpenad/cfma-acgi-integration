@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ACGI HubSpot Integration - Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .main-container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            margin: 2rem auto;
+            padding: 2rem;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 2rem;
+            color: #333;
+        }
+        .header h1 {
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+        .header p {
+            color: #666;
+            font-size: 1.1rem;
+        }
+        .form-section {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            border-left: 4px solid #667eea;
+        }
+        .form-section h3 {
+            color: #333;
+            margin-bottom: 1rem;
+            font-weight: 600;
+        }
+        .form-label {
+            font-weight: 600;
+            color: #555;
+            margin-bottom: 0.5rem;
+        }
+        .form-control {
+            border-radius: 10px;
+            border: 2px solid #e9ecef;
+            padding: 0.75rem;
+            transition: all 0.3s ease;
+        }
+        .form-control:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            border-radius: 10px;
+            padding: 0.75rem 2rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+        .btn-secondary {
+            background: #6c757d;
+            border: none;
+            border-radius: 10px;
+            padding: 0.75rem 2rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        .btn-secondary:hover {
+            background: #5a6268;
+            transform: translateY(-2px);
+        }
+        .btn-success {
+            background: #28a745;
+            border: none;
+            border-radius: 10px;
+            padding: 0.75rem 2rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        .btn-success:hover {
+            background: #218838;
+            transform: translateY(-2px);
+        }
+        .btn-danger {
+            background: #dc3545;
+            border: none;
+            border-radius: 10px;
+            padding: 0.75rem 2rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        .btn-danger:hover {
+            background: #c82333;
+            transform: translateY(-2px);
+        }
+        .btn-info {
+            background: #17a2b8;
+            border: none;
+            border-radius: 10px;
+            padding: 0.75rem 2rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        .btn-info:hover {
+            background: #138496;
+            transform: translateY(-2px);
+        }
+        .nav-tabs {
+            border-bottom: 2px solid #dee2e6;
+        }
+        .nav-tabs .nav-link {
+            border: none;
+            border-radius: 10px 10px 0 0;
+            margin-right: 0.5rem;
+            color: #6c757d;
+            font-weight: 600;
+        }
+        .nav-tabs .nav-link.active {
+            background: #667eea;
+            color: white;
+        }
+        .alert {
+            border-radius: 10px;
+            border: none;
+            margin-bottom: 1rem;
+        }
+        .user-info {
+            background: #e9ecef;
+            border-radius: 10px;
+            padding: 0.5rem 1rem;
+            margin-bottom: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .user-info .user-details {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .user-info .user-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="main-container">
+            <!-- User Info Bar -->
+            <div class="user-info">
+                <div class="user-details">
+                    <i class="fas fa-user-circle"></i>
+                    <span>Welcome, <strong>{{ username }}</strong></span>
+                </div>
+                <div class="user-actions">
+                    <a href="{{ url_for('auth.logout') }}" class="btn btn-outline-danger btn-sm">
+                        <i class="fas fa-sign-out-alt"></i> Logout
+                    </a>
+                </div>
+            </div>
+
+            <div class="header">
+                <h1><i class="fas fa-sync-alt"></i> ACGI HubSpot Integration</h1>
+                <p>Configure and manage your ACGI to HubSpot data synchronization</p>
+            </div>
+
+            <!-- Navigation -->
+            <nav class="mb-4">
+                <ul class="nav nav-tabs">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/dashboard"><i class="fas fa-sync-alt"></i> Integration</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/acgi-to-hubspot"><i class="fas fa-cogs"></i> ACGI to HubSpot</a>
+                    </li>
+                </ul>
+            </nav>
+
+            <!-- Credentials Form -->
+            <div class="form-section">
+                <h3><i class="fas fa-key"></i> API Credentials</h3>
+                <form id="credentialsForm">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label for="acgi_username" class="form-label">ACGI Username</label>
+                                <input type="text" class="form-control" id="acgi_username" name="acgi_username" required>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label for="acgi_password" class="form-label">ACGI Password</label>
+                                <input type="password" class="form-control" id="acgi_password" name="acgi_password" required>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label for="acgi_environment" class="form-label">ACGI Environment</label>
+                                <select class="form-control" id="acgi_environment" name="acgi_environment">
+                                    <option value="test">Test</option>
+                                    <option value="prod">Production</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="hubspot_api_key" class="form-label">HubSpot API Key</label>
+                        <input type="password" class="form-control" id="hubspot_api_key" name="hubspot_api_key" required>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i> Save Credentials
+                        </button>
+                        <button type="button" class="btn btn-success" onclick="testACGI()">
+                            <i class="fas fa-vial"></i> Test ACGI
+                        </button>
+                        <button type="button" class="btn btn-info" onclick="testHubSpot()">
+                            <i class="fas fa-vial"></i> Test HubSpot
+                        </button>
+                        <button type="button" class="btn btn-secondary" onclick="testBoth()">
+                            <i class="fas fa-vial"></i> Test Both
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Status Messages -->
+            <div id="statusMessages"></div>
+
+            <!-- Test Results Section -->
+            <div id="testResults" class="mt-4" style="display: none;">
+                <div class="form-section">
+                    <h3><i class="fas fa-clipboard-list"></i> Test Results</h3>
+                    <div id="testResultsContent"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Load saved credentials
+        function loadCredentials() {
+            fetch('/api/credentials')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        document.getElementById('acgi_username').value = data.credentials.acgi_username || '';
+                        document.getElementById('acgi_password').value = data.credentials.acgi_password || '';
+                        document.getElementById('acgi_environment').value = data.credentials.acgi_environment || 'test';
+                        document.getElementById('hubspot_api_key').value = data.credentials.hubspot_api_key || '';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading credentials:', error);
+                });
+        }
+
+        // Load saved credentials on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            loadCredentials();
+        });
+
+        document.getElementById('credentialsForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            saveCredentials();
+        });
+
+        function saveCredentials() {
+            const formData = {
+                acgi_username: document.getElementById('acgi_username').value,
+                acgi_password: document.getElementById('acgi_password').value,
+                acgi_environment: document.getElementById('acgi_environment').value,
+                hubspot_api_key: document.getElementById('hubspot_api_key').value
+            };
+
+            fetch('/save-credentials', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(formData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                showMessage(data.success ? 'success' : 'danger', data.message);
+            })
+            .catch(error => {
+                showMessage('danger', 'Error saving credentials: ' + error.message);
+            });
+        }
+
+        function testACGI() {
+            showMessage('info', 'Testing ACGI credentials...');
+            fetch('/test-acgi', {
+                method: 'POST'
+            })
+            .then(response => response.json())
+            .then(data => {
+                showMessage(data.success ? 'success' : 'danger', data.message);
+                showTestResults('ACGI Test Results', data);
+            })
+            .catch(error => {
+                showMessage('danger', 'Error testing ACGI: ' + error.message);
+            });
+        }
+
+        function testHubSpot() {
+            showMessage('info', 'Testing HubSpot credentials...');
+            fetch('/test-hubspot', {
+                method: 'POST'
+            })
+            .then(response => response.json())
+            .then(data => {
+                showMessage(data.success ? 'success' : 'danger', data.message);
+                showTestResults('HubSpot Test Results', data);
+            })
+            .catch(error => {
+                showMessage('danger', 'Error testing HubSpot: ' + error.message);
+            });
+        }
+
+        function testBoth() {
+            showMessage('info', 'Testing both ACGI and HubSpot credentials...');
+            fetch('/test-both', {
+                method: 'POST'
+            })
+            .then(response => response.json())
+            .then(data => {
+                showMessage(data.success ? 'success' : 'danger', data.message);
+                showTestResults('Both Services Test Results', data);
+            })
+            .catch(error => {
+                showMessage('danger', 'Error testing both: ' + error.message);
+            });
+        }
+
+        function showTestResults(title, data) {
+            const resultsDiv = document.getElementById('testResults');
+            const contentDiv = document.getElementById('testResultsContent');
+            
+            let html = `<h4>${title}</h4>`;
+            
+            if (data.success) {
+                html += `<div class="alert alert-success"><i class="fas fa-check-circle"></i> ${data.message}</div>`;
+            } else {
+                html += `<div class="alert alert-danger"><i class="fas fa-exclamation-triangle"></i> ${data.message}</div>`;
+            }
+            
+            // Show detailed response if available
+            if (data.response) {
+                html += `
+                    <div class="mt-3">
+                        <h5>API Response:</h5>
+                        <div class="bg-light p-3 rounded">
+                            <pre class="mb-0" style="white-space: pre-wrap; font-size: 0.9em;">${escapeHtml(data.response)}</pre>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            // For "test both" results, show individual results
+            if (data.acgi || data.hubspot) {
+                html += `<div class="mt-3"><h5>Individual Results:</h5>`;
+                
+                if (data.acgi) {
+                    html += `
+                        <div class="card mb-2">
+                            <div class="card-header">
+                                <strong>ACGI:</strong> 
+                                <span class="badge ${data.acgi.success ? 'bg-success' : 'bg-danger'}">
+                                    ${data.acgi.success ? 'Success' : 'Failed'}
+                                </span>
+                            </div>
+                            <div class="card-body">
+                                <p>${data.acgi.message}</p>
+                                ${data.acgi.response ? `
+                                    <details>
+                                        <summary>View Response</summary>
+                                        <div class="bg-light p-2 rounded mt-2">
+                                            <pre style="white-space: pre-wrap; font-size: 0.8em;">${escapeHtml(data.acgi.response)}</pre>
+                                        </div>
+                                    </details>
+                                ` : ''}
+                            </div>
+                        </div>
+                    `;
+                }
+                
+                if (data.hubspot) {
+                    html += `
+                        <div class="card mb-2">
+                            <div class="card-header">
+                                <strong>HubSpot:</strong> 
+                                <span class="badge ${data.hubspot.success ? 'bg-success' : 'bg-danger'}">
+                                    ${data.hubspot.success ? 'Success' : 'Failed'}
+                                </span>
+                            </div>
+                            <div class="card-body">
+                                <p>${data.hubspot.message}</p>
+                                ${data.hubspot.response ? `
+                                    <details>
+                                        <summary>View Response</summary>
+                                        <div class="bg-light p-2 rounded mt-2">
+                                            <pre style="white-space: pre-wrap; font-size: 0.8em;">${escapeHtml(data.hubspot.response)}</pre>
+                                        </div>
+                                    </details>
+                                ` : ''}
+                            </div>
+                        </div>
+                    `;
+                }
+                
+                html += `</div>`;
+            }
+            
+            contentDiv.innerHTML = html;
+            resultsDiv.style.display = 'block';
+            
+            // Scroll to results
+            resultsDiv.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function showMessage(type, message) {
+            const statusDiv = document.getElementById('statusMessages');
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+            alertDiv.innerHTML = `
+                <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'info' ? 'info-circle' : 'exclamation-triangle'}"></i>
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            statusDiv.appendChild(alertDiv);
+            
+            // Auto-remove after 5 seconds
+            setTimeout(() => {
+                alertDiv.remove();
+            }, 5000);
+        }
+    </script>
+</body>
+</html> 

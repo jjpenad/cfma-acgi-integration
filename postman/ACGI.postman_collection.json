@@ -1,0 +1,100 @@
+{
+	"info": {
+		"_postman_id": "80b8107b-02aa-424f-b8fa-61631fb8bd54",
+		"name": "ACGI",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "10706350"
+	},
+	"item": [
+		{
+			"name": "Get Updates Queue",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "p_input_xml_doc=<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n<custRequest>\r\n    <vendorId>{{userid}}</vendorId>\r\n    <vendorPassword>{{password}}</vendorPassword>\r\n</custRequest>",
+					"options": {
+						"raw": {
+							"language": "xml"
+						}
+					}
+				},
+				"url": {
+					"raw": "https://ams.cfma.org/{{environment}}/CENCUSTINTEGRATESYNCWEBSVCLIB.GET_QUEUE_CUSTS_W_REASONS_XML",
+					"protocol": "https",
+					"host": [
+						"ams",
+						"cfma",
+						"org"
+					],
+					"path": [
+						"{{environment}}",
+						"CENCUSTINTEGRATESYNCWEBSVCLIB.GET_QUEUE_CUSTS_W_REASONS_XML"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get Customer Data",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "p_input_xml_doc=<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n<custInfoRequest>\r\n    <custId>25113</custId>\r\n    <!-- this element can repeat if bulkRequest is true.\r\n see bulk request details section -->\r\n    <integratorUsername>{{userid}}</integratorUsername>\r\n    <integratorPassword>{{password}}</integratorPassword>\r\n    <directoryId></directoryId>\r\n    <!-- if provided, returned data will\r\n respect customer preferences for indicated directory ID -->\r\n    <bulkRequest>false</bulkRequest>\r\n    <!-- true/false - if \"true\", multiple\r\n customers' info can be requested at once. see bulk request details\r\n section -->\r\n    <details includeCodeValues=\"true\">\r\n        <roles include=\"true\" />\r\n        <addresses include=\"true\" includeBad=\"true\" />\r\n        <phones include=\"true\" />\r\n        <emails include=\"true\" includeBad=\"true\" />\r\n        <websites include=\"true\" includeBad=\"true\" />\r\n        <jobs include=\"true\" includeInactive=\"true\" />\r\n        <employmentAttributes include=\"true\" includeAll=\"true\">\r\n            <!-\r\n   To pull employment attributes, you must include jobs in your request.\r\n   The following are examples of querying attributes by type or\r\n type+code.\r\n   Do not include the attr children if includeAll is set to \"true\"\r\n \r\n   <attr type=\"GENDER\" /><attr type=\"EDUCATION\" code=\"COLLEGE\" />\r\n   -->\r\n  \r\n        \r\n        </employmentAttributes>\r\n        <committeePositions include=\"true\" includeInactive=\"true\" />\r\n        <memberships include=\"true\" includeInactive=\"true\" />\r\n        <subscriptions include=\"true\" includeExpired=\"true\" />\r\n        <communicationPreferences include=\"true\" />\r\n        <customerAttributes include=\"true\" includeAll=\"true\">\r\n            <!-\r\n   The following are examples of querying attributes by type or\r\n type+code.\r\n   Do not include the attr children if includeAll is set to \"true\"\r\n \r\n   <attr type=\"GENDER\" /><attr type=\"EDUCATION\" code=\"COLLEGE\" />\r\n   -->\r\n  \r\n        \r\n        </customerAttributes>\r\n        <custDimAttrs include=\"true\" includeAll=\"true\">\r\n            <!-\r\n            The following are examples of querying attributes by type or\r\n type+code.\r\n            Do not include the attr children if includeAll is set to\r\n \"true\"\r\n  \r\n            <attr type=\"VOLUME\" dimensionType=\"YEAR\"\r\n dimensionType=\"2015\" /><attr type=\"EDUCATION\" code=\"COLLEGE\" />\r\n            -->\r\n  \r\n        \r\n        </custDimAttrs>\r\n        <bio include=\"true\" />\r\n        <aliases include=\"true\" />\r\n        <companyAdmins include=\"true\" />\r\n        <certifications include=\"true\" />\r\n        <employees include=\"true\" />\r\n        <referralInfo include=\"true\" />\r\n        <files include=\"true\" />\r\n    </details>\r\n</custInfoRequest>",
+					"options": {
+						"raw": {
+							"language": "xml"
+						}
+					}
+				},
+				"url": {
+					"raw": "https://ams.cfma.org/{{environment}}/CENSSAWEBSVCLIB.GET_CUST_INFO_XML",
+					"protocol": "https",
+					"host": [
+						"ams",
+						"cfma",
+						"org"
+					],
+					"path": [
+						"{{environment}}",
+						"CENSSAWEBSVCLIB.GET_CUST_INFO_XML"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get Customer Data Copy",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "p_input_xml_doc=<?xml version=\"1.0\" encoding=\"UTF-8\" ?>\r\n <ecord-request>           \r\n    <vendorId>{{userid}}</vendorId>                 <!-- provided by ACGI -->\r\n    <vendorPassword>{{password}}</vendorPassword> <!-- provided by ACGI -->\r\n    <custId>25113</custId> \r\n    <orderSerno></orderSerno> <!-- optional -->\r\n    <productType></productType> <!-- optional -->      \r\n</ecord-request>",
+					"options": {
+						"raw": {
+							"language": "xml"
+						}
+					}
+				},
+				"url": {
+					"raw": "https://ams.cfma.org/{{environment}}/ECSSAWEBSVCLIB.GET_PURCHASED_PRODUCTS_XML",
+					"protocol": "https",
+					"host": [
+						"ams",
+						"cfma",
+						"org"
+					],
+					"path": [
+						"{{environment}}",
+						"ECSSAWEBSVCLIB.GET_PURCHASED_PRODUCTS_XML"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}

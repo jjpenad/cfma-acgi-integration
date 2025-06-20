@@ -1,0 +1,1130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ACGI to HubSpot - Field Mapping</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .main-container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            margin: 2rem auto;
+            padding: 2rem;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 2rem;
+            color: #333;
+        }
+        .header h1 {
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+        .header p {
+            color: #666;
+            font-size: 1.1rem;
+        }
+        .form-section {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            border-left: 4px solid #667eea;
+        }
+        .form-section h3 {
+            color: #333;
+            margin-bottom: 1rem;
+            font-weight: 600;
+        }
+        .form-label {
+            font-weight: 600;
+            color: #555;
+            margin-bottom: 0.5rem;
+        }
+        .form-control {
+            border-radius: 10px;
+            border: 2px solid #e9ecef;
+            padding: 0.75rem;
+            transition: all 0.3s ease;
+        }
+        .form-control:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            border-radius: 10px;
+            padding: 0.75rem 2rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+        .btn-secondary {
+            background: #6c757d;
+            border: none;
+            border-radius: 10px;
+            padding: 0.75rem 2rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        .btn-secondary:hover {
+            background: #5a6268;
+            transform: translateY(-2px);
+        }
+        .btn-success {
+            background: #28a745;
+            border: none;
+            border-radius: 10px;
+            padding: 0.75rem 2rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        .btn-success:hover {
+            background: #218838;
+            transform: translateY(-2px);
+        }
+        .btn-danger {
+            background: #dc3545;
+            border: none;
+            border-radius: 10px;
+            padding: 0.75rem 2rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        .btn-danger:hover {
+            background: #c82333;
+            transform: translateY(-2px);
+        }
+        .btn-info {
+            background: #17a2b8;
+            border: none;
+            border-radius: 10px;
+            padding: 0.75rem 2rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        .btn-info:hover {
+            background: #138496;
+            transform: translateY(-2px);
+        }
+        .btn-warning {
+            background: #ffc107;
+            border: none;
+            border-radius: 10px;
+            padding: 0.75rem 2rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        .btn-warning:hover {
+            background: #e0a800;
+            transform: translateY(-2px);
+        }
+        .nav-tabs {
+            border-bottom: 2px solid #dee2e6;
+        }
+        .nav-tabs .nav-link {
+            border: none;
+            border-radius: 10px 10px 0 0;
+            margin-right: 0.5rem;
+            color: #6c757d;
+            font-weight: 600;
+        }
+        .nav-tabs .nav-link.active {
+            background: #667eea;
+            color: white;
+        }
+        .property-card {
+            background: white;
+            border-radius: 10px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            border: 2px solid #e9ecef;
+            transition: all 0.3s ease;
+        }
+        .property-card:hover {
+            border-color: #667eea;
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.1);
+        }
+        .property-card.important {
+            border-color: #28a745;
+            background: #f8fff9;
+        }
+        .property-card.enabled {
+            border-color: #667eea;
+            background: #f8f9ff;
+        }
+        .property-card.sortable-ghost {
+            opacity: 0.5;
+            background: #e9ecef;
+        }
+        .property-card.sortable-chosen {
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+            transform: rotate(2deg);
+        }
+        .drag-handle {
+            transition: color 0.2s ease;
+        }
+        .drag-handle:hover {
+            color: #667eea !important;
+        }
+        .property-header {
+            display: flex;
+            justify-content: between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+        .property-name {
+            font-weight: 600;
+            color: #333;
+        }
+        .property-label {
+            color: #666;
+            font-size: 0.9rem;
+        }
+        .property-type {
+            background: #e9ecef;
+            padding: 0.25rem 0.5rem;
+            border-radius: 5px;
+            font-size: 0.8rem;
+            color: #666;
+        }
+        .property-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+        .form-check {
+            margin-bottom: 0.5rem;
+        }
+        .form-check-input:checked {
+            background-color: #667eea;
+            border-color: #667eea;
+        }
+        .loading {
+            display: none;
+        }
+        .spinner-border-sm {
+            width: 1rem;
+            height: 1rem;
+        }
+        .alert {
+            border-radius: 10px;
+            border: none;
+            margin-bottom: 1rem;
+        }
+        .badge {
+            font-size: 0.75rem;
+            padding: 0.25rem 0.5rem;
+        }
+        .badge-important {
+            background: #28a745;
+        }
+        .badge-enabled {
+            background: #667eea;
+        }
+        .form-row {
+            margin-bottom: 1rem;
+        }
+        .form-row label {
+            font-weight: 600;
+            color: #555;
+            margin-bottom: 0.5rem;
+        }
+        .form-row input,
+        .form-row select,
+        .form-row textarea {
+            border-radius: 8px;
+            border: 2px solid #e9ecef;
+            padding: 0.5rem;
+            transition: all 0.3s ease;
+        }
+        .form-row input:focus,
+        .form-row select:focus,
+        .form-row textarea:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+        }
+        
+        /* Output area styling */
+        #contactsOutput, #dealsOutput {
+            border-top: 1px solid #e9ecef;
+            padding-top: 1rem;
+        }
+        
+        #contactsOutput h6, #dealsOutput h6 {
+            color: #495057;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+        
+        #contactsOutputContent, #dealsOutputContent {
+            font-family: 'Courier New', monospace;
+            font-size: 0.875rem;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+        
+        #contactsOutputContent pre, #dealsOutputContent pre {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 4px;
+            padding: 0.5rem;
+            margin: 0.5rem 0;
+            font-size: 0.8rem;
+            overflow-x: auto;
+        }
+        .user-info {
+            background: #e9ecef;
+            border-radius: 10px;
+            padding: 0.5rem 1rem;
+            margin-bottom: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .user-info .user-details {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .user-info .user-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="main-container">
+            <!-- User Info Bar -->
+            <div class="user-info">
+                <div class="user-details">
+                    <i class="fas fa-user-circle"></i>
+                    <span>Welcome, <strong>{{ username }}</strong></span>
+                </div>
+                <div class="user-actions">
+                    <a href="{{ url_for('auth.logout') }}" class="btn btn-outline-danger btn-sm">
+                        <i class="fas fa-sign-out-alt"></i> Logout
+                    </a>
+                </div>
+            </div>
+
+            <div class="header">
+                <h1><i class="fas fa-cogs"></i> ACGI to HubSpot Field Mapping</h1>
+                <p>Configure field mappings and data synchronization for different object types</p>
+            </div>
+
+            <!-- Navigation -->
+            <nav class="mb-4">
+                <ul class="nav nav-tabs">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/"><i class="fas fa-sync-alt"></i> Integration</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/acgi-to-hubspot"><i class="fas fa-cogs"></i> ACGI to HubSpot</a>
+                    </li>
+                    
+                </ul>
+            </nav>
+
+            <!-- Object Type Tabs -->
+            <ul class="nav nav-tabs" id="objectTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="contacts-tab" data-bs-toggle="tab" data-bs-target="#contacts" type="button" role="tab">
+                        <i class="fas fa-user"></i> Contacts
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="deals-tab" data-bs-toggle="tab" data-bs-target="#deals" type="button" role="tab">
+                        <i class="fas fa-handshake"></i> Deals
+                    </button>
+                </li>
+            </ul>
+
+            <!-- Tab Content -->
+            <div class="tab-content" id="objectTabContent">
+                <!-- Contacts Tab -->
+                <div class="tab-pane fade show active" id="contacts" role="tabpanel">
+                    <div class="mt-4">
+                        <div class="row">
+                            <div class="col-md-8">
+                                <h4><i class="fas fa-star"></i> Important Fields</h4>
+                                <div id="contactsImportantFields" class="mb-4">
+                                    <div class="text-center text-muted">
+                                        <i class="fas fa-info-circle"></i> Load properties to see important fields
+                                    </div>
+                                </div>
+                                
+                                <h4><i class="fas fa-list"></i> All Available Fields</h4>
+                                <div id="contactsAllFields">
+                                    <div class="text-center text-muted">
+                                        <i class="fas fa-info-circle"></i> Load properties to see all available fields
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-4">
+                                <div class="card">
+                                    <div class="card-header bg-primary text-white">
+                                        <i class="fas fa-save"></i> Save to HubSpot
+                                    </div>
+                                    <div class="card-body">
+                                        <div id="contactsForm">
+                                            <div class="text-center text-muted">
+                                                <i class="fas fa-info-circle"></i> Load properties to see the form
+                                            </div>
+                                        </div>
+                                        <div class="mt-3">
+                                            <button type="button" class="btn btn-success w-100 mb-2" onclick="saveToHubSpot('contacts')">
+                                                <i class="fas fa-save"></i> Save to HubSpot
+                                            </button>
+                                            <button type="button" class="btn btn-warning w-100 mb-3" onclick="resetForm('contacts')">
+                                                <i class="fas fa-undo"></i> Reset Form
+                                            </button>
+                                            
+                                            <!-- Search Preference Section -->
+                                            <div class="card mt-3">
+                                                <div class="card-header bg-info text-white">
+                                                    <i class="fas fa-search"></i> Search Preference
+                                                </div>
+                                                <div class="card-body">
+                                                    <div class="form-check">
+                                                        <input class="form-check-input" type="radio" name="contactsSearchPreference" id="contactsEmailOnly" value="email_only" checked>
+                                                        <label class="form-check-label" for="contactsEmailOnly">
+                                                            Search by email only
+                                                        </label>
+                                                    </div>
+                                                    <div class="form-check">
+                                                        <input class="form-check-input" type="radio" name="contactsSearchPreference" id="contactsCustomerIdOnly" value="customer_id_only">
+                                                        <label class="form-check-label" for="contactsCustomerIdOnly">
+                                                            Search by customer_id only
+                                                        </label>
+                                                    </div>
+                                                    <div class="form-check">
+                                                        <input class="form-check-input" type="radio" name="contactsSearchPreference" id="contactsEmailThenCustomerId" value="email_then_customer_id">
+                                                        <label class="form-check-label" for="contactsEmailThenCustomerId">
+                                                            Search by email and then customer_id
+                                                        </label>
+                                                    </div>
+                                                    <div class="form-check">
+                                                        <input class="form-check-input" type="radio" name="contactsSearchPreference" id="contactsCustomerIdThenEmail" value="customer_id_then_email">
+                                                        <label class="form-check-label" for="contactsCustomerIdThenEmail">
+                                                            Search by customer_id and then email
+                                                        </label>
+                                                    </div>
+                                                    <button type="button" class="btn btn-outline-info btn-sm mt-2" onclick="saveSearchPreference('contacts')">
+                                                        <i class="fas fa-save"></i> Save Preference
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div id="contactsOutput" class="mt-3" style="display: none;">
+                                            <h6><i class="fas fa-terminal"></i> Output:</h6>
+                                            <div class="alert alert-info" id="contactsOutputContent">
+                                                <!-- Output will be displayed here -->
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Deals Tab -->
+                <div class="tab-pane fade" id="deals" role="tabpanel">
+                    <div class="mt-4">
+                        <div class="row">
+                            <div class="col-md-8">
+                                <h4><i class="fas fa-star"></i> Important Fields</h4>
+                                <div id="dealsImportantFields" class="mb-4">
+                                    <div class="text-center text-muted">
+                                        <i class="fas fa-info-circle"></i> Load properties to see important fields
+                                    </div>
+                                </div>
+                                
+                                <h4><i class="fas fa-list"></i> All Available Fields</h4>
+                                <div id="dealsAllFields">
+                                    <div class="text-center text-muted">
+                                        <i class="fas fa-info-circle"></i> Load properties to see all available fields
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-4">
+                                <div class="card">
+                                    <div class="card-header bg-primary text-white">
+                                        <i class="fas fa-save"></i> Save to HubSpot
+                                    </div>
+                                    <div class="card-body">
+                                        <div id="dealsForm">
+                                            <div class="text-center text-muted">
+                                                <i class="fas fa-info-circle"></i> Load properties to see the form
+                                            </div>
+                                        </div>
+                                        <div class="mt-3">
+                                            <button type="button" class="btn btn-success w-100 mb-2" onclick="saveToHubSpot('deals')">
+                                                <i class="fas fa-save"></i> Save to HubSpot
+                                            </button>
+                                            <button type="button" class="btn btn-warning w-100 mb-3" onclick="resetForm('deals')">
+                                                <i class="fas fa-undo"></i> Reset Form
+                                            </button>
+                                            
+                                            <!-- Search Preference Section -->
+                                            <div class="card mt-3">
+                                                <div class="card-header bg-info text-white">
+                                                    <i class="fas fa-search"></i> Search Preference
+                                                </div>
+                                                <div class="card-body">
+                                                    <div class="form-check">
+                                                        <input class="form-check-input" type="radio" name="dealsSearchPreference" id="dealsEmailOnly" value="email_only" checked>
+                                                        <label class="form-check-label" for="dealsEmailOnly">
+                                                            Search by email only
+                                                        </label>
+                                                    </div>
+                                                    <div class="form-check">
+                                                        <input class="form-check-input" type="radio" name="dealsSearchPreference" id="dealsCustomerIdOnly" value="customer_id_only">
+                                                        <label class="form-check-label" for="dealsCustomerIdOnly">
+                                                            Search by customer_id only
+                                                        </label>
+                                                    </div>
+                                                    <div class="form-check">
+                                                        <input class="form-check-input" type="radio" name="dealsSearchPreference" id="dealsEmailThenCustomerId" value="email_then_customer_id">
+                                                        <label class="form-check-label" for="dealsEmailThenCustomerId">
+                                                            Search by email and then customer_id
+                                                        </label>
+                                                    </div>
+                                                    <div class="form-check">
+                                                        <input class="form-check-input" type="radio" name="dealsSearchPreference" id="dealsCustomerIdThenEmail" value="customer_id_then_email">
+                                                        <label class="form-check-label" for="dealsCustomerIdThenEmail">
+                                                            Search by customer_id and then email
+                                                        </label>
+                                                    </div>
+                                                    <button type="button" class="btn btn-outline-info btn-sm mt-2" onclick="saveSearchPreference('deals')">
+                                                        <i class="fas fa-save"></i> Save Preference
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div id="dealsOutput" class="mt-3" style="display: none;">
+                                            <h6><i class="fas fa-terminal"></i> Output:</h6>
+                                            <div class="alert alert-info" id="dealsOutputContent">
+                                                <!-- Output will be displayed here -->
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Loading Spinner -->
+            <div class="loading text-center mt-4" id="loadingSpinner">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <p class="mt-2">Loading properties...</p>
+            </div>
+
+            <!-- Reload Buttons -->
+            <div class="text-center mt-3" id="reloadButtonsContainer" style="display: none;">
+                <button type="button" class="btn btn-outline-primary me-2" onclick="loadProperties()">
+                    <i class="fas fa-sync-alt"></i> Reload All Properties
+                </button>
+                <button type="button" class="btn btn-outline-success me-2" onclick="loadContactsProperties()">
+                    <i class="fas fa-user"></i> Reload Contacts Properties
+                </button>
+                <button type="button" class="btn btn-outline-info" onclick="loadDealsProperties()">
+                    <i class="fas fa-handshake"></i> Reload Deals Properties
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+    <script>
+        let currentObjectType = 'contacts';
+        let propertiesData = {};
+
+        function showLoading() {
+            document.getElementById('loadingSpinner').style.display = 'block';
+            document.getElementById('reloadButtonsContainer').style.display = 'none';
+        }
+
+        function hideLoading() {
+            document.getElementById('loadingSpinner').style.display = 'none';
+            document.getElementById('reloadButtonsContainer').style.display = 'block';
+        }
+
+        function showAlert(message, type = 'info') {
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+            alertDiv.innerHTML = `
+                <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'danger' ? 'exclamation-triangle' : 'info-circle'}"></i>
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            document.querySelector('.main-container').insertBefore(alertDiv, document.querySelector('.nav-tabs'));
+        }
+
+        function loadProperties() {
+            showLoading();
+            
+            // Load properties for both object types
+            Promise.all([
+                loadObjectProperties('contacts'),
+                loadObjectProperties('deals')
+            ]).then(() => {
+                hideLoading();
+                showAlert('All properties loaded successfully!', 'success');
+            }).catch(error => {
+                hideLoading();
+                console.error('Error loading properties:', error);
+                showAlert('Error loading properties: ' + error.message + '\nPlease set your HubSpot API key on the Integration page first.', 'danger');
+            });
+        }
+
+        function loadContactsProperties() {
+            showLoading();
+            loadObjectProperties('contacts')
+                .then(() => {
+                    hideLoading();
+                    showAlert('Contacts properties loaded successfully!', 'success');
+                })
+                .catch(error => {
+                    hideLoading();
+                    console.error('Error loading contacts properties:', error);
+                    showAlert('Error loading contacts properties: ' + error.message + '\nPlease set your HubSpot API key on the Integration page first.', 'danger');
+                });
+        }
+
+        function loadDealsProperties() {
+            showLoading();
+            loadObjectProperties('deals')
+                .then(() => {
+                    hideLoading();
+                    showAlert('Deals properties loaded successfully!', 'success');
+                })
+                .catch(error => {
+                    hideLoading();
+                    console.error('Error loading deals properties:', error);
+                    showAlert('Error loading deals properties: ' + error.message + '\nPlease set your HubSpot API key on the Integration page first.', 'danger');
+                });
+        }
+
+        function loadObjectProperties(objectType) {
+            return fetch(`/api/hubspot-properties/${objectType}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) {
+                        throw new Error(data.error);
+                    }
+                    
+                    // Initialize arrays if they don't exist
+                    if (!data.important_properties) data.important_properties = [];
+                    if (!data.other_properties) data.other_properties = [];
+                    
+                    propertiesData[objectType] = data;
+                    renderProperties(objectType, data);
+                    renderForm(objectType, data);
+                });
+        }
+
+        function renderProperties(objectType, data) {
+            const importantContainer = document.getElementById(`${objectType}ImportantFields`);
+            const allContainer = document.getElementById(`${objectType}AllFields`);
+            
+            // Initialize arrays if they don't exist
+            if (!data.important_properties) data.important_properties = [];
+            if (!data.other_properties) data.other_properties = [];
+            
+            // Sort other properties alphabetically by name (important properties keep their order)
+            data.other_properties.sort((a, b) => {
+                const nameA = a.name || '';
+                const nameB = b.name || '';
+                return nameA.localeCompare(nameB);
+            });
+            
+            // Render important properties
+            if (data.important_properties.length > 0) {
+                importantContainer.innerHTML = data.important_properties.map(prop => 
+                    createPropertyCard(prop, objectType, true)
+                ).join('');
+                
+                // Initialize drag-and-drop for important fields
+                initializeSortable(objectType);
+            } else {
+                importantContainer.innerHTML = '<div class="text-center text-muted">No important fields configured</div>';
+            }
+            
+            // Render all properties
+            if (data.other_properties.length > 0) {
+                allContainer.innerHTML = data.other_properties.map(prop => 
+                    createPropertyCard(prop, objectType, false)
+                ).join('');
+            } else {
+                allContainer.innerHTML = '<div class="text-center text-muted">No additional fields available</div>';
+            }
+        }
+
+        function initializeSortable(objectType) {
+            const importantContainer = document.getElementById(`${objectType}ImportantFields`);
+            
+            // Remove existing sortable instance if it exists
+            if (importantContainer.sortable) {
+                importantContainer.sortable.destroy();
+            }
+            
+            // Initialize new sortable instance
+            importantContainer.sortable = Sortable.create(importantContainer, {
+                animation: 150,
+                handle: '.drag-handle',
+                ghostClass: 'sortable-ghost',
+                chosenClass: 'sortable-chosen',
+                onEnd: function(evt) {
+                    // Update order indices after drag ends
+                    updateFieldOrder(objectType);
+                }
+            });
+        }
+
+        function updateFieldOrder(objectType) {
+            const data = propertiesData[objectType];
+            if (!data || !data.important_properties) return;
+            
+            const importantContainer = document.getElementById(`${objectType}ImportantFields`);
+            const cards = importantContainer.querySelectorAll('.property-card');
+            
+            // Update order indices based on new positions
+            cards.forEach((card, index) => {
+                const fieldName = card.getAttribute('data-field-name');
+                const property = data.important_properties.find(p => p.name === fieldName);
+                if (property) {
+                    property.order_index = index;
+                    
+                    // Save the updated order to database
+                    saveFieldConfiguration(objectType, property, 'order');
+                }
+            });
+            
+            console.log('Field order updated for', objectType);
+        }
+
+        function createPropertyCard(property, objectType, isImportant) {
+            const badges = [];
+            if (isImportant) badges.push('<span class="badge badge-important">Important</span>');
+            if (property.is_enabled) badges.push('<span class="badge badge-enabled">Enabled</span>');
+            
+            const dragHandle = isImportant ? 
+                '<div class="drag-handle me-2" style="cursor: grab; color: #6c757d;"><i class="fas fa-grip-vertical"></i></div>' : '';
+            
+            return `
+                <div class="property-card ${isImportant ? 'important' : ''} ${property.is_enabled ? 'enabled' : ''}" data-field-name="${property.name}">
+                    <div class="property-header">
+                        <div class="d-flex align-items-center">
+                            ${dragHandle}
+                            <div>
+                                <div class="property-name">${property.name}</div>
+                                <div class="property-label">${property.label || property.name}</div>
+                            </div>
+                        </div>
+                        <div class="property-actions">
+                            ${badges.join('')}
+                            <span class="property-type">${property.type}</span>
+                            <div class="btn-group btn-group-sm">
+                                <button type="button" class="btn btn-outline-primary btn-sm" onclick="toggleField('${objectType}', '${property.name}', 'important')">
+                                    <i class="fas fa-star"></i>
+                                </button>
+                                <button type="button" class="btn btn-outline-success btn-sm" onclick="toggleField('${objectType}', '${property.name}', 'enabled')">
+                                    <i class="fas fa-toggle-on"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderForm(objectType, data) {
+            const formContainer = document.getElementById(`${objectType}Form`);
+            
+            if (!data) {
+                formContainer.innerHTML = '<div class="text-center text-muted">No properties available</div>';
+                return;
+            }
+            
+            // Initialize arrays if they don't exist
+            if (!data.important_properties) data.important_properties = [];
+            if (!data.other_properties) data.other_properties = [];
+            
+            // Combine all properties for the form
+            const allProperties = [
+                ...data.important_properties,
+                ...data.other_properties
+            ];
+            
+            if (allProperties.length === 0) {
+                formContainer.innerHTML = '<div class="text-center text-muted">No properties available</div>';
+                return;
+            }
+            
+            const formFields = allProperties
+                .filter(prop => prop.is_enabled)
+                .map(prop => createFormField(prop, objectType))
+                .join('');
+            
+            formContainer.innerHTML = formFields;
+        }
+
+        function createFormField(property, objectType) {
+            const fieldId = `${objectType}_${property.name}`;
+            const label = property.label || property.name;
+            
+            let inputHtml = '';
+            switch (property.type) {
+                case 'number':
+                    inputHtml = `<input type="number" class="form-control" id="${fieldId}" name="${property.name}">`;
+                    break;
+                case 'date':
+                    inputHtml = `<input type="date" class="form-control" id="${fieldId}" name="${property.name}" data-field-type="date">`;
+                    break;
+                case 'datetime':
+                    inputHtml = `<input type="datetime-local" class="form-control" id="${fieldId}" name="${property.name}" data-field-type="datetime">`;
+                    break;
+                case 'textarea':
+                    inputHtml = `<textarea class="form-control" id="${fieldId}" name="${property.name}" rows="3"></textarea>`;
+                    break;
+                case 'enumeration':
+                case 'select':
+                    // Handle enumeration fields with options
+                    let options = '<option value="">Select an option...</option>';
+                    if (property.options && Array.isArray(property.options)) {
+                        options += property.options.map(opt => 
+                            `<option value="${opt.value || opt}">${opt.label || opt}</option>`
+                        ).join('');
+                    } else if (property.options && typeof property.options === 'object') {
+                        // Handle case where options might be in a different format
+                        Object.entries(property.options).forEach(([value, label]) => {
+                            options += `<option value="${value}">${label}</option>`;
+                        });
+                    }
+                    inputHtml = `<select class="form-control" id="${fieldId}" name="${property.name}">${options}</select>`;
+                    break;
+                default:
+                    inputHtml = `<input type="text" class="form-control" id="${fieldId}" name="${property.name}">`;
+            }
+            
+            return `
+                <div class="form-row">
+                    <label for="${fieldId}">${label}</label>
+                    ${inputHtml}
+                </div>
+            `;
+        }
+
+        function toggleField(objectType, fieldName, toggleType) {
+            const data = propertiesData[objectType];
+            if (!data) return;
+            
+            // Initialize arrays if they don't exist
+            if (!data.important_properties) data.important_properties = [];
+            if (!data.other_properties) data.other_properties = [];
+            
+            // Find the property in both sections
+            let property = data.important_properties.find(p => p.name === fieldName);
+            let isInImportant = true;
+            
+            if (!property) {
+                property = data.other_properties.find(p => p.name === fieldName);
+                isInImportant = false;
+            }
+            
+            if (!property) return;
+            
+            console.log(`Toggling field: ${fieldName}, type: ${toggleType}, currently in important: ${isInImportant}`);
+            console.log('Before toggle - Important:', data.important_properties.length, 'Other:', data.other_properties.length);
+            
+            // Toggle the property
+            if (toggleType === 'important') {
+                // Toggle the important state
+                property.is_important = !property.is_important;
+                
+                // Remove from current array
+                if (isInImportant) {
+                    data.important_properties = data.important_properties.filter(p => p.name !== fieldName);
+                } else {
+                    data.other_properties = data.other_properties.filter(p => p.name !== fieldName);
+                }
+                
+                // Add to correct array based on new state
+                if (property.is_important) {
+                    data.important_properties.push(property);
+                } else {
+                    data.other_properties.push(property);
+                }
+            } else if (toggleType === 'enabled') {
+                property.is_enabled = !property.is_enabled;
+            }
+            
+            console.log('After toggle - Important:', data.important_properties.length, 'Other:', data.other_properties.length);
+            console.log('Property is_important:', property.is_important);
+            
+            // Save to database
+            saveFieldConfiguration(objectType, property, toggleType);
+            
+            // Re-render
+            renderProperties(objectType, data);
+            renderForm(objectType, data);
+        }
+
+        function saveFieldConfiguration(objectType, property, toggleType) {
+            let data = {
+                object_type: objectType,
+                field_name: property.name,
+                order_index: property.order_index || 0
+            };
+            
+            // Only send the relevant data based on toggle type
+            if (toggleType === 'order') {
+                // Only send order_index for order updates
+            } else {
+                // Send all field data for other updates
+                data.field_label = property.label || property.name;
+                data.field_type = property.type;
+                data.is_enabled = property.is_enabled;
+                data.is_important = property.is_important;
+            }
+            
+            fetch('/api/save-form-field', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(result => {
+                if (!result.success) {
+                    console.error('Failed to save field configuration:', result.error);
+                }
+            })
+            .catch(error => {
+                console.error('Error saving field configuration:', error);
+            });
+        }
+
+        function saveToHubSpot(objectType) {
+            // Collect form data from all enabled fields
+            const formData = {};
+            const form = document.getElementById(`${objectType}Form`);
+            const inputs = form.querySelectorAll('input, select, textarea');
+            
+            inputs.forEach(input => {
+                if (input.value.trim()) {
+                    let value = input.value;
+                    
+                    // Convert datetime fields to milliseconds for HubSpot API
+                    if (input.getAttribute('data-field-type') === 'datetime') {
+                        const date = new Date(value);
+                        if (!isNaN(date.getTime())) {
+                            value = date.getTime().toString();
+                        }
+                    } else if (input.getAttribute('data-field-type') === 'date') {
+                        const date = new Date(value + 'T00:00:00');
+                        if (!isNaN(date.getTime())) {
+                            value = date.getTime().toString();
+                        }
+                    }
+                    
+                    formData[input.name] = value;
+                }
+            });
+            
+            if (Object.keys(formData).length === 0) {
+                showOutput(objectType, 'Please fill in at least one field', 'warning');
+                return;
+            }
+            
+            showLoading();
+            
+            const requestData = {
+                object_data: formData
+            };
+            
+            fetch(`/api/save-to-hubspot/${objectType}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(requestData)
+            })
+            .then(response => response.json())
+            .then(result => {
+                hideLoading();
+                if (result.success) {
+                    let message = `<strong>${result.message}</strong><br><br>`;
+                    message += `<strong>Details:</strong><br>${result.details}<br><br>`;
+                    
+                    if (result.search_strategy) {
+                        message += `<strong>Search Strategy Used:</strong> ${result.search_strategy}<br>`;
+                    }
+                    if (result.search_info) {
+                        message += `<strong>Search Details:</strong> ${result.search_info}<br>`;
+                    }
+                    if (result.acgi_customer_id) {
+                        message += `<strong>ACGI Customer ID:</strong> ${result.acgi_customer_id}<br>`;
+                    }
+                    if (result.contact_id) {
+                        message += `<strong>HubSpot Contact ID:</strong> ${result.contact_id}<br>`;
+                    }
+                    if (result.deal_id) {
+                        message += `<strong>HubSpot Deal ID:</strong> ${result.deal_id}<br>`;
+                    }
+                    
+                    message += `<br><strong>Data sent to HubSpot:</strong><br><pre>${JSON.stringify(formData, null, 2)}</pre>`;
+                    
+                    if (result.hubspot_response) {
+                        message += `<br><strong>HubSpot Response:</strong><br><pre>${JSON.stringify(result.hubspot_response, null, 2)}</pre>`;
+                    }
+                    
+                    showOutput(objectType, message, 'success');
+                    resetForm(objectType, false); // Don't clear output after successful save
+                } else {
+                    let message = `<strong>${result.message}</strong><br><br>`;
+                    if (result.details) {
+                        message += `<strong>Details:</strong><br>${result.details}<br><br>`;
+                    }
+                    message += `<strong>Data sent:</strong><br><pre>${JSON.stringify(formData, null, 2)}</pre>`;
+                    
+                    showOutput(objectType, message, 'danger');
+                }
+            })
+            .catch(error => {
+                hideLoading();
+                console.error('Error saving to HubSpot:', error);
+                showOutput(objectType, `❌ Error saving to HubSpot: ${error.message}<br><br><strong>Data sent:</strong><br><pre>${JSON.stringify(formData, null, 2)}</pre>`, 'danger');
+            });
+        }
+
+        function showOutput(objectType, message, type = 'info') {
+            const outputContainer = document.getElementById(`${objectType}Output`);
+            const outputContent = document.getElementById(`${objectType}OutputContent`);
+            
+            outputContent.className = `alert alert-${type}`;
+            outputContent.innerHTML = message;
+            outputContainer.style.display = 'block';
+            
+            // Scroll to output
+            outputContainer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+
+        function resetForm(objectType, clearOutput = true) {
+            const form = document.getElementById(`${objectType}Form`);
+            const inputs = form.querySelectorAll('input, select, textarea');
+            
+            inputs.forEach(input => {
+                input.value = '';
+            });
+            
+            // Clear output area only if requested
+            if (clearOutput) {
+                const outputContainer = document.getElementById(`${objectType}Output`);
+                outputContainer.style.display = 'none';
+            }
+        }
+
+        // Handle tab changes and load properties on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            // Load properties automatically when page loads
+            loadProperties();
+            
+            // Load search preferences
+            loadSearchPreferences();
+            
+            const tabs = document.querySelectorAll('[data-bs-toggle="tab"]');
+            tabs.forEach(tab => {
+                tab.addEventListener('shown.bs.tab', function(event) {
+                    const target = event.target.getAttribute('data-bs-target');
+                    if (target === '#contacts') {
+                        currentObjectType = 'contacts';
+                    } else if (target === '#deals') {
+                        currentObjectType = 'deals';
+                    }
+                });
+            });
+        });
+
+        function saveSearchPreference(objectType) {
+            const selectedRadio = document.querySelector(`input[name="${objectType}SearchPreference"]:checked`);
+            if (!selectedRadio) {
+                showAlert('Please select a search preference', 'warning');
+                return;
+            }
+            
+            const searchStrategy = selectedRadio.value;
+            
+            fetch('/api/save-search-preference', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    object_type: objectType,
+                    search_strategy: searchStrategy
+                })
+            })
+            .then(response => response.json())
+            .then(result => {
+                if (result.success) {
+                    showAlert(`Search preference saved for ${objectType}!`, 'success');
+                } else {
+                    showAlert(`Failed to save search preference: ${result.error}`, 'danger');
+                }
+            })
+            .catch(error => {
+                console.error('Error saving search preference:', error);
+                showAlert(`Error saving search preference: ${error.message}`, 'danger');
+            });
+        }
+
+        function loadSearchPreferences() {
+            // Load preferences for both object types
+            Promise.all([
+                loadObjectSearchPreference('contacts'),
+                loadObjectSearchPreference('deals')
+            ]).catch(error => {
+                console.error('Error loading search preferences:', error);
+            });
+        }
+
+        function loadObjectSearchPreference(objectType) {
+            return fetch(`/api/get-search-preference/${objectType}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        const radioId = `${objectType}${data.search_strategy.charAt(0).toUpperCase() + data.search_strategy.slice(1).replace(/_([a-z])/g, (g) => g[1].toUpperCase())}`;
+                        const radio = document.getElementById(radioId);
+                        if (radio) {
+                            radio.checked = true;
+                        }
+                    }
+                });
+        }
+    </script>
+</body>
+</html> 
