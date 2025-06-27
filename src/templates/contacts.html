@@ -1,0 +1,71 @@
+                <div class="row">
+  <!-- Left: ACGI Fields & Mapping -->
+  <div class="col-md-6 mb-4">
+    <div class="mb-3">
+      <label for="acgi-customer-id">ACGI Customer ID:</label>
+      <input type="text" id="acgi-customer-id" class="form-control" />
+      <button id="fetch-acgi-btn" class="btn btn-primary mt-2">Fetch</button>
+                    </div>
+    <form id="mapping-form">
+      <div id="acgi-fields-list"></div>
+      <button type="submit" class="btn btn-success mt-3">Save Mapping</button>
+                    </form>
+                </div>
+  <!-- Right: HubSpot Form (unchanged) -->
+  <div class="col-md-6">
+    <!-- ... existing HubSpot form and important property logic ... -->
+                </div>
+            </div>
+<script>
+let hubspotFields = window.hubspotFields || [];
+
+// Fetch ACGI fields
+$('#fetch-acgi-btn').click(function() {
+  const customerId = $('#acgi-customer-id').val();
+  if (!customerId) return;
+  $.get(`/api/acgi/customer/${customerId}`, function(data) {
+    const fields = data.fields;
+    let html = '';
+    for (const [acgiField, value] of Object.entries(fields)) {
+      html += `
+        <div class="mb-2">
+          <label><b>${acgiField}</b>: ${value || ''}</label>
+          <select class="form-select mapping-dropdown" data-acgi="${acgiField}">
+            <option value="">-- Map to HubSpot --</option>
+            ${hubspotFields.map(f => `<option value="${f}">${f}</option>`).join('')}
+          </select>
+        </div>
+      `;
+    }
+    $('#acgi-fields-list').html(html);
+    // Optionally, load existing mapping and pre-select
+    $.get('/api/mapping/contact', function(resp) {
+      const mapping = resp.mapping || {};
+      $('.mapping-dropdown').each(function() {
+        const acgi = $(this).data('acgi');
+        if (mapping[acgi]) $(this).val(mapping[acgi]);
+      });
+    });
+  });
+});
+
+// Save mapping
+$('#mapping-form').submit(function(e) {
+  e.preventDefault();
+  let mapping = {};
+  $('.mapping-dropdown').each(function() {
+    const acgi = $(this).data('acgi');
+    const hubspot = $(this).val();
+    if (hubspot) mapping[acgi] = hubspot;
+  });
+  $.ajax({
+    url: '/api/mapping/contact',
+    type: 'POST',
+    contentType: 'application/json',
+    data: JSON.stringify({mapping}),
+    success: function(resp) {
+      alert('Mapping saved!');
+    }
+            });
+        });
+    </script>

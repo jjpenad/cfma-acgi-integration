@@ -1,11 +1,14 @@
-from flask import request, jsonify
+from flask import request, jsonify, Blueprint
 from utils import get_app_credentials, save_credentials, setup_logging
 from models import get_session, FormField, SearchPreference
 from services.hubspot_client import HubSpotClient
 from routes.auth import login_required
+from src.services.acgi_client import ACGIClient
+from src.models import  ContactFieldMapping, AppState
 
 logger = setup_logging()
 hubspot_client = HubSpotClient()
+api = Blueprint('api', __name__)
 
 def init_api_routes(app):
     """Initialize API routes"""
@@ -32,6 +35,7 @@ def init_api_routes(app):
     @app.route('/api/hubspot-properties/<object_type>', methods=['GET'])
     @login_required
     def get_hubspot_properties_by_type(object_type):
+        print("object_type",object_type)
         """Get available HubSpot properties for specific object type"""
         try:
             creds = get_app_credentials()
@@ -198,6 +202,7 @@ def init_api_routes(app):
         """Get available HubSpot contact properties"""
         try:
             creds = get_app_credentials()
+            print("creds",creds)
             api_key = creds.get('hubspot_api_key')
             if not api_key:
                 return jsonify({'error': 'API key required. Please set it on the home page.'}), 400
@@ -284,7 +289,7 @@ def init_api_routes(app):
         
         except Exception as e:
             logger.error(f"Error creating deal: {str(e)}")
-            return jsonify({'error': str(e)}), 500
+            return jsonify({'error': str(e)}), 500 
 
     @app.route('/api/save-search-preference', methods=['POST'])
     @login_required
@@ -355,4 +360,268 @@ def init_api_routes(app):
         
         except Exception as e:
             logger.error(f"Error getting search preference: {str(e)}")
-            return jsonify({'error': str(e)}), 500 
+            return jsonify({'error': str(e)}), 500
+
+    @app.route('/api/acgi/customer/<customer_id>', methods=['GET'])
+    def fetch_acgi_customer(customer_id):
+        print("customer_id_get",customer_id)
+        # Get global credentials from AppState
+        creds = get_app_credentials()
+        print("creds",creds)
+        #check if acgi_credentials is set in the database
+        if not creds:
+            print("acgi_credentials not set")
+            return jsonify({'error': 'ACGI credentials not set'}), 400
+        credentials = {
+            'userid': creds['acgi_username'],
+            'password': creds['acgi_password'],
+            'environment': "cetdigitdev" if creds['acgi_environment'] == "test" else "cetdigit"
+        }
+        acgi_client = ACGIClient()
+        result = acgi_client.get_customer_data(credentials, customer_id)
+        print("result",result)
+        if not result['success'] or not result['customers']:
+            return jsonify({'error': 'Customer not found or fetch failed', 'details': result.get('message', '')}), 404
+        # Flatten the customer data for mapping UI
+        customer_data = result['customers'][0]
+        return jsonify({'fields': customer_data})
+
+    @app.route('/api/mapping/contact', methods=['GET', 'POST'])
+    def contact_mapping():
+        if request.method == 'POST':
+            mapping = request.json.get('mapping', {})
+            ContactFieldMapping.set_mapping(mapping)
+            return jsonify({'status': 'success'})
+        else:
+            mapping = ContactFieldMapping.get_mapping()
+            return jsonify({'mapping': mapping or {}})
+
+    @app.route('/api/acgi-field-config', methods=['POST'])
+    @login_required
+    def save_acgi_field_config():
+        data = request.get_json()
+        object_type = data.get('object_type')
+        config = data.get('config')
+        if not object_type or config is None:
+            return jsonify({'success': False, 'error': 'Missing object_type or config'}), 400
+        session = get_session()
+        try:
+            key = f'acgi_field_config_{object_type}'
+            from src.models import AppState
+            obj = session.query(AppState).filter_by(key=key).first()
+            import json
+            if not obj:
+                obj = AppState(key=key, value=json.dumps(config))
+                session.add(obj)
+            else:
+                obj.value = json.dumps(config)
+            session.commit()
+            return jsonify({'success': True})
+        except Exception as e:
+            session.rollback()
+            return jsonify({'success': False, 'error': str(e)}), 500
+        finally:
+            session.close()
+
+    @app.route('/api/acgi-field-config', methods=['GET'])
+    @login_required
+    def get_acgi_field_config():
+        object_type = request.args.get('object_type')
+        if not object_type:
+            return jsonify({'success': False, 'error': 'Missing object_type'}), 400
+        session = get_session()
+        try:
+            key = f'acgi_field_config_{object_type}'
+            from src.models import AppState
+            obj = session.query(AppState).filter_by(key=key).first()
+            import json
+            config = json.loads(obj.value) if obj and obj.value else {}
+            return jsonify({'success': True, 'config': config})
+        except Exception as e:
+            return jsonify({'success': False, 'error': str(e)}), 500
+        finally:
+            session.close()
+
+    @app.route('/api/acgi-fields', methods=['POST'])
+    @login_required
+    def save_acgi_fields():
+        data = request.get_json()
+        object_type = data.get('object_type')
+        fields = data.get('fields')
+        if not object_type or fields is None:
+            return jsonify({'success': False, 'error': 'Missing object_type or fields'}), 400
+        session = get_session()
+        try:
+            key = f'acgi_fields_{object_type}'
+            from src.models import AppState
+            obj = session.query(AppState).filter_by(key=key).first()
+            import json
+            if not obj:
+                obj = AppState(key=key, value=json.dumps(fields))
+                session.add(obj)
+            else:
+                obj.value = json.dumps(fields)
+            session.commit()
+            return jsonify({'success': True})
+        except Exception as e:
+            session.rollback()
+            return jsonify({'success': False, 'error': str(e)}), 500
+        finally:
+            session.close()
+
+    @app.route('/api/acgi-fields', methods=['GET'])
+    @login_required
+    def get_acgi_fields():
+        object_type = request.args.get('object_type')
+        if not object_type:
+            return jsonify({'success': False, 'error': 'Missing object_type'}), 400
+        session = get_session()
+        try:
+            key = f'acgi_fields_{object_type}'
+            from src.models import AppState
+            obj = session.query(AppState).filter_by(key=key).first()
+            import json
+            fields = json.loads(obj.value) if obj and obj.value else {}
+            return jsonify({'success': True, 'fields': fields})
+        except Exception as e:
+            return jsonify({'success': False, 'error': str(e)}), 500
+        finally:
+            session.close()
+
+    @app.route('/api/acgi-address-preference', methods=['POST'])
+    @login_required
+    def save_acgi_address_preference():
+        data = request.get_json()
+        object_type = data.get('object_type')
+        preference = data.get('preference')
+        if not object_type or preference is None:
+            return jsonify({'success': False, 'error': 'Missing object_type or preference'}), 400
+        session = get_session()
+        try:
+            key = f'acgi_address_preference_{object_type}'
+            from src.models import AppState
+            obj = session.query(AppState).filter_by(key=key).first()
+            import json
+            if not obj:
+                obj = AppState(key=key, value=json.dumps(preference))
+                session.add(obj)
+            else:
+                obj.value = json.dumps(preference)
+            session.commit()
+            return jsonify({'success': True})
+        except Exception as e:
+            session.rollback()
+            return jsonify({'success': False, 'error': str(e)}), 500
+        finally:
+            session.close()
+
+    @app.route('/api/acgi-address-preference', methods=['GET'])
+    @login_required
+    def get_acgi_address_preference():
+        object_type = request.args.get('object_type')
+        if not object_type:
+            return jsonify({'success': False, 'error': 'Missing object_type'}), 400
+        session = get_session()
+        try:
+            key = f'acgi_address_preference_{object_type}'
+            from src.models import AppState
+            obj = session.query(AppState).filter_by(key=key).first()
+            import json
+            preference = json.loads(obj.value) if obj and obj.value else {}
+            return jsonify({'success': True, 'preference': preference})
+        except Exception as e:
+            return jsonify({'success': False, 'error': str(e)}), 500
+        finally:
+            session.close()
+
+    @app.route('/api/acgi-email-preference', methods=['POST'])
+    @login_required
+    def save_acgi_email_preference():
+        data = request.get_json()
+        object_type = data.get('object_type')
+        preference = data.get('preference')
+        if not object_type or preference is None:
+            return jsonify({'success': False, 'error': 'Missing object_type or preference'}), 400
+        session = get_session()
+        try:
+            key = f'acgi_email_preference_{object_type}'
+            from src.models import AppState
+            obj = session.query(AppState).filter_by(key=key).first()
+            import json
+            if not obj:
+                obj = AppState(key=key, value=json.dumps(preference))
+                session.add(obj)
+            else:
+                obj.value = json.dumps(preference)
+            session.commit()
+            return jsonify({'success': True})
+        except Exception as e:
+            session.rollback()
+            return jsonify({'success': False, 'error': str(e)}), 500
+        finally:
+            session.close()
+
+    @app.route('/api/acgi-email-preference', methods=['GET'])
+    @login_required
+    def get_acgi_email_preference():
+        object_type = request.args.get('object_type')
+        if not object_type:
+            return jsonify({'success': False, 'error': 'Missing object_type'}), 400
+        session = get_session()
+        try:
+            key = f'acgi_email_preference_{object_type}'
+            from src.models import AppState
+            obj = session.query(AppState).filter_by(key=key).first()
+            import json
+            preference = json.loads(obj.value) if obj and obj.value else {}
+            return jsonify({'success': True, 'preference': preference})
+        except Exception as e:
+            return jsonify({'success': False, 'error': str(e)}), 500
+        finally:
+            session.close()
+
+    @app.route('/api/acgi-phone-preference', methods=['POST'])
+    @login_required
+    def save_acgi_phone_preference():
+        data = request.get_json()
+        object_type = data.get('object_type')
+        preference = data.get('preference')
+        if not object_type or preference is None:
+            return jsonify({'success': False, 'error': 'Missing object_type or preference'}), 400
+        session = get_session()
+        try:
+            key = f'acgi_phone_preference_{object_type}'
+            from src.models import AppState
+            obj = session.query(AppState).filter_by(key=key).first()
+            import json
+            if not obj:
+                obj = AppState(key=key, value=json.dumps(preference))
+                session.add(obj)
+            else:
+                obj.value = json.dumps(preference)
+            session.commit()
+            return jsonify({'success': True})
+        except Exception as e:
+            session.rollback()
+            return jsonify({'success': False, 'error': str(e)}), 500
+        finally:
+            session.close()
+
+    @app.route('/api/acgi-phone-preference', methods=['GET'])
+    @login_required
+    def get_acgi_phone_preference():
+        object_type = request.args.get('object_type')
+        if not object_type:
+            return jsonify({'success': False, 'error': 'Missing object_type'}), 400
+        session = get_session()
+        try:
+            key = f'acgi_phone_preference_{object_type}'
+            from src.models import AppState
+            obj = session.query(AppState).filter_by(key=key).first()
+            import json
+            preference = json.loads(obj.value) if obj and obj.value else {}
+            return jsonify({'success': True, 'preference': preference})
+        except Exception as e:
+            return jsonify({'success': False, 'error': str(e)}), 500
+        finally:
+            session.close() 

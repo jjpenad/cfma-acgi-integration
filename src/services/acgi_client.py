@@ -145,73 +145,77 @@ class ACGIClient:
                 'raw_response': None
             }
     
-    def get_customer_data(self, credentials: Dict[str, str], customer_ids: List[str]) -> Dict[str, any]:
+    def get_customer_data(self, credentials: Dict[str, str], customer_id: str) -> Dict[str, any]:
         """Get detailed customer data for given customer IDs"""
         try:
             customers_data = []
+            print("customer_id",customer_id)
             
-            for cust_id in customer_ids:
-                customer_xml = f"""<?xml version="1.0" encoding="UTF-8"?>
-<custInfoRequest>
-    <custId>{cust_id}</custId>
-    <integratorUsername>{credentials['userid']}</integratorUsername>
-    <integratorPassword>{credentials['password']}</integratorPassword>
-    <directoryId></directoryId>
-    <bulkRequest>false</bulkRequest>
-    <details includeCodeValues="true">
-        <roles include="true" />
-        <addresses include="true" includeBad="true" />
-        <phones include="true" />
-        <emails include="true" includeBad="true" />
-        <websites include="true" includeBad="true" />
-        <jobs include="true" includeInactive="true" />
-        <employmentAttributes include="true" includeAll="true" />
-        <committeePositions include="true" includeInactive="true" />
-        <memberships include="true" includeInactive="true" />
-        <subscriptions include="true" includeExpired="true" />
-        <communicationPreferences include="true" />
-        <customerAttributes include="true" includeAll="true" />
-        <custDimAttrs include="true" includeAll="true" />
-        <bio include="true" />
-        <aliases include="true" />
-        <companyAdmins include="true" />
-        <certifications include="true" />
-        <employees include="true" />
-        <referralInfo include="true" />
-        <files include="true" />
-    </details>
-</custInfoRequest>"""
+            customer_xml = f"""p_input_xml_doc=<?xml version="1.0" encoding="UTF-8"?>
+        <custInfoRequest>
+            <custId>{customer_id}</custId>
+            <integratorUsername>{credentials['userid']}</integratorUsername>
+            <integratorPassword>{credentials['password']}</integratorPassword>
+            <directoryId></directoryId>
+            <bulkRequest>false</bulkRequest>
+            <details includeCodeValues="true">
+                <roles include="true" />
+                <addresses include="true" includeBad="true" />
+                <phones include="true" />
+                <emails include="true" includeBad="true" />
+                <websites include="true" includeBad="true" />
+                <jobs include="true" includeInactive="true" />
+                <employmentAttributes include="true" includeAll="true" />
+                <committeePositions include="true" includeInactive="true" />
+                <memberships include="true" includeInactive="true" />
+                <subscriptions include="true" includeExpired="true" />
+                <communicationPreferences include="true" />
+                <customerAttributes include="true" includeAll="true" />
+                <custDimAttrs include="true" includeAll="true" />
+                <bio include="true" />
+                <aliases include="true" />
+                <companyAdmins include="true" />
+                <certifications include="true" />
+                <employees include="true" />
+                <referralInfo include="true" />
+                <files include="true" />
+            </details>
+        </custInfoRequest>"""
                 
-                url = f"{self.base_url}/{credentials['environment']}/CENSSAWEBSVCLIB.GET_CUST_INFO_XML"
+            print("customer_xml",customer_xml)
                 
-                response = self.session.post(
-                    url,
-                    data={'p_input_xml_doc': customer_xml},
-                    timeout=30
-                )
-                
-                if response.status_code == 200:
-                    try:
-                        root = ET.fromstring(response.text)
-                        
-                        # Parse customer data
-                        customer_data = self._parse_customer_xml(root)
-                        customer_data['custId'] = cust_id
-                        customers_data.append(customer_data)
-                        
-                    except ET.ParseError as e:
-                        logger.error(f"Failed to parse customer {cust_id} XML: {str(e)}")
-                        customers_data.append({
-                            'custId': cust_id,
-                            'error': f"XML parsing failed: {str(e)}",
-                            'raw_response': response.text
-                        })
-                else:
+            url = f"{self.base_url}/{credentials['environment']}/CENSSAWEBSVCLIB.GET_CUST_INFO_XML"
+            
+            response = self.session.post(
+                url,
+                data=customer_xml,
+                timeout=30
+            )
+            print("URLLLL",url)
+            print("responseTEXT",response.text)
+            
+            if response.status_code == 200:
+                try:
+                    root = ET.fromstring(response.text)
+                    
+                    # Parse customer data
+                    customer_data = self._parse_customer_xml(root)
+                    customer_data['custId'] = customer_id
+                    customers_data.append(customer_data)
+                    
+                except ET.ParseError as e:
+                    logger.error(f"Failed to parse customer {customer_id} XML: {str(e)}")
                     customers_data.append({
-                        'custId': cust_id,
-                        'error': f"HTTP {response.status_code}: {response.text}",
+                        'custId': customer_id,
+                        'error': f"XML parsing failed: {str(e)}",
                         'raw_response': response.text
                     })
+            else:
+                customers_data.append({
+                    'custId': customer_id,
+                    'error': f"HTTP {response.status_code}: {response.text}",
+                    'raw_response': response.text
+                })
             
             return {
                 'success': True,
@@ -228,6 +232,136 @@ class ACGIClient:
     def _parse_customer_xml(self, root: ET.Element) -> Dict[str, any]:
         """Parse customer XML data into a structured format"""
         customer = {}
+        print("roottttt",root)
+        
+        # Basic customer info
+        customer['custId'] = self._get_element_text(root, './/custId')
+        customer['custType'] = self._get_element_text(root, './/custType')
+        customer['loginId'] = self._get_element_text(root, './/loginId')
+        
+        # Name fields
+        name_elem = root.find('.//name')
+        if name_elem is not None:
+            customer['prefixName'] = self._get_element_text(name_elem, 'prefixName')
+            customer['firstName'] = self._get_element_text(name_elem, 'firstName') 
+            customer['middleName'] = self._get_element_text(name_elem, 'middleName')
+            customer['lastName'] = self._get_element_text(name_elem, 'lastName')
+            customer['suffixName'] = self._get_element_text(name_elem, 'suffixName')
+            customer['degreeName'] = self._get_element_text(name_elem, 'degreeName')
+            customer['informalName'] = self._get_element_text(name_elem, 'informalName')
+            customer['displayName'] = self._get_element_text(name_elem, 'displayName')
+        
+        # Roles
+        roles = []
+        for role_elem in root.findall('.//roles/role'):
+            role = role_elem.text
+            if role:
+                roles.append(role.strip())
+        customer['roles'] = roles
+        
+        # Addresses
+        addresses = []
+        for addr_elem in root.findall('.//addresses/address'):
+            addr_data = {
+                'addressSerno': self._get_element_text(addr_elem, 'addressSerno'),
+                'addressType': self._get_element_text(addr_elem, 'addressType'),
+                'addressTypeDescr': self._get_element_text(addr_elem, 'addressTypeDescr'),
+                'best': self._get_element_text(addr_elem, 'best') == 'true',
+                'preferred': self._get_element_text(addr_elem, 'preferred') == 'true',
+                'street1': self._get_element_text(addr_elem, 'street1'),
+                'street2': self._get_element_text(addr_elem, 'street2'),
+                'street3': self._get_element_text(addr_elem, 'street3'),
+                'city': self._get_element_text(addr_elem, 'city'),
+                'state': self._get_element_text(addr_elem, 'state'),
+                'postalCode': self._get_element_text(addr_elem, 'postalCode'),
+                'countryCode': self._get_element_text(addr_elem, 'countryCode'),
+                'countryDescr': self._get_element_text(addr_elem, 'countryDescr'),
+                'badAddress': self._get_element_text(addr_elem, 'badAddress') == 'true'
+            }
+            addresses.append(addr_data)
+        customer['addresses'] = addresses
+        
+        # Phones
+        phones = []
+        for phone_elem in root.findall('.//phones/phone'):
+            phone_data = {
+                'phoneSerno': self._get_element_text(phone_elem, 'phoneSerno'),
+                'phoneType': self._get_element_text(phone_elem, 'phoneType'),
+                'phoneTypeDescr': self._get_element_text(phone_elem, 'phoneTypeDescr'),
+                'best': self._get_element_text(phone_elem, 'best') == 'true',
+                'preferred': self._get_element_text(phone_elem, 'preferred') == 'true',
+                'number': self._get_element_text(phone_elem, 'number'),
+                'ext': self._get_element_text(phone_elem, 'ext')
+            }
+            phones.append(phone_data)
+        customer['phones'] = phones
+        
+        # Emails
+        emails = []
+        for email_elem in root.findall('.//emails/email'):
+            email_data = {
+                'emailSerno': self._get_element_text(email_elem, 'emailSerno'),
+                'emailType': self._get_element_text(email_elem, 'emailType'),
+                'emailTypeDescr': self._get_element_text(email_elem, 'emailTypeDescr'),
+                'best': self._get_element_text(email_elem, 'best') == 'true',
+                'preferred': self._get_element_text(email_elem, 'preferred') == 'true',
+                'address': self._get_element_text(email_elem, 'address'),
+                'badAddress': self._get_element_text(email_elem, 'badAddress') == 'true'
+            }
+            emails.append(email_data)
+        customer['emails'] = emails
+        
+        # Jobs
+        jobs = []
+        for job_elem in root.findall('.//jobs/job'):
+            job_data = {
+                'employerName': self._get_element_text(job_elem, 'employerName'),
+                'titleName': self._get_element_text(job_elem, 'titleName'),
+                'startDate': self._get_element_text(job_elem, 'startDate'),
+                'endDate': self._get_element_text(job_elem, 'endDate'),
+                'best': self._get_element_text(job_elem, 'best') == 'true',
+                'preferred': self._get_element_text(job_elem, 'preferred') == 'true'
+            }
+            jobs.append(job_data)
+        customer['jobs'] = jobs
+
+        #Customer Attributes
+        customer_attributes = []
+        for cust_attr_elem in root.findall('.//customerAttributes/customerAttribute'):
+            cust_attr_data = {
+                'type': self._get_element_text(cust_attr_elem, 'type'),
+                'typeName': self._get_element_text(cust_attr_elem, 'typeName'),
+                'code': self._get_element_text(cust_attr_elem, 'code'),
+                'codeDescr': self._get_element_text(cust_attr_elem, 'codeDescr'),
+                'char': self._get_element_text(cust_attr_elem, 'char'),
+                'number': self._get_element_text(cust_attr_elem, 'number')
+            }
+            customer_attributes.append(cust_attr_data)
+        customer['customerAttributes'] = customer_attributes
+
+        # Memberships
+        memberships = []
+        for mem_elem in root.findall('.//memberships/membership'):
+            mem_data = {
+                'subgroupId': self._get_element_text(mem_elem, 'subgroupId'),
+                'startsubgroupNameDate': self._get_element_text(mem_elem, 'subgroupName'),
+                'subgroupTypeDescr': self._get_element_text(mem_elem, 'subgroupTypeDescr'),
+                'member': self._get_element_text(mem_elem, 'member'),
+                'statusDescr': self._get_element_text(mem_elem, 'statusDescr'),
+                'isActive': self._get_element_text(mem_elem, 'statusCode') == "ACTIVE",
+                'directOrInherited': self._get_element_text(mem_elem, 'directOrInherited'),
+                'subgroupType': self._get_element_text(mem_elem, 'subgroupType'),
+                'classCode': self._get_element_text(mem_elem, 'classCode'),
+                'joinDate': self._get_element_text(mem_elem, 'joinDate'),
+            }
+            memberships.append(mem_data)
+        customer['memberships'] = memberships
+
+        return customer
+    def _parse_customer_xml_old(self, root: ET.Element) -> Dict[str, any]:
+        """Parse customer XML data into a structured format"""
+        customer = {}
+        
         
         # Basic customer info
         basic_info = root.find('.//customer')

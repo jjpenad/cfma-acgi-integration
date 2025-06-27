@@ -193,7 +193,7 @@
             </nav>
 
             <!-- Credentials Form -->
-            <div class="form-section">
+                <div class="form-section">
                 <h3><i class="fas fa-key"></i> API Credentials</h3>
                 <form id="credentialsForm">
                     <div class="row">
@@ -212,11 +212,11 @@
                         <div class="col-md-4">
                             <div class="mb-3">
                                 <label for="acgi_environment" class="form-label">ACGI Environment</label>
-                                <select class="form-control" id="acgi_environment" name="acgi_environment">
+                            <select class="form-control" id="acgi_environment" name="acgi_environment">
                                     <option value="test">Test</option>
                                     <option value="prod">Production</option>
-                                </select>
-                            </div>
+                            </select>
+                        </div>
                         </div>
                     </div>
                     <div class="mb-3">
@@ -236,8 +236,8 @@
                         <button type="button" class="btn btn-secondary" onclick="testBoth()">
                             <i class="fas fa-vial"></i> Test Both
                         </button>
-                    </div>
-                </form>
+                </div>
+            </form>
             </div>
 
             <!-- Status Messages -->
@@ -265,7 +265,7 @@
                         document.getElementById('acgi_password').value = data.credentials.acgi_password || '';
                         document.getElementById('acgi_environment').value = data.credentials.acgi_environment || 'test';
                         document.getElementById('hubspot_api_key').value = data.credentials.hubspot_api_key || '';
-                    }
+        }
                 })
                 .catch(error => {
                     console.error('Error loading credentials:', error);
@@ -373,8 +373,8 @@
                         </div>
                     </div>
                 `;
-            }
-            
+        }
+
             // For "test both" results, show individual results
             if (data.acgi || data.hubspot) {
                 html += `<div class="mt-3"><h5>Individual Results:</h5>`;

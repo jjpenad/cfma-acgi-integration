@@ -17,4 +17,4 @@ app = create_app()
 
 if __name__ == "__main__":
     # For local development
-    app.run() 
+    app.run(debug=True) 

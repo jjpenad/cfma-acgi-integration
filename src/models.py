@@ -4,6 +4,7 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from config import Config
 import logging
+import json
 
 logger = logging.getLogger(__name__)
 
@@ -22,7 +23,7 @@ def get_database_url():
         return Config.LOCAL_DATABASE_URL
     else:
         return Config.IN_MEMORY_DATABASE_URL
-
+    
 engine = create_engine(get_database_url(), echo=True)
 Base = declarative_base()
 Session = sessionmaker(bind=engine)
@@ -66,6 +67,44 @@ class SearchPreference(Base):
     search_strategy = Column(String(50), nullable=False)  # email_only, customer_id_only, email_then_customer_id, customer_id_then_email
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+class ContactFieldMapping(Base):
+    __tablename__ = 'contact_field_mapping'
+    id = Column(Integer, primary_key=True)
+    mapping = Column(Text)  # Store JSON as text instead of PickleType
+
+    @staticmethod
+    def set_mapping(mapping):
+        session = Session()
+        try:
+            obj = session.query(ContactFieldMapping).first()
+            if not obj:
+                obj = ContactFieldMapping()
+            # Convert mapping to JSON string
+            obj.mapping = json.dumps(mapping) if mapping else '{}'
+            session.add(obj)
+            session.commit()
+        except Exception as e:
+            session.rollback()
+            logger.error(f"Error saving mapping: {str(e)}")
+            raise
+        finally:
+            session.close()
+
+    @staticmethod
+    def get_mapping():
+        session = Session()
+        try:
+            obj = session.query(ContactFieldMapping).first()
+            if obj and obj.mapping:
+                # Parse JSON string back to dict
+                return json.loads(obj.mapping)
+            return {}
+        except Exception as e:
+            logger.error(f"Error loading mapping: {str(e)}")
+            return {}
+        finally:
+            session.close()
 
 def init_db():
     """Initialize database tables"""
