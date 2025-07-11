@@ -190,6 +190,8 @@ def init_api_routes(app):
                 result = hubspot_client.create_or_update_contact(object_data, search_strategy)
             elif object_type == 'deals':
                 result = hubspot_client.create_deal(object_data)
+            elif object_type == 'memberships':
+                result = hubspot_client.create_membership(object_data)
             else:
                 return jsonify({'error': f'Unsupported object type: {object_type}'}), 400
             

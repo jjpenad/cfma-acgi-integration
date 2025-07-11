@@ -113,6 +113,55 @@ class HubSpotClient:
             logger.error(f"Error getting contact properties: {str(e)}")
             return []
         
+    def create_membership(self, membership_data: Dict[str, any]) -> Dict[str, any]:
+        """Create a new membership in HubSpot"""
+        try:
+            if not self.api_key:
+                return {
+                    'success': False,
+                    'message': 'HubSpot client not initialized',
+                    'membership_id': None
+                }
+            
+            # Prepare membership properties for HubSpot
+            properties = {}
+            
+            # Add all form data as properties
+            for key, value in membership_data.items():
+                if value:  # Only add non-empty values
+                    properties[key] = value
+
+            # Create membership
+            create_url = f"{self.base_url}/crm/v3/objects/2-46896622"
+            create_data = {'properties': properties}
+            print("CREATE DATA",create_data)
+            create_response = self.session.post(create_url, json=create_data, timeout=30)
+            
+            if create_response.status_code == 201:
+                new_membership = create_response.json()
+                membership_id = new_membership['id']
+                print("NEW MEMBERSHIP",new_membership)
+                return {
+                    'success': True,
+                    'message': f"Created new membership {new_membership}",
+                    'membership_id': membership_id,
+                    'action': 'created'
+                }
+            else:
+                return {
+                    'success': False,
+                    'message': f"Failed to create membership: {create_response.status_code} - {create_response.text}",
+                    'membership_id': None
+                }       
+            
+        except Exception as e:
+            logger.error(f"Error creating membership: {str(e)}")
+            return {
+                'success': False,
+                'message': f"Error creating membership: {str(e)}",
+                'membership_id': None
+            }
+        
     def get_membership_properties(self) -> List[Dict[str, any]]:
         """Get all available membership properties from HubSpot"""
         try:
