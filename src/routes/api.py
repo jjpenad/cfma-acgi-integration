@@ -4,7 +4,7 @@ from models import get_session, FormField, SearchPreference
 from services.hubspot_client import HubSpotClient
 from routes.auth import login_required
 from src.services.acgi_client import ACGIClient
-from src.models import  ContactFieldMapping, AppState
+from src.models import  ContactFieldMapping, AppState, MembershipFieldMapping
 
 logger = setup_logging()
 hubspot_client = HubSpotClient()
@@ -52,6 +52,9 @@ def init_api_routes(app):
                 properties = hubspot_client.get_contact_properties()
             elif object_type == 'deals':
                 properties = hubspot_client.get_deal_properties()
+            elif object_type == 'memberships':
+                properties = hubspot_client.get_membership_properties()
+                print("properties",properties)
             else:
                 return jsonify({'error': f'Unsupported object type: {object_type}'}), 400
             
@@ -386,6 +389,31 @@ def init_api_routes(app):
         customer_data = result['customers'][0]
         return jsonify({'fields': customer_data})
 
+    @app.route('/api/acgi/customer/<customer_id>/memberships', methods=['GET'])
+    def fetch_acgi_memberships(customer_id):
+        print("memberships_customer_id_get", customer_id)
+        # Get global credentials from AppState
+        creds = get_app_credentials()
+        print("creds", creds)
+        #check if acgi_credentials is set in the database
+        if not creds:
+            print("acgi_credentials not set")
+            return jsonify({'error': 'ACGI credentials not set'}), 400
+        credentials = {
+            'userid': creds['acgi_username'],
+            'password': creds['acgi_password'],
+            'environment': "cetdigitdev" if creds['acgi_environment'] == "test" else "cetdigit"
+        }
+        acgi_client = ACGIClient()
+        result = acgi_client.get_memberships_data(credentials, customer_id)
+        print("result", result)
+        if not result['success']:
+            return jsonify({'error': 'Memberships not found or fetch failed', 'details': result.get('message', '')}), 404
+        # Return the memberships data
+        memberships_data = result['memberships']
+        memberships_list = memberships_data.get("memberships", [])
+        return jsonify({'fields': memberships_list})
+
     @app.route('/api/mapping/contact', methods=['GET', 'POST'])
     def contact_mapping():
         if request.method == 'POST':
@@ -395,6 +423,17 @@ def init_api_routes(app):
         else:
             mapping = ContactFieldMapping.get_mapping()
             return jsonify({'mapping': mapping or {}})
+        
+    @app.route('/api/mapping/membership', methods=['GET', 'POST'])
+    def membership_mapping():
+        if request.method == 'POST':
+            mapping = request.json.get('mapping', {})
+            MembershipFieldMapping.set_mapping(mapping)
+            return jsonify({'status': 'success'})
+        else:   
+            mapping = MembershipFieldMapping.get_mapping()
+            return jsonify({'mapping': mapping or {}})
+        
 
     @app.route('/api/acgi-field-config', methods=['POST'])
     @login_required
@@ -625,3 +664,33 @@ def init_api_routes(app):
             return jsonify({'success': False, 'error': str(e)}), 500
         finally:
             session.close() 
+
+    @app.route('/api/hubspot-create-membership', methods=['POST'])
+    @login_required
+    def create_hubspot_membership():
+        """Create a record in HubSpot custom object 2-46896622 (ACGI Memberships)"""
+        try:
+            creds = get_app_credentials()
+            api_key = creds.get('hubspot_api_key')
+            if not api_key:
+                return jsonify({'error': 'API key required. Please set it on the home page.'}), 400
+            data = request.get_json().get('data', {})
+            # Prepare payload for HubSpot custom object API
+            payload = {
+                'properties': data
+            }
+            # Custom object type ID for ACGI Memberships
+            object_type_id = '2-46896622'
+            url = f'https://api.hubapi.com/crm/v3/objects/{object_type_id}'
+            headers = {
+                'Content-Type': 'application/json',
+                'Authorization': f'Bearer {api_key}'
+            }
+            import requests
+            resp = requests.post(url, headers=headers, json=payload)
+            if resp.status_code in (200, 201):
+                return jsonify({'success': True, 'message': 'Membership created in HubSpot.'})
+            else:
+                return jsonify({'error': f'HubSpot API error: {resp.status_code} {resp.text}'}), 400
+        except Exception as e:
+            return jsonify({'error': str(e)}), 500 

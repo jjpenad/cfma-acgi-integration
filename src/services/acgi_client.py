@@ -228,6 +228,67 @@ class ACGIClient:
                 'message': f"Error getting customer data: {str(e)}",
                 'customers': []
             }
+
+    def get_memberships_data(self, credentials: Dict[str, str], customer_id: str) -> Dict[str, any]:
+        """Get memberships data for a specific customer"""
+        try:
+            print("Getting memberships for customer_id:", customer_id)
+            
+            memberships_xml = f"""p_input_xml_doc=<?xml version="1.0"?>
+<member-request>
+    <vendor-id>{credentials['userid']}</vendor-id>
+    <vendor-password>{credentials['password']}</vendor-password>
+    <cust-id>{customer_id}</cust-id> 
+</member-request>"""
+                
+            print("memberships_xml:", memberships_xml)
+                
+            url = f"{self.base_url}/{credentials['environment']}/MEMSSAWEBSVCLIB.GET_MEMBERS_XML"
+            
+            response = self.session.post(
+                url,
+                data=memberships_xml,
+                timeout=30
+            )
+            print("URL:", url)
+            print("Response status:", response.status_code)
+            print("Response text:", response.text)
+            
+            if response.status_code == 200:
+                try:
+                    root = ET.fromstring(response.text)
+                    
+                    # Parse memberships data
+                    memberships_data = self._parse_memberships_xml(root)
+                    print("MEMBERSHIPS DATA",memberships_data)
+                    for membership in memberships_data['memberships']:
+                        membership['customerId'] = customer_id
+                    
+                    return {
+                        'success': True,
+                        'memberships': memberships_data
+                    }
+                    
+                except ET.ParseError as e:
+                    logger.error(f"Failed to parse memberships XML for customer {customer_id}: {str(e)}")
+                    return {
+                        'success': False,
+                        'message': f"XML parsing failed: {str(e)}",
+                        'raw_response': response.text
+                    }
+            else:
+                return {
+                    'success': False,
+                    'message': f"HTTP {response.status_code}: {response.text}",
+                    'raw_response': response.text
+                }
+            
+        except Exception as e:
+            return {
+                'success': False,
+                'message': f"Error getting memberships data: {str(e)}",
+                'memberships': {}
+            }
     
     def _parse_customer_xml(self, root: ET.Element) -> Dict[str, any]:
         """Parse customer XML data into a structured format"""
@@ -358,6 +419,47 @@ class ACGIClient:
         customer['memberships'] = memberships
 
         return customer
+
+    def _parse_memberships_xml(self, root: ET.Element) -> Dict[str, any]:
+        """Parse memberships XML data into a structured format"""
+        memberships_data = {}
+        
+        # Get first membership record for customer info
+        first_membership = root.find('.//membership')
+        if first_membership is not None:
+            memberships_data['custId'] = self._get_element_text(first_membership, 'customer-id')
+            memberships_data['firstName'] = self._get_element_text(first_membership, 'first-name')
+            memberships_data['lastName'] = self._get_element_text(first_membership, 'last-name')
+            memberships_data['company'] = self._get_element_text(first_membership, 'company')
+            memberships_data['employerId'] = self._get_element_text(first_membership, 'employer-id')
+            memberships_data['employerName'] = self._get_element_text(first_membership, 'employer-name')
+            memberships_data['city'] = self._get_element_text(first_membership, 'city')
+            memberships_data['state'] = self._get_element_text(first_membership, 'state')
+
+        # Memberships
+        memberships = []
+        for mem_elem in root.findall('.//membership'):
+            mem_data = {
+                'customerId': self._get_element_text(mem_elem, 'customer-id'),
+                'subgroupId': self._get_element_text(mem_elem, 'subgroup-id'),
+                'subgroupName': self._get_element_text(mem_elem, 'subgroup-name'),
+                'classCd': self._get_element_text(mem_elem, 'class-cd'),
+                'subclassCd': self._get_element_text(mem_elem, 'subclass-cd'),
+                'status': self._get_element_text(mem_elem, 'status'),
+                'isActive': self._get_element_text(mem_elem, 'status') == "ACTIVE",
+                'joinDate': self._get_element_text(mem_elem, 'join-date'),
+                'expireDate': self._get_element_text(mem_elem, 'expire-date'),
+                'currentStatusReasonCd': self._get_element_text(mem_elem, 'current-status-reason-cd'),
+                'currentStatusReasonNote': self._get_element_text(mem_elem, 'current-status-reason-note'),
+                'reinstateDate': self._get_element_text(mem_elem, 'reinstate-date'),
+                'terminateDate': self._get_element_text(mem_elem, 'terminate-date')
+            }
+            memberships.append(mem_data)
+            
+        memberships_data['memberships'] = memberships
+        
+        return memberships_data
+
     def _parse_customer_xml_old(self, root: ET.Element) -> Dict[str, any]:
         """Parse customer XML data into a structured format"""
         customer = {}

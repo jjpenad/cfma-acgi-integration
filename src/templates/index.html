@@ -189,6 +189,9 @@
                     <li class="nav-item">
                         <a class="nav-link" href="/acgi-to-hubspot"><i class="fas fa-cogs"></i> ACGI to HubSpot</a>
                     </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/memberships"><i class="fas fa-users"></i> Memberships</a>
+                    </li>
                 </ul>
             </nav>
 
@@ -275,7 +278,22 @@
         // Load saved credentials on page load
         document.addEventListener('DOMContentLoaded', function() {
             loadCredentials();
+            updateNavigationLinks();
         });
+        
+        function updateNavigationLinks() {
+            // Update the ACGI to HubSpot link to default to contacts tab
+            const acgiToHubspotLink = document.querySelector('a[href="/acgi-to-hubspot"]');
+            if (acgiToHubspotLink) {
+                acgiToHubspotLink.href = `/acgi-to-hubspot?tab=contacts`;
+            }
+            
+            // Update the memberships link
+            const membershipsLink = document.querySelector('a[href="/memberships"]');
+            if (membershipsLink) {
+                membershipsLink.href = `/memberships`;
+            }
+        }
 
         document.getElementById('credentialsForm').addEventListener('submit', function(e) {
             e.preventDefault();

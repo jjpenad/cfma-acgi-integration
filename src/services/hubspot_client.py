@@ -112,6 +112,42 @@ class HubSpotClient:
         except Exception as e:
             logger.error(f"Error getting contact properties: {str(e)}")
             return []
+        
+    def get_membership_properties(self) -> List[Dict[str, any]]:
+        """Get all available membership properties from HubSpot"""
+        try:
+            if not self.api_key:
+                return []
+            
+            url = f"{self.base_url}/crm/v3/properties/2-46896622"
+            response = self.session.get(url, timeout=30)
+            print("RESPONSE",response)
+            if response.status_code == 200:
+                data = response.json()
+                properties = data.get('results', [])
+                print("RESULT PROPERTIES",properties)
+                # Filter and format properties  
+                formatted_properties = []
+                for prop in properties:
+                    if prop.get('name') not in ['hs_object_id', 'createdate', 'lastmodifieddate']:
+                        formatted_properties.append({
+                            'name': prop.get('name', ''),
+                            'label': prop.get('label', ''),
+                            'type': prop.get('type', ''),
+                            'fieldType': prop.get('fieldType', ''),
+                            'groupName': prop.get('groupName', ''),
+                            'description': prop.get('description', ''),
+                            'options': prop.get('options', [])
+                        })
+                
+                return formatted_properties
+            else:
+                logger.error(f"Failed to get membership properties: {response.status_code} - {response.text}")
+                return []
+            
+        except Exception as e:  
+            logger.error(f"Error getting membership properties: {str(e)}")
+            return []
     
     def get_deal_properties(self) -> List[Dict[str, any]]:
         """Get all available deal properties from HubSpot"""

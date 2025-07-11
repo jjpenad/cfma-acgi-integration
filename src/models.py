@@ -106,6 +106,44 @@ class ContactFieldMapping(Base):
         finally:
             session.close()
 
+
+class MembershipFieldMapping(Base):
+    __tablename__ = 'membership_field_mapping'
+    id = Column(Integer, primary_key=True)
+    mapping = Column(Text)  # Store JSON as text instead of PickleType
+    
+    @staticmethod
+    def set_mapping(mapping):
+        session = Session()
+        try:
+            obj = session.query(MembershipFieldMapping).first()
+            if not obj:
+                obj = MembershipFieldMapping()
+            obj.mapping = json.dumps(mapping) if mapping else '{}'
+            session.add(obj)
+            session.commit()
+        except Exception as e:
+            session.rollback()
+            logger.error(f"Error saving mapping: {str(e)}")
+            raise
+        finally:
+            session.close()
+
+    @staticmethod
+    def get_mapping():
+        session = Session()
+        try:
+            obj = session.query(MembershipFieldMapping).first()
+            if obj and obj.mapping:
+                # Parse JSON string back to dict
+                return json.loads(obj.mapping)
+            return {}
+        except Exception as e:
+            logger.error(f"Error loading mapping: {str(e)}")
+            return {}
+        finally:
+            session.close()
+
 def init_db():
     """Initialize database tables"""
     try:

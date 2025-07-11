@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -12,6 +13,7 @@
             min-height: 100vh;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
+
         .main-container {
             background: rgba(255, 255, 255, 0.95);
             border-radius: 20px;
@@ -24,19 +26,23 @@
             padding-top: 2rem;
             padding-bottom: 2rem;
         }
+
         .header {
             text-align: center;
             margin-bottom: 2rem;
             color: #333;
         }
+
         .header h1 {
             font-weight: 700;
             margin-bottom: 0.5rem;
         }
+
         .header p {
             color: #666;
             font-size: 1.1rem;
         }
+
         .form-section {
             background: #f8f9fa;
             border-radius: 15px;
@@ -44,26 +50,31 @@
             margin-bottom: 1.5rem;
             border-left: 4px solid #667eea;
         }
+
         .form-section h3 {
             color: #333;
             margin-bottom: 1rem;
             font-weight: 600;
         }
+
         .form-label {
             font-weight: 600;
             color: #555;
             margin-bottom: 0.5rem;
         }
+
         .form-control {
             border-radius: 10px;
             border: 2px solid #e9ecef;
             padding: 0.75rem;
             transition: all 0.3s ease;
         }
+
         .form-control:focus {
             border-color: #667eea;
             box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
         }
+
         .btn-primary {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             border: none;
@@ -72,10 +83,12 @@
             font-weight: 600;
             transition: all 0.3s ease;
         }
+
         .btn-primary:hover {
             transform: translateY(-2px);
             box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
         }
+
         .btn-secondary {
             background: #6c757d;
             border: none;
@@ -84,10 +97,12 @@
             font-weight: 600;
             transition: all 0.3s ease;
         }
+
         .btn-secondary:hover {
             background: #5a6268;
             transform: translateY(-2px);
         }
+
         .btn-success {
             background: #28a745;
             border: none;
@@ -96,10 +111,12 @@
             font-weight: 600;
             transition: all 0.3s ease;
         }
+
         .btn-success:hover {
             background: #218838;
             transform: translateY(-2px);
         }
+
         .btn-danger {
             background: #dc3545;
             border: none;
@@ -108,10 +125,12 @@
             font-weight: 600;
             transition: all 0.3s ease;
         }
+
         .btn-danger:hover {
             background: #c82333;
             transform: translateY(-2px);
         }
+
         .btn-info {
             background: #17a2b8;
             border: none;
@@ -120,10 +139,12 @@
             font-weight: 600;
             transition: all 0.3s ease;
         }
+
         .btn-info:hover {
             background: #138496;
             transform: translateY(-2px);
         }
+
         .btn-warning {
             background: #ffc107;
             border: none;
@@ -132,13 +153,16 @@
             font-weight: 600;
             transition: all 0.3s ease;
         }
+
         .btn-warning:hover {
             background: #e0a800;
             transform: translateY(-2px);
         }
+
         .nav-tabs {
             border-bottom: 2px solid #dee2e6;
         }
+
         .nav-tabs .nav-link {
             border: none;
             border-radius: 10px 10px 0 0;
@@ -146,10 +170,12 @@
             color: #6c757d;
             font-weight: 600;
         }
+
         .nav-tabs .nav-link.active {
             background: #667eea;
             color: white;
         }
+
         .property-card {
             background: white;
             border-radius: 10px;
@@ -158,38 +184,47 @@
             border: 2px solid #e9ecef;
             transition: all 0.3s ease;
         }
+
         .property-card:hover {
             border-color: #667eea;
             box-shadow: 0 5px 15px rgba(102, 126, 234, 0.1);
         }
+
         .property-card.important {
             border-color: #28a745;
             background: #f8fff9;
         }
+
         .property-card.enabled {
             border-color: #667eea;
             background: #f8f9ff;
         }
+
         .property-card.sortable-ghost {
             opacity: 0.5;
             background: #e9ecef;
         }
+
         .property-card.sortable-chosen {
             box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
             transform: rotate(2deg);
         }
+
         .drag-handle {
             transition: color 0.2s ease;
         }
+
         .drag-handle:hover {
             color: #667eea !important;
         }
+
         .property-header {
             display: flex;
             justify-content: between;
             align-items: center;
             margin-bottom: 0.5rem;
         }
+
         .property-name {
             font-weight: 600;
             color: #333;
@@ -200,6 +235,7 @@
             display: inline-block;
             vertical-align: middle;
         }
+
         .property-label {
             color: #666;
             font-size: 0.9rem;
@@ -208,6 +244,7 @@
             max-height: 120px;
             overflow: auto;
         }
+
         .property-type {
             background: #e9ecef;
             padding: 0.25rem 0.5rem;
@@ -215,6 +252,7 @@
             font-size: 0.8rem;
             color: #666;
         }
+
         .property-actions {
             display: flex;
             flex-wrap: wrap;
@@ -223,52 +261,65 @@
             justify-content: flex-end;
             min-width: 80px;
         }
+
         @media (max-width: 600px) {
             .property-actions {
                 flex-direction: column;
                 align-items: flex-end;
             }
         }
+
         .property-card .btn-group {
             flex-shrink: 0;
         }
+
         .form-check {
             margin-bottom: 0.5rem;
         }
+
         .form-check-input:checked {
             background-color: #667eea;
             border-color: #667eea;
         }
+
         .loading {
             display: none;
         }
+
         .spinner-border-sm {
             width: 1rem;
             height: 1rem;
         }
+
         .alert {
             border-radius: 10px;
             border: none;
             margin-bottom: 1rem;
         }
+
         .badge {
             font-size: 0.75rem;
             padding: 0.25rem 0.5rem;
         }
+
         .badge-important {
             background: #28a745;
         }
+
         .badge-enabled {
             background: #667eea;
         }
+
         .form-row {
             margin-bottom: 1rem;
         }
+
         .form-row label {
             font-weight: 600;
             color: #555;
             margin-bottom: 0.5rem;
         }
+
         .form-row input,
         .form-row select,
         .form-row textarea {
@@ -277,33 +328,38 @@
             padding: 0.5rem;
             transition: all 0.3s ease;
         }
+
         .form-row input:focus,
         .form-row select:focus,
         .form-row textarea:focus {
             border-color: #667eea;
             box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
         }
-        
+
         /* Output area styling */
-        #contactsOutput, #dealsOutput {
+        #contactsOutput,
+        #dealsOutput {
             border-top: 1px solid #e9ecef;
             padding-top: 1rem;
         }
-        
-        #contactsOutput h6, #dealsOutput h6 {
+
+        #contactsOutput h6,
+        #dealsOutput h6 {
             color: #495057;
             font-weight: 600;
             margin-bottom: 0.5rem;
         }
-        
-        #contactsOutputContent, #dealsOutputContent {
+
+        #contactsOutputContent,
+        #dealsOutputContent {
             font-family: 'Courier New', monospace;
             font-size: 0.875rem;
             white-space: pre-wrap;
             word-break: break-word;
         }
-        
-        #contactsOutputContent pre, #dealsOutputContent pre {
+
+        #contactsOutputContent pre,
+        #dealsOutputContent pre {
             background: #f8f9fa;
             border: 1px solid #e9ecef;
             border-radius: 4px;
@@ -312,6 +368,7 @@
             font-size: 0.8rem;
             overflow-x: auto;
         }
+
         .user-info {
             background: #e9ecef;
             border-radius: 10px;
@@ -321,18 +378,20 @@
             justify-content: space-between;
             align-items: center;
         }
+
         .user-info .user-details {
             display: flex;
             align-items: center;
             gap: 0.5rem;
         }
+
         .user-info .user-actions {
             display: flex;
             gap: 0.5rem;
         }
-        
     </style>
 </head>
+
 <body>
     <div class="container-fluid">
         <div class="main-container">
@@ -350,9 +409,10 @@
             </div>
 
             <div class="header">
-                <h1><i class="fas fa-cogs"></i> ACGI to HubSpot Field Mapping</h1>
-                <p>Configure field mappings and data synchronization for different object types</p>
+                <h1><i class="fas fa-sync-alt"></i> ACGI to HubSpot Field Mapping</h1>
+                <p>Configure and map ACGI fields to HubSpot properties</p>
             </div>
+            <div id="statusMessages"></div>
 
             <!-- Navigation -->
             <nav class="mb-4">
@@ -361,24 +421,26 @@
                         <a class="nav-link" href="/"><i class="fas fa-sync-alt"></i> Integration</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link active" href="/acgi-to-hubspot"><i class="fas fa-cogs"></i> ACGI to HubSpot</a>
+                        <a class="nav-link active" href="/acgi-to-hubspot"><i class="fas fa-cogs"></i> ACGI to
+                            HubSpot</a>
                     </li>
-                    
                 </ul>
             </nav>
 
             <!-- Object Type Tabs -->
             <ul class="nav nav-tabs" id="objectTabs" role="tablist">
                 <li class="nav-item" role="presentation">
-                    <button class="nav-link active" id="contacts-tab" data-bs-toggle="tab" data-bs-target="#contacts" type="button" role="tab">
+                    <button class="nav-link active" id="contacts-tab" data-bs-toggle="tab" data-bs-target="#contacts"
+                        type="button" role="tab">
                         <i class="fas fa-user"></i> Contacts
                     </button>
                 </li>
-                <!-- <li class="nav-item" role="presentation">
-                    <button class="nav-link" id="deals-tab" data-bs-toggle="tab" data-bs-target="#deals" type="button" role="tab">
-                        <i class="fas fa-handshake"></i> Deals
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="memberships-tab" data-bs-toggle="tab" data-bs-target="#memberships"
+                        type="button" role="tab">
+                        <i class="fas fa-users"></i> Memberships
                     </button>
-                </li> -->
+                </li>
             </ul>
 
             <!-- Tab Content -->
@@ -388,7 +450,8 @@
                     <div class="mt-4">
                         <div class="row">
                             <div class="d-flex justify-content-center">
-                                <button id="copyToHubspotBtn" class="btn btn-outline-primary btn-sm mb-2" style="width: 10rem;">
+                                <button id="copyToHubspotBtn" class="btn btn-outline-primary btn-sm mb-2"
+                                    style="width: 10rem;">
                                     <i class="fas fa-arrow-right"></i> Copy To HubSpot
                                 </button>
                             </div>
@@ -404,8 +467,10 @@
                                         <div class="mb-3">
                                             <label for="acgi-customer-id">ACGI Customer ID:</label>
                                             <input type="text" id="acgi-customer-id" class="form-control" />
-                                            <button id="fetch-acgi-btn" class="btn btn-primary mt-2 w-100" onclick="fetchAcgiCustomer()">Fetch</button>
-                                            <div id="acgi-loading-spinner" class="text-center my-2" style="display:none;">
+                                            <button id="fetch-acgi-btn" class="btn btn-primary mt-2 w-100"
+                                                onclick="fetchAcgiCustomer()">Fetch</button>
+                                            <div id="acgi-loading-spinner" class="text-center my-2"
+                                                style="display:none;">
                                                 <div class="spinner-border text-primary" role="status">
                                                     <span class="visually-hidden">Loading...</span>
                                                 </div>
@@ -414,197 +479,253 @@
                                         </div>
                                         <!-- Address Preferences Section -->
                                         <div class="card mt-3">
-                                          <div class="card-header bg-info text-white">
-                                            <i class="fas fa-cog"></i> Address Preferences
-                                          </div>
-                                          <div class="card-body">
-                                            <form id="address-preferences-form">
-                                              <div class="mb-2">
-                                                <div class="form-label fw-bold mb-1">Selection Preferences</div>
-                                                <div class="form-check">
-                                                  <input class="form-check-input" type="radio" name="addressPreferenceMode" id="addressModeFirst" value="first" checked>
-                                                  <label class="form-check-label" for="addressModeFirst">Select first</label>
-                                                </div>
-                                                <div class="form-check">
-                                                  <input class="form-check-input" type="radio" name="addressPreferenceMode" id="addressModeLast" value="last">
-                                                  <label class="form-check-label" for="addressModeLast">Select last</label>
-                                                </div>
-                                                <div class="form-check">
-                                                  <input class="form-check-input" type="radio" name="addressPreferenceMode" id="addressModeCriteria" value="criteria">
-                                                  <label class="form-check-label" for="addressModeCriteria">Select by criteria</label>
-                                                </div>
-                                              </div>
-                                              <div id="address-criteria-section" style="display:none;">
-                                                <div class="mb-2">
-                                                  <label class="form-label">Property:</label>
-                                                  <select class="form-select" id="address-criteria-property" name="property"></select>
-                                                </div>
-                                                <div class="mb-2">
-                                                  <label class="form-label">Operator:</label>
-                                                  <select class="form-select" id="address-criteria-operator" name="operator">
-                                                    <option value="=">=</option>
-                                                    <option value="!=">!=</option>
-                                                    <option value="contains">contains</option>
-                                                    <option value=">">&gt;</option>
-                                                    <option value="<">&lt;</option>
-                                                    <option value="is null">is null</option>
-                                                    <option value="is not null">is not null</option>
-                                                  </select>
-                                                </div>
-                                                <div class="mb-2" id="address-criteria-value-group">
-                                                  <label class="form-label">Value:</label>
-                                                  <input type="text" class="form-control" id="address-criteria-value" name="value" />
-                                                </div>
-                                              </div>
-                                              <div class="mb-2 mt-3">
-                                                <div class="form-label fw-bold mb-1">Format Preferences</div>
-                                                <div class="form-check">
-                                                  <input class="form-check-input" type="radio" name="addressFormat" id="addressFormatJson" value="json" checked>
-                                                  <label class="form-check-label" for="addressFormatJson">As JSON</label>
-                                                </div>
-                                                <div class="form-check">
-                                                  <input class="form-check-input" type="radio" name="addressFormat" id="addressFormatFlat" value="flat">
-                                                  <label class="form-check-label" for="addressFormatFlat">Flat</label>
-                                                </div>
-                                              </div>
-                                              <button type="submit" class="btn btn-outline-info btn-sm w-100 mt-2">
-                                                <i class="fas fa-save"></i> Save Preference
-                                              </button>
-                                            </form>
-                                          </div>
+                                            <div class="card-header bg-info text-white">
+                                                <i class="fas fa-cog"></i> Address Preferences
+                                            </div>
+                                            <div class="card-body">
+                                                <form id="address-preferences-form">
+                                                    <div class="mb-2">
+                                                        <div class="form-label fw-bold mb-1">Selection Preferences</div>
+                                                        <div class="form-check">
+                                                            <input class="form-check-input" type="radio"
+                                                                name="addressPreferenceMode" id="addressModeFirst"
+                                                                value="first" checked>
+                                                            <label class="form-check-label"
+                                                                for="addressModeFirst">Select first</label>
+                                                        </div>
+                                                        <div class="form-check">
+                                                            <input class="form-check-input" type="radio"
+                                                                name="addressPreferenceMode" id="addressModeLast"
+                                                                value="last">
+                                                            <label class="form-check-label" for="addressModeLast">Select
+                                                                last</label>
+                                                        </div>
+                                                        <div class="form-check">
+                                                            <input class="form-check-input" type="radio"
+                                                                name="addressPreferenceMode" id="addressModeCriteria"
+                                                                value="criteria">
+                                                            <label class="form-check-label"
+                                                                for="addressModeCriteria">Select by criteria</label>
+                                                        </div>
+                                                    </div>
+                                                    <div id="address-criteria-section" style="display:none;">
+                                                        <div class="mb-2">
+                                                            <label class="form-label">Property:</label>
+                                                            <select class="form-select" id="address-criteria-property"
+                                                                name="property"></select>
+                                                        </div>
+                                                        <div class="mb-2">
+                                                            <label class="form-label">Operator:</label>
+                                                            <select class="form-select" id="address-criteria-operator"
+                                                                name="operator">
+                                                                <option value="=">=</option>
+                                                                <option value="!=">!=</option>
+                                                                <option value="contains">contains</option>
+                                                                <option value=">">&gt;</option>
+                                                                <option value="<">&lt;</option>
+                                                                <option value="is null">is null</option>
+                                                                <option value="is not null">is not null</option>
+                                                            </select>
+                                                        </div>
+                                                        <div class="mb-2" id="address-criteria-value-group">
+                                                            <label class="form-label">Value:</label>
+                                                            <input type="text" class="form-control"
+                                                                id="address-criteria-value" name="value" />
+                                                        </div>
+                                                    </div>
+                                                    <div class="mb-2 mt-3">
+                                                        <div class="form-label fw-bold mb-1">Format Preferences</div>
+                                                        <div class="form-check">
+                                                            <input class="form-check-input" type="radio"
+                                                                name="addressFormat" id="addressFormatJson" value="json"
+                                                                checked>
+                                                            <label class="form-check-label" for="addressFormatJson">As
+                                                                JSON</label>
+                                                        </div>
+                                                        <div class="form-check">
+                                                            <input class="form-check-input" type="radio"
+                                                                name="addressFormat" id="addressFormatFlat"
+                                                                value="flat">
+                                                            <label class="form-check-label"
+                                                                for="addressFormatFlat">Flat</label>
+                                                        </div>
+                                                    </div>
+                                                    <button type="submit"
+                                                        class="btn btn-outline-info btn-sm w-100 mt-2">
+                                                        <i class="fas fa-save"></i> Save Preference
+                                                    </button>
+                                                </form>
+                                            </div>
                                         </div>
                                         <!-- Email Preferences Section -->
                                         <div class="card mt-3">
-                                          <div class="card-header bg-info text-white">
-                                            <i class="fas fa-envelope"></i> Email Preferences
-                                          </div>
-                                          <div class="card-body">
-                                            <form id="email-preferences-form">
-                                              <div class="mb-2">
-                                                <div class="form-label fw-bold mb-1">Selection Preferences</div>
-                                                <div class="form-check">
-                                                  <input class="form-check-input" type="radio" name="emailPreferenceMode" id="emailModeFirst" value="first" checked>
-                                                  <label class="form-check-label" for="emailModeFirst">Select first</label>
-                                                </div>
-                                                <div class="form-check">
-                                                  <input class="form-check-input" type="radio" name="emailPreferenceMode" id="emailModeLast" value="last">
-                                                  <label class="form-check-label" for="emailModeLast">Select last</label>
-                                                </div>
-                                                <div class="form-check">
-                                                  <input class="form-check-input" type="radio" name="emailPreferenceMode" id="emailModeCriteria" value="criteria">
-                                                  <label class="form-check-label" for="emailModeCriteria">Select by criteria</label>
-                                                </div>
-                                              </div>
-                                              <div id="email-criteria-section" style="display:none;">
-                                                <div class="mb-2">
-                                                  <label class="form-label">Property:</label>
-                                                  <select class="form-select" id="email-criteria-property" name="property"></select>
-                                                </div>
-                                                <div class="mb-2">
-                                                  <label class="form-label">Operator:</label>
-                                                  <select class="form-select" id="email-criteria-operator" name="operator">
-                                                    <option value="=">=</option>
-                                                    <option value="!=">!=</option>
-                                                    <option value="contains">contains</option>
-                                                    <option value=">">&gt;</option>
-                                                    <option value="<">&lt;</option>
-                                                    <option value="is null">is null</option>
-                                                    <option value="is not null">is not null</option>
-                                                  </select>
-                                                </div>
-                                                <div class="mb-2" id="email-criteria-value-group">
-                                                  <label class="form-label">Value:</label>
-                                                  <input type="text" class="form-control" id="email-criteria-value" name="value" />
-                                                </div>
-                                              </div>
-                                              <div class="mb-2 mt-3">
-                                                <div class="form-label fw-bold mb-1">Format Preferences</div>
-                                                <div class="form-check">
-                                                  <input class="form-check-input" type="radio" name="emailFormat" id="emailFormatJson" value="json" checked>
-                                                  <label class="form-check-label" for="emailFormatJson">As JSON</label>
-                                                </div>
-                                                <div class="form-check">
-                                                  <input class="form-check-input" type="radio" name="emailFormat" id="emailFormatFlat" value="flat">
-                                                  <label class="form-check-label" for="emailFormatFlat">Flat</label>
-                                                </div>
-                                              </div>
-                                              <button type="submit" class="btn btn-outline-info btn-sm w-100 mt-2">
-                                                <i class="fas fa-save"></i> Save Preference
-                                              </button>
-                                            </form>
-                                          </div>
+                                            <div class="card-header bg-info text-white">
+                                                <i class="fas fa-envelope"></i> Email Preferences
+                                            </div>
+                                            <div class="card-body">
+                                                <form id="email-preferences-form">
+                                                    <div class="mb-2">
+                                                        <div class="form-label fw-bold mb-1">Selection Preferences</div>
+                                                        <div class="form-check">
+                                                            <input class="form-check-input" type="radio"
+                                                                name="emailPreferenceMode" id="emailModeFirst"
+                                                                value="first" checked>
+                                                            <label class="form-check-label" for="emailModeFirst">Select
+                                                                first</label>
+                                                        </div>
+                                                        <div class="form-check">
+                                                            <input class="form-check-input" type="radio"
+                                                                name="emailPreferenceMode" id="emailModeLast"
+                                                                value="last">
+                                                            <label class="form-check-label" for="emailModeLast">Select
+                                                                last</label>
+                                                        </div>
+                                                        <div class="form-check">
+                                                            <input class="form-check-input" type="radio"
+                                                                name="emailPreferenceMode" id="emailModeCriteria"
+                                                                value="criteria">
+                                                            <label class="form-check-label"
+                                                                for="emailModeCriteria">Select by criteria</label>
+                                                        </div>
+                                                    </div>
+                                                    <div id="email-criteria-section" style="display:none;">
+                                                        <div class="mb-2">
+                                                            <label class="form-label">Property:</label>
+                                                            <select class="form-select" id="email-criteria-property"
+                                                                name="property"></select>
+                                                        </div>
+                                                        <div class="mb-2">
+                                                            <label class="form-label">Operator:</label>
+                                                            <select class="form-select" id="email-criteria-operator"
+                                                                name="operator">
+                                                                <option value="=">=</option>
+                                                                <option value="!=">!=</option>
+                                                                <option value="contains">contains</option>
+                                                                <option value=">">&gt;</option>
+                                                                <option value="<">&lt;</option>
+                                                                <option value="is null">is null</option>
+                                                                <option value="is not null">is not null</option>
+                                                            </select>
+                                                        </div>
+                                                        <div class="mb-2" id="email-criteria-value-group">
+                                                            <label class="form-label">Value:</label>
+                                                            <input type="text" class="form-control"
+                                                                id="email-criteria-value" name="value" />
+                                                        </div>
+                                                    </div>
+                                                    <div class="mb-2 mt-3">
+                                                        <div class="form-label fw-bold mb-1">Format Preferences</div>
+                                                        <div class="form-check">
+                                                            <input class="form-check-input" type="radio"
+                                                                name="emailFormat" id="emailFormatJson" value="json"
+                                                                checked>
+                                                            <label class="form-check-label" for="emailFormatJson">As
+                                                                JSON</label>
+                                                        </div>
+                                                        <div class="form-check">
+                                                            <input class="form-check-input" type="radio"
+                                                                name="emailFormat" id="emailFormatFlat" value="flat">
+                                                            <label class="form-check-label"
+                                                                for="emailFormatFlat">Flat</label>
+                                                        </div>
+                                                    </div>
+                                                    <button type="submit"
+                                                        class="btn btn-outline-info btn-sm w-100 mt-2">
+                                                        <i class="fas fa-save"></i> Save Preference
+                                                    </button>
+                                                </form>
+                                            </div>
                                         </div>
                                         <!-- Phone Preferences Section -->
                                         <div class="card mt-3">
-                                          <div class="card-header bg-info text-white">
-                                            <i class="fas fa-phone"></i> Phone Preferences
-                                          </div>
-                                          <div class="card-body">
-                                            <form id="phone-preferences-form">
-                                              <div class="mb-2">
-                                                <div class="form-label fw-bold mb-1">Selection Preferences</div>
-                                                <div class="form-check">
-                                                  <input class="form-check-input" type="radio" name="phonePreferenceMode" id="phoneModeFirst" value="first" checked>
-                                                  <label class="form-check-label" for="phoneModeFirst">Select first</label>
-                                                </div>
-                                                <div class="form-check">
-                                                  <input class="form-check-input" type="radio" name="phonePreferenceMode" id="phoneModeLast" value="last">
-                                                  <label class="form-check-label" for="phoneModeLast">Select last</label>
-                                                </div>
-                                                <div class="form-check">
-                                                  <input class="form-check-input" type="radio" name="phonePreferenceMode" id="phoneModeCriteria" value="criteria">
-                                                  <label class="form-check-label" for="phoneModeCriteria">Select by criteria</label>
-                                                </div>
-                                              </div>
-                                              <div id="phone-criteria-section" style="display:none;">
-                                                <div class="mb-2">
-                                                  <label class="form-label">Property:</label>
-                                                  <select class="form-select" id="phone-criteria-property" name="property"></select>
-                                                </div>
-                                                <div class="mb-2">
-                                                  <label class="form-label">Operator:</label>
-                                                  <select class="form-select" id="phone-criteria-operator" name="operator">
-                                                    <option value="=">=</option>
-                                                    <option value="!=">!=</option>
-                                                    <option value="contains">contains</option>
-                                                    <option value=">">&gt;</option>
-                                                    <option value="<">&lt;</option>
-                                                    <option value="is null">is null</option>
-                                                    <option value="is not null">is not null</option>
-                                                  </select>
-                                                </div>
-                                                <div class="mb-2" id="phone-criteria-value-group">
-                                                  <label class="form-label">Value:</label>
-                                                  <input type="text" class="form-control" id="phone-criteria-value" name="value" />
-                                                </div>
-                                              </div>
-                                              <div class="mb-2 mt-3">
-                                                <div class="form-label fw-bold mb-1">Format Preferences</div>
-                                                <div class="form-check">
-                                                  <input class="form-check-input" type="radio" name="phoneFormat" id="phoneFormatJson" value="json" checked>
-                                                  <label class="form-check-label" for="phoneFormatJson">As JSON</label>
-                                                </div>
-                                                <div class="form-check">
-                                                  <input class="form-check-input" type="radio" name="phoneFormat" id="phoneFormatFlat" value="flat">
-                                                  <label class="form-check-label" for="phoneFormatFlat">Flat</label>
-                                                </div>
-                                              </div>
-                                              <button type="submit" class="btn btn-outline-info btn-sm w-100 mt-2">
-                                                <i class="fas fa-save"></i> Save Preference
-                                              </button>
-                                            </form>
-                                          </div>
+                                            <div class="card-header bg-info text-white">
+                                                <i class="fas fa-phone"></i> Phone Preferences
+                                            </div>
+                                            <div class="card-body">
+                                                <form id="phone-preferences-form">
+                                                    <div class="mb-2">
+                                                        <div class="form-label fw-bold mb-1">Selection Preferences</div>
+                                                        <div class="form-check">
+                                                            <input class="form-check-input" type="radio"
+                                                                name="phonePreferenceMode" id="phoneModeFirst"
+                                                                value="first" checked>
+                                                            <label class="form-check-label" for="phoneModeFirst">Select
+                                                                first</label>
+                                                        </div>
+                                                        <div class="form-check">
+                                                            <input class="form-check-input" type="radio"
+                                                                name="phonePreferenceMode" id="phoneModeLast"
+                                                                value="last">
+                                                            <label class="form-check-label" for="phoneModeLast">Select
+                                                                last</label>
+                                                        </div>
+                                                        <div class="form-check">
+                                                            <input class="form-check-input" type="radio"
+                                                                name="phonePreferenceMode" id="phoneModeCriteria"
+                                                                value="criteria">
+                                                            <label class="form-check-label"
+                                                                for="phoneModeCriteria">Select by criteria</label>
+                                                        </div>
+                                                    </div>
+                                                    <div id="phone-criteria-section" style="display:none;">
+                                                        <div class="mb-2">
+                                                            <label class="form-label">Property:</label>
+                                                            <select class="form-select" id="phone-criteria-property"
+                                                                name="property"></select>
+                                                        </div>
+                                                        <div class="mb-2">
+                                                            <label class="form-label">Operator:</label>
+                                                            <select class="form-select" id="phone-criteria-operator"
+                                                                name="operator">
+                                                                <option value="=">=</option>
+                                                                <option value="!=">!=</option>
+                                                                <option value="contains">contains</option>
+                                                                <option value=">">&gt;</option>
+                                                                <option value="<">&lt;</option>
+                                                                <option value="is null">is null</option>
+                                                                <option value="is not null">is not null</option>
+                                                            </select>
+                                                        </div>
+                                                        <div class="mb-2" id="phone-criteria-value-group">
+                                                            <label class="form-label">Value:</label>
+                                                            <input type="text" class="form-control"
+                                                                id="phone-criteria-value" name="value" />
+                                                        </div>
+                                                    </div>
+                                                    <div class="mb-2 mt-3">
+                                                        <div class="form-label fw-bold mb-1">Format Preferences</div>
+                                                        <div class="form-check">
+                                                            <input class="form-check-input" type="radio"
+                                                                name="phoneFormat" id="phoneFormatJson" value="json"
+                                                                checked>
+                                                            <label class="form-check-label" for="phoneFormatJson">As
+                                                                JSON</label>
+                                                        </div>
+                                                        <div class="form-check">
+                                                            <input class="form-check-input" type="radio"
+                                                                name="phoneFormat" id="phoneFormatFlat" value="flat">
+                                                            <label class="form-check-label"
+                                                                for="phoneFormatFlat">Flat</label>
+                                                        </div>
+                                                    </div>
+                                                    <button type="submit"
+                                                        class="btn btn-outline-info btn-sm w-100 mt-2">
+                                                        <i class="fas fa-save"></i> Save Preference
+                                                    </button>
+                                                </form>
+                                            </div>
                                         </div>
                                         <div class="mt-3">
                                             <label class="form-label">Fetched Data (JSON):</label>
-                                            <pre id="acgi-json-viewer" style="background:#f8f9fa; border-radius:8px; padding:1em; min-height:120px; max-height:300px; overflow:auto; font-size:0.9em;"></pre>
+                                            <pre id="acgi-json-viewer"
+                                                style="background:#f8f9fa; border-radius:8px; padding:1em; min-height:120px; max-height:300px; overflow:auto; font-size:0.9em;"></pre>
                                         </div>
                                     </div>
                                 </div>
                             </div>
                             <!-- COLUMN 2: ACGI Fields List (with Important/All Available sections, no card box) -->
                             <div class="col-md-3 mb-4">
-                                
+
                                 <h4><i class="fas fa-star"></i> Important Fields</h4>
                                 <div id="acgiImportantFields" class="mb-4">
                                     <div class="text-center text-muted">
@@ -646,43 +767,58 @@
                                             </div>
                                         </div>
                                         <div class="mt-3">
-                                            <button type="button" class="btn btn-success w-100 mb-2" onclick="saveToHubSpot('contacts')">
+                                            <button type="button" class="btn btn-success w-100 mb-2"
+                                                onclick="saveToHubSpot('contacts')">
                                                 <i class="fas fa-save"></i> Save to HubSpot
                                             </button>
-                                            <button type="button" class="btn btn-warning w-100 mb-3" onclick="resetForm('contacts')">
+                                            <button type="button" class="btn btn-warning w-100 mb-3"
+                                                onclick="resetForm('contacts')">
                                                 <i class="fas fa-undo"></i> Reset Form
                                             </button>
                                             <!-- Search Preference Section -->
                                             <div class="card mt-3">
                                                 <div class="card-header bg-info text-white">
                                                     <i class="fas fa-search"></i> Search Preference
-                                        </div>
+                                                </div>
                                                 <div class="card-body">
                                                     <div class="form-check">
-                                                        <input class="form-check-input" type="radio" name="contactsSearchPreference" id="contactsEmailOnly" value="email_only" checked>
+                                                        <input class="form-check-input" type="radio"
+                                                            name="contactsSearchPreference" id="contactsEmailOnly"
+                                                            value="email_only" checked>
                                                         <label class="form-check-label" for="contactsEmailOnly">
                                                             Search by email only
                                                         </label>
-                                    </div>
+                                                    </div>
                                                     <div class="form-check">
-                                                        <input class="form-check-input" type="radio" name="contactsSearchPreference" id="contactsCustomerIdOnly" value="customer_id_only">
+                                                        <input class="form-check-input" type="radio"
+                                                            name="contactsSearchPreference" id="contactsCustomerIdOnly"
+                                                            value="customer_id_only">
                                                         <label class="form-check-label" for="contactsCustomerIdOnly">
                                                             Search by customer_id only
                                                         </label>
-                                </div>
+                                                    </div>
                                                     <div class="form-check">
-                                                        <input class="form-check-input" type="radio" name="contactsSearchPreference" id="contactsEmailThenCustomerId" value="email_then_customer_id">
-                                                        <label class="form-check-label" for="contactsEmailThenCustomerId">
+                                                        <input class="form-check-input" type="radio"
+                                                            name="contactsSearchPreference"
+                                                            id="contactsEmailThenCustomerId"
+                                                            value="email_then_customer_id">
+                                                        <label class="form-check-label"
+                                                            for="contactsEmailThenCustomerId">
                                                             Search by email and then customer_id
                                                         </label>
-                            </div>
+                                                    </div>
                                                     <div class="form-check">
-                                                        <input class="form-check-input" type="radio" name="contactsSearchPreference" id="contactsCustomerIdThenEmail" value="customer_id_then_email">
-                                                        <label class="form-check-label" for="contactsCustomerIdThenEmail">
+                                                        <input class="form-check-input" type="radio"
+                                                            name="contactsSearchPreference"
+                                                            id="contactsCustomerIdThenEmail"
+                                                            value="customer_id_then_email">
+                                                        <label class="form-check-label"
+                                                            for="contactsCustomerIdThenEmail">
                                                             Search by customer_id and then email
                                                         </label>
                                                     </div>
-                                                    <button type="button" class="btn btn-outline-info btn-sm mt-2" onclick="saveSearchPreference('contacts')">
+                                                    <button type="button" class="btn btn-outline-info btn-sm mt-2"
+                                                        onclick="saveSearchPreference('contacts')">
                                                         <i class="fas fa-save"></i> Save Preference
                                                     </button>
                                                 </div>
@@ -700,85 +836,107 @@
                         </div>
                     </div>
                 </div>
-
-                <!-- Deals Tab -->
-                <div class="tab-pane fade" id="deals" role="tabpanel">
+                <!-- Memberships Tab -->
+                <div class="tab-pane fade" id="memberships" role="tabpanel">
                     <div class="mt-4">
                         <div class="row">
-                            <div class="col-md-8">
+                            <div class="d-flex justify-content-center">
+                                <button id="copyMembershipsToHubspotBtn" class="btn btn-outline-primary btn-sm mb-2"
+                                    style="width: 10rem;">
+                                    <i class="fas fa-arrow-right"></i> Copy To HubSpot
+                                </button>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <!-- COLUMN 1: Fetch Memberships -->
+                            <div class="col-md-3 mb-4">
+                                <div class="card mb-3">
+                                    <div class="card-header bg-info text-white">
+                                        <i class="fas fa-database"></i> ACGI Membership Data
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="mb-3">
+                                            <label for="acgi-membership-customer-id">ACGI Customer ID:</label>
+                                            <input type="text" id="acgi-membership-customer-id" class="form-control" />
+                                            <button id="fetch-memberships-btn"
+                                                class="btn btn-primary mt-2 w-100" onclick="fetchAcgiCustomerMemberships()">Fetch</button>
+                                            <div id="acgi-membership-loading-spinner" class="text-center my-2"
+                                                style="display:none;">
+                                                <div class="spinner-border text-primary" role="status">
+                                                    <span class="visually-hidden">Loading...</span>
+                                                </div>
+                                                <div>Loading memberships...</div>
+                                            </div>
+                                        </div>
+                                        <div class="mt-3">
+                                            <div class="mb-2" id="membership-selector-container" style="display: none;">
+                                                <label class="form-label">Select Membership Item:</label>
+                                                <select class="form-select" id="membership-item-selector">
+                                                    <option value="">Loading...</option>
+                                                </select>
+                                            </div>
+                                            <label class="form-label">Fetched Data (JSON):</label>
+                                            <pre id="acgi-memberships-json-viewer"
+                                                style="background:#f8f9fa; border-radius:8px; padding:1em; min-height:120px; max-height:300px; overflow:auto; font-size:0.9em;"></pre>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- COLUMN 2: Important Fields from First Membership -->
+                            <div class="col-md-3 mb-4">
                                 <h4><i class="fas fa-star"></i> Important Fields</h4>
-                                <div id="dealsImportantFields" class="mb-4">
+                                <div id="membershipACGIImportantFields" class="mb-4">
+                                    <div class="text-center text-muted">
+                                        <i class="fas fa-info-circle"></i> No important fields
+                                    </div>
+                                </div>
+                                <h4><i class="fas fa-list"></i> All Available Fields</h4>
+                                <div id="membershipACGIAllFields">
+                                    <div class="text-center text-muted">
+                                        <i class="fas fa-info-circle"></i> No fields loaded
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- COLUMN 3: Mapping UI -->
+                            <div class="col-md-3">
+                                <h4><i class="fas fa-link"></i> Map to HubSpot Fields</h4>
+                                <div id="membershipsImportantFields" class="mb-4"> 
                                     <div class="text-center text-muted">
                                         <i class="fas fa-info-circle"></i> Load properties to see important fields
                                     </div>
                                 </div>
-                                
                                 <h4><i class="fas fa-list"></i> All Available Fields</h4>
-                                <div id="dealsAllFields">
+                                <div id="membershipsAllFields">
                                     <div class="text-center text-muted">
                                         <i class="fas fa-info-circle"></i> Load properties to see all available fields
                                     </div>
                                 </div>
                             </div>
-                            
-                            <div class="col-md-4">
+                            <!-- COLUMN 4: HubSpot Form for Custom Object -->
+                            <div class="col-md-3">
                                 <div class="card">
                                     <div class="card-header bg-primary text-white">
-                                        <i class="fas fa-save"></i> Save to HubSpot
+                                        <i class="fas fa-save"></i> Save to HubSpot (ACGI Memberships)
                                     </div>
                                     <div class="card-body">
-                                        <div id="dealsForm">
+                                        <div id="membershipsForm">
                                             <div class="text-center text-muted">
                                                 <i class="fas fa-info-circle"></i> Load properties to see the form
                                             </div>
                                         </div>
                                         <div class="mt-3">
-                                            <button type="button" class="btn btn-success w-100 mb-2" onclick="saveToHubSpot('deals')">
+                                            <button type="button" class="btn btn-success w-100 mb-2"
+                                                onclick="saveToHubSpot('memberships')">
                                                 <i class="fas fa-save"></i> Save to HubSpot
                                             </button>
-                                            <button type="button" class="btn btn-warning w-100 mb-3" onclick="resetForm('deals')">
+                                            <button type="button" class="btn btn-warning w-100 mb-3"
+                                                onclick="resetForm('memberships')">
                                                 <i class="fas fa-undo"></i> Reset Form
                                             </button>
-                                            
-                                            <!-- Search Preference Section -->
-                                            <div class="card mt-3">
-                                                <div class="card-header bg-info text-white">
-                                                    <i class="fas fa-search"></i> Search Preference
                                         </div>
-                                                <div class="card-body">
-                                                    <div class="form-check">
-                                                        <input class="form-check-input" type="radio" name="dealsSearchPreference" id="dealsEmailOnly" value="email_only" checked>
-                                                        <label class="form-check-label" for="dealsEmailOnly">
-                                                            Search by email only
-                                                        </label>
-                                    </div>
-                                                    <div class="form-check">
-                                                        <input class="form-check-input" type="radio" name="dealsSearchPreference" id="dealsCustomerIdOnly" value="customer_id_only">
-                                                        <label class="form-check-label" for="dealsCustomerIdOnly">
-                                                            Search by customer_id only
-                                                        </label>
-                                </div>
-                                                    <div class="form-check">
-                                                        <input class="form-check-input" type="radio" name="dealsSearchPreference" id="dealsEmailThenCustomerId" value="email_then_customer_id">
-                                                        <label class="form-check-label" for="dealsEmailThenCustomerId">
-                                                            Search by email and then customer_id
-                                                        </label>
-                            </div>
-                                                    <div class="form-check">
-                                                        <input class="form-check-input" type="radio" name="dealsSearchPreference" id="dealsCustomerIdThenEmail" value="customer_id_then_email">
-                                                        <label class="form-check-label" for="dealsCustomerIdThenEmail">
-                                                            Search by customer_id and then email
-                                                        </label>
-                                                    </div>
-                                                    <button type="button" class="btn btn-outline-info btn-sm mt-2" onclick="saveSearchPreference('deals')">
-                                                        <i class="fas fa-save"></i> Save Preference
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div id="dealsOutput" class="mt-3" style="display: none;">
+                                        <div id="hubspotMembershipOutput" class="mt-3" style="display: none;">
                                             <h6><i class="fas fa-terminal"></i> Output:</h6>
-                                            <div class="alert alert-info" id="dealsOutputContent">
+                                            <div class="alert alert-info" id="hubspotMembershipOutputContent">
                                                 <!-- Output will be displayed here -->
                                             </div>
                                         </div>
@@ -852,16 +1010,17 @@
 
         function loadProperties() {
             showLoading();
-            
+
             // Load properties for both object types
             Promise.all([
                 loadObjectProperties('contacts'),
-                loadObjectProperties('deals')
+                //loadObjectProperties('deals'),
+                loadObjectProperties('memberships')
             ]).then(() => {
                 hideLoading();
                 showAlert('All properties loaded successfully!', 'success');
             }).catch(error => {
-                console.log("error",error)
+                console.log("error", error)
                 hideLoading();
                 console.error('Error loading properties:', error);
                 showAlert('Error loading properties: ' + error.message + '\nPlease set your HubSpot API key on the Integration page first.', 'danger');
@@ -897,53 +1056,68 @@
         }
 
         function loadObjectProperties(objectType) {
+            console.log(`Loading properties for ${objectType}...`);
             return fetch(`/api/hubspot-properties/${objectType}`)
-                .then(response => response.json())
+                .then(response => {
+                    console.log(`Response status for ${objectType}:`, response.status);
+                    
+                    return response.json();
+                })
                 .then(data => {
+                    console.log(`Data received for ${objectType}:`, data);
                     if (data.error) {
                         throw new Error(data.error);
                     }
-                    
+
                     // Initialize arrays if they don't exist
                     if (!data.important_properties) data.important_properties = [];
                     if (!data.other_properties) data.other_properties = [];
-                    
+
                     propertiesData[objectType] = data;
+                    console.log(`Rendering properties for ${objectType}...`);
                     renderProperties(objectType, data);
                     renderForm(objectType, data);
+                })
+                .catch(error => {
+                    console.error(`Error loading properties for ${objectType}:`, error);
+                    throw error;
                 });
         }
 
         function renderProperties(objectType, data) {
+            console.log("renderProperties called for", objectType, data);
             const importantContainer = document.getElementById(`${objectType}ImportantFields`);
             const allContainer = document.getElementById(`${objectType}AllFields`);
             
+            console.log("Important container:", importantContainer);
+            console.log("All container:", allContainer);
+
             // Initialize arrays if they don't exist
             if (!data.important_properties) data.important_properties = [];
             if (!data.other_properties) data.other_properties = [];
-            
+
             // Sort other properties alphabetically by name (important properties keep their order)
             data.other_properties.sort((a, b) => {
                 const nameA = a.name || '';
                 const nameB = b.name || '';
                 return nameA.localeCompare(nameB);
             });
-            
+
             // Render important properties
             if (data.important_properties.length > 0) {
-                importantContainer.innerHTML = data.important_properties.map(prop => 
+                importantContainer.innerHTML = data.important_properties.map(prop =>
                     createPropertyCard(prop, objectType, true)
                 ).join('');
-                
+
                 // Initialize drag-and-drop for important fields
                 initializeSortable(objectType);
             } else {
                 importantContainer.innerHTML = '<div class="text-center text-muted">No important fields configured</div>';
             }
-            
+
             // Render all properties
             if (data.other_properties.length > 0) {
-                allContainer.innerHTML = data.other_properties.map(prop => 
+                allContainer.innerHTML = data.other_properties.map(prop =>
                     createPropertyCard(prop, objectType, false)
                 ).join('');
             } else {
@@ -953,19 +1127,19 @@
 
         function initializeSortable(objectType) {
             const importantContainer = document.getElementById(`${objectType}ImportantFields`);
-            
+
             // Remove existing sortable instance if it exists
             if (importantContainer.sortable) {
                 importantContainer.sortable.destroy();
             }
-            
+
             // Initialize new sortable instance
             importantContainer.sortable = Sortable.create(importantContainer, {
                 animation: 150,
                 handle: '.drag-handle',
                 ghostClass: 'sortable-ghost',
                 chosenClass: 'sortable-chosen',
-                onEnd: function(evt) {
+                onEnd: function (evt) {
                     // Update order indices after drag ends
                     updateFieldOrder(objectType);
                     // Re-render the HubSpot form to reflect new order
@@ -1002,10 +1176,10 @@
             const badges = [];
             if (isImportant) badges.push('<span class="badge badge-important">Important</span>');
             if (property.is_enabled) badges.push('<span class="badge badge-enabled">Enabled</span>');
-            
-            const dragHandle = isImportant ? 
+
+            const dragHandle = isImportant ?
                 '<div class="drag-handle me-2" style="cursor: grab; color: #6c757d;"><i class="fas fa-grip-vertical"></i></div>' : '';
-            
+
             return `
                 <div class="property-card ${isImportant ? 'important' : ''} ${property.is_enabled ? 'enabled' : ''}" data-field-name="${property.name}">
                     <div class="property-header">
@@ -1035,39 +1209,39 @@
 
         function renderForm(objectType, data) {
             const formContainer = document.getElementById(`${objectType}Form`);
-            
+
             if (!data) {
                 formContainer.innerHTML = '<div class="text-center text-muted">No properties available</div>';
                 return;
             }
-            
+
             // Initialize arrays if they don't exist
             if (!data.important_properties) data.important_properties = [];
             if (!data.other_properties) data.other_properties = [];
-            
+
             // Combine all properties for the form
             const allProperties = [
                 ...data.important_properties,
                 ...data.other_properties
             ];
-            
+
             if (allProperties.length === 0) {
                 formContainer.innerHTML = '<div class="text-center text-muted">No properties available</div>';
                 return;
             }
-            
+
             const formFields = allProperties
                 .filter(prop => prop.is_enabled)
                 .map(prop => createFormField(prop, objectType))
                 .join('');
-            
+
             formContainer.innerHTML = formFields;
         }
 
         function createFormField(property, objectType) {
             const fieldId = `${objectType}_${property.name}`;
             const label = property.label || property.name;
-            
+
             let inputHtml = '';
             switch (property.type) {
                 case 'number':
@@ -1087,7 +1261,7 @@
                     // Handle enumeration fields with options
                     let options = '<option value="">Select an option...</option>';
                     if (property.options && Array.isArray(property.options)) {
-                        options += property.options.map(opt => 
+                        options += property.options.map(opt =>
                             `<option value="${opt.value || opt}">${opt.label || opt}</option>`
                         ).join('');
                     } else if (property.options && typeof property.options === 'object') {
@@ -1101,7 +1275,7 @@
                 default:
                     inputHtml = `<input type="text" class="form-control" id="${fieldId}" name="${property.name}">`;
             }
-            
+
             return `
                 <div class="form-row">
                     <label for="${fieldId}">${label}</label>
@@ -1113,37 +1287,37 @@
         function toggleField(objectType, fieldName, toggleType) {
             const data = propertiesData[objectType];
             if (!data) return;
-            
+
             // Initialize arrays if they don't exist
             if (!data.important_properties) data.important_properties = [];
             if (!data.other_properties) data.other_properties = [];
-            
+
             // Find the property in both sections
             let property = data.important_properties.find(p => p.name === fieldName);
             let isInImportant = true;
-            
+
             if (!property) {
                 property = data.other_properties.find(p => p.name === fieldName);
                 isInImportant = false;
             }
-            
+
             if (!property) return;
-            
+
             console.log(`Toggling field: ${fieldName}, type: ${toggleType}, currently in important: ${isInImportant}`);
             console.log('Before toggle - Important:', data.important_properties.length, 'Other:', data.other_properties.length);
-            
+
             // Toggle the property
             if (toggleType === 'important') {
                 // Toggle the important state
                 property.is_important = !property.is_important;
-                
+
                 // Remove from current array
                 if (isInImportant) {
                     data.important_properties = data.important_properties.filter(p => p.name !== fieldName);
                 } else {
-                        data.other_properties = data.other_properties.filter(p => p.name !== fieldName);
-                    }
-                
+                    data.other_properties = data.other_properties.filter(p => p.name !== fieldName);
+                }
+
                 // Add to correct array based on new state
                 if (property.is_important) {
                     data.important_properties.push(property);
@@ -1153,13 +1327,13 @@
             } else if (toggleType === 'enabled') {
                 property.is_enabled = !property.is_enabled;
             }
-            
+
             console.log('After toggle - Important:', data.important_properties.length, 'Other:', data.other_properties.length);
             console.log('Property is_important:', property.is_important);
-            
+
             // Save to database
             saveFieldConfiguration(objectType, property, toggleType);
-            
+
             // Re-render
             renderProperties(objectType, data);
             renderForm(objectType, data);
@@ -1171,7 +1345,7 @@
                 field_name: property.name,
                 order_index: property.order_index || 0
             };
-            
+
             // Only send the relevant data based on toggle type
             if (toggleType === 'order') {
                 // Only send order_index for order updates
@@ -1182,7 +1356,7 @@
                 data.is_enabled = property.is_enabled;
                 data.is_important = property.is_important;
             }
-            
+
             fetch('/api/save-form-field', {
                 method: 'POST',
                 headers: {
@@ -1190,15 +1364,15 @@
                 },
                 body: JSON.stringify(data)
             })
-            .then(response => response.json())
-            .then(result => {
-                if (!result.success) {
-                    console.error('Failed to save field configuration:', result.error);
-                }
-            })
-            .catch(error => {
-                console.error('Error saving field configuration:', error);
-            });
+                .then(response => response.json())
+                .then(result => {
+                    if (!result.success) {
+                        console.error('Failed to save field configuration:', result.error);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error saving field configuration:', error);
+                });
         }
 
         function saveToHubSpot(objectType) {
@@ -1206,11 +1380,11 @@
             const formData = {};
             const form = document.getElementById(`${objectType}Form`);
             const inputs = form.querySelectorAll('input, select, textarea');
-            
+
             inputs.forEach(input => {
                 if (input.value.trim()) {
                     let value = input.value;
-                    
+
                     // Convert datetime fields to milliseconds for HubSpot API
                     if (input.getAttribute('data-field-type') === 'datetime') {
                         const date = new Date(value);
@@ -1223,22 +1397,22 @@
                             value = date.getTime().toString();
                         }
                     }
-                    
+
                     formData[input.name] = value;
                 }
             });
-            
+
             if (Object.keys(formData).length === 0) {
                 showOutput(objectType, 'Please fill in at least one field', 'warning');
                 return;
             }
-            
+
             showLoading();
-            
+
             const requestData = {
                 object_data: formData
             };
-            
+
             fetch(`/api/save-to-hubspot/${objectType}`, {
                 method: 'POST',
                 headers: {
@@ -1246,62 +1420,62 @@
                 },
                 body: JSON.stringify(requestData)
             })
-            .then(response => response.json())
-            .then(result => {
-                hideLoading();
-                if (result.success) {
-                    let message = `<strong>${result.message}</strong><br><br>`;
-                    message += `<strong>Details:</strong><br>${result.details}<br><br>`;
-                    
-                    if (result.search_strategy) {
-                        message += `<strong>Search Strategy Used:</strong> ${result.search_strategy}<br>`;
-                    }
-                    if (result.search_info) {
-                        message += `<strong>Search Details:</strong> ${result.search_info}<br>`;
-                    }
-                    if (result.acgi_customer_id) {
-                        message += `<strong>ACGI Customer ID:</strong> ${result.acgi_customer_id}<br>`;
-                    }
-                    if (result.contact_id) {
-                        message += `<strong>HubSpot Contact ID:</strong> ${result.contact_id}<br>`;
-                    }
-                    if (result.deal_id) {
-                        message += `<strong>HubSpot Deal ID:</strong> ${result.deal_id}<br>`;
-                    }
-                    
-                    message += `<br><strong>Data sent to HubSpot:</strong><br><pre>${JSON.stringify(formData, null, 2)}</pre>`;
-                    
-                    if (result.hubspot_response) {
-                        message += `<br><strong>HubSpot Response:</strong><br><pre>${JSON.stringify(result.hubspot_response, null, 2)}</pre>`;
-                    }
-                    
-                    showOutput(objectType, message, 'success');
-                    resetForm(objectType, false); // Don't clear output after successful save
-                } else {
-                    let message = `<strong>${result.message}</strong><br><br>`;
-                    if (result.details) {
+                .then(response => response.json())
+                .then(result => {
+                    hideLoading();
+                    if (result.success) {
+                        let message = `<strong>${result.message}</strong><br><br>`;
                         message += `<strong>Details:</strong><br>${result.details}<br><br>`;
+
+                        if (result.search_strategy) {
+                            message += `<strong>Search Strategy Used:</strong> ${result.search_strategy}<br>`;
+                        }
+                        if (result.search_info) {
+                            message += `<strong>Search Details:</strong> ${result.search_info}<br>`;
+                        }
+                        if (result.acgi_customer_id) {
+                            message += `<strong>ACGI Customer ID:</strong> ${result.acgi_customer_id}<br>`;
+                        }
+                        if (result.contact_id) {
+                            message += `<strong>HubSpot Contact ID:</strong> ${result.contact_id}<br>`;
+                        }
+                        if (result.deal_id) {
+                            message += `<strong>HubSpot Deal ID:</strong> ${result.deal_id}<br>`;
+                        }
+
+                        message += `<br><strong>Data sent to HubSpot:</strong><br><pre>${JSON.stringify(formData, null, 2)}</pre>`;
+
+                        if (result.hubspot_response) {
+                            message += `<br><strong>HubSpot Response:</strong><br><pre>${JSON.stringify(result.hubspot_response, null, 2)}</pre>`;
+                        }
+
+                        showOutput(objectType, message, 'success');
+                        resetForm(objectType, false); // Don't clear output after successful save
+                    } else {
+                        let message = `<strong>${result.message}</strong><br><br>`;
+                        if (result.details) {
+                            message += `<strong>Details:</strong><br>${result.details}<br><br>`;
+                        }
+                        message += `<strong>Data sent:</strong><br><pre>${JSON.stringify(formData, null, 2)}</pre>`;
+
+                        showOutput(objectType, message, 'danger');
                     }
-                    message += `<strong>Data sent:</strong><br><pre>${JSON.stringify(formData, null, 2)}</pre>`;
-                    
-                    showOutput(objectType, message, 'danger');
-                }
-            })
-            .catch(error => {
-                hideLoading();
-                console.error('Error saving to HubSpot:', error);
-                showOutput(objectType, `❌ Error saving to HubSpot: ${error.message}<br><br><strong>Data sent:</strong><br><pre>${JSON.stringify(formData, null, 2)}</pre>`, 'danger');
-            });
+                })
+                .catch(error => {
+                    hideLoading();
+                    console.error('Error saving to HubSpot:', error);
+                    showOutput(objectType, `❌ Error saving to HubSpot: ${error.message}<br><br><strong>Data sent:</strong><br><pre>${JSON.stringify(formData, null, 2)}</pre>`, 'danger');
+                });
         }
 
         function showOutput(objectType, message, type = 'info') {
             const outputContainer = document.getElementById(`${objectType}Output`);
             const outputContent = document.getElementById(`${objectType}OutputContent`);
-            
+
             outputContent.className = `alert alert-${type}`;
             outputContent.innerHTML = message;
             outputContainer.style.display = 'block';
-            
+
             // Scroll to output
             outputContainer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
         }
@@ -1309,11 +1483,11 @@
         function resetForm(objectType, clearOutput = true) {
             const form = document.getElementById(`${objectType}Form`);
             const inputs = form.querySelectorAll('input, select, textarea');
-            
+
             inputs.forEach(input => {
                 input.value = '';
             });
-            
+
             // Clear output area only if requested
             if (clearOutput) {
                 const outputContainer = document.getElementById(`${objectType}Output`);
@@ -1322,25 +1496,79 @@
         }
 
         // Handle tab changes and load properties on page load
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             // Load properties automatically when page loads
             loadProperties();
-            
+
             // Load search preferences
             loadSearchPreferences();
+
+            // Handle URL parameters for tab state
+            const urlParams = new URLSearchParams(window.location.search);
+            const activeTab = urlParams.get('tab') || 'contacts';
             
+            // Activate the appropriate tab based on URL parameter
+            if (activeTab === 'memberships') {
+                const membershipsTab = document.getElementById('memberships-tab');
+                const membershipsPane = document.getElementById('memberships');
+                const contactsTab = document.getElementById('contacts-tab');
+                const contactsPane = document.getElementById('contacts');
+                
+                // Remove active class from contacts
+                contactsTab.classList.remove('active');
+                contactsPane.classList.remove('show', 'active');
+                
+                // Add active class to memberships
+                membershipsTab.classList.add('active');
+                membershipsPane.classList.add('show', 'active');
+                
+                currentObjectType = 'memberships';
+            } else {
+                // Default to contacts tab
+                currentObjectType = 'contacts';
+            }
+
             const tabs = document.querySelectorAll('[data-bs-toggle="tab"]');
             tabs.forEach(tab => {
-                tab.addEventListener('shown.bs.tab', function(event) {
+                tab.addEventListener('shown.bs.tab', function (event) {
                     const target = event.target.getAttribute('data-bs-target');
+                    let newTab = 'contacts';
+                    
                     if (target === '#contacts') {
                         currentObjectType = 'contacts';
-                    } else if (target === '#deals') {
-                        currentObjectType = 'deals';
+                        newTab = 'contacts';
+                    } else if (target === '#memberships') {
+                        currentObjectType = 'memberships';
+                        newTab = 'memberships';
                     }
+                    
+                    // Update URL with the new tab parameter
+                    const url = new URL(window.location);
+                    url.searchParams.set('tab', newTab);
+                    window.history.replaceState({}, '', url);
                 });
             });
+            
+            // Update navigation links to preserve current tab
+            updateNavigationLinks();
         });
+        
+        function updateNavigationLinks() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const currentTab = urlParams.get('tab') || 'contacts';
+            
+            // Update the memberships link to include the current tab
+            const membershipsLink = document.querySelector('a[href="/memberships"]');
+            if (membershipsLink) {
+                membershipsLink.href = `/memberships`;
+            }
+            
+            // Update the ACGI to HubSpot link to preserve the current tab
+            const acgiToHubspotLink = document.querySelector('a[href="/acgi-to-hubspot"]');
+            if (acgiToHubspotLink) {
+                acgiToHubspotLink.href = `/acgi-to-hubspot?tab=${currentTab}`;
+            }
+        }
 
         function saveSearchPreference(objectType) {
             const selectedRadio = document.querySelector(`input[name="${objectType}SearchPreference"]:checked`);
@@ -1348,9 +1576,9 @@
                 showAlert('Please select a search preference', 'warning');
                 return;
             }
-            
+
             const searchStrategy = selectedRadio.value;
-            
+
             fetch('/api/save-search-preference', {
                 method: 'POST',
                 headers: {
@@ -1361,18 +1589,18 @@
                     search_strategy: searchStrategy
                 })
             })
-            .then(response => response.json())
-            .then(result => {
-                if (result.success) {
-                    showAlert(`Search preference saved for ${objectType}!`, 'success');
-                } else {
-                    showAlert(`Failed to save search preference: ${result.error}`, 'danger');
-                }
-            })
-            .catch(error => {
-                console.error('Error saving search preference:', error);
-                showAlert(`Error saving search preference: ${error.message}`, 'danger');
-            });
+                .then(response => response.json())
+                .then(result => {
+                    if (result.success) {
+                        showAlert(`Search preference saved for ${objectType}!`, 'success');
+                    } else {
+                        showAlert(`Failed to save search preference: ${result.error}`, 'danger');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error saving search preference:', error);
+                    showAlert(`Error saving search preference: ${error.message}`, 'danger');
+                });
         }
 
         function loadSearchPreferences() {
@@ -1404,10 +1632,58 @@
         let acgiFieldConfig = {};
         let currentEmailPreference = { mode: 'first', format: 'json' };
         let currentPhonePreference = { mode: 'first', format: 'json' };
+        let acgiMemberships = {};
+        let acgiMembershipsFieldConfig = {};
+        let acgiMembershipsList = []; // Store the full list of memberships
+        let currentMembershipIndex = 0; // Track which membership is currently selected
 
         function showAcgiJson(data) {
             const jsonViewer = document.getElementById('acgi-json-viewer');
             jsonViewer.textContent = JSON.stringify(data, null, 2);
+        }
+        
+        function showAcgiMembershipsJson(data) {
+            const jsonViewer = document.getElementById('acgi-memberships-json-viewer');
+            jsonViewer.textContent = JSON.stringify(data, null, 2);
+        }
+
+        function populateMembershipSelector(membershipsList) {
+            const container = document.getElementById('membership-selector-container');
+            const selector = document.getElementById('membership-item-selector');
+            
+            if (!membershipsList || membershipsList.length === 0) {
+                container.style.display = 'none';
+                return;
+            }
+            
+            // Clear existing options
+            selector.innerHTML = '';
+            
+            // Add options for each membership (1-based indexing for user display)
+            membershipsList.forEach((membership, index) => {
+                const option = document.createElement('option');
+                option.value = index;
+                option.textContent = `Item ${index + 1}`;
+                selector.appendChild(option);
+            });
+            
+            // Show the selector and set default to first item
+            container.style.display = 'block';
+            selector.value = '0';
+            currentMembershipIndex = 0;
+        }
+
+        function updateMembershipDisplay() {
+            if (acgiMembershipsList.length === 0) return;
+            
+            // Update the current membership data
+            acgiMemberships = ensureAcgiFieldsObject(acgiMembershipsList[currentMembershipIndex]);
+            
+            // Update JSON viewer
+            showAcgiMembershipsJson(acgiMembershipsList);
+            
+            // Re-render the fields with the new membership data
+            renderAcgiMembershipsFields(acgiMemberships, acgiMembershipsFieldConfig);
         }
 
         function formatAddressFlat(addr) {
@@ -1498,6 +1774,12 @@
         }
 
         function renderAcgiFields(fields, config) {
+            if (!config) {
+                console.warn('renderAcgiFields: config is not a valid object', config);
+                document.getElementById('acgiImportantFields').innerHTML = '<div class="text-center text-muted">No important fields</div>';
+                document.getElementById('acgiAllFields').innerHTML = '<div class="text-center text-muted">No fields loaded</div>';
+                return;
+            }
             if (!fields || typeof fields !== 'object' || Array.isArray(fields)) {
                 console.warn('renderAcgiFields: fields is not a valid object', fields);
                 document.getElementById('acgiImportantFields').innerHTML = '<div class="text-center text-muted">No important fields</div>';
@@ -1548,8 +1830,8 @@
                         ${isImportant ? '<div class="drag-handle me-2" style="cursor: grab; color: #6c757d;"><i class="fas fa-grip-vertical"></i></div>' : ''}
                         <span class="property-name" title="${key}">${key}</span>
                         <div class="property-actions">
-                            <span class="badge badge-important" style="background:#28a745;${isImportant?'':'display:none'}">Important</span>
-                            <span class="badge badge-enabled" style="background:#667eea;${isEnabled?'':'display:none'}">Enabled</span>
+                            <span class="badge badge-important" style="background:#28a745;${isImportant ? '' : 'display:none'}">Important</span>
+                            <span class="badge badge-enabled" style="background:#667eea;${isEnabled ? '' : 'display:none'}">Enabled</span>
                             <button class="btn btn-outline-success btn-sm" onclick="toggleAcgiField('${key}','important')"><i class="fas fa-star"></i></button>
                             <button class="btn btn-outline-primary btn-sm" onclick="toggleAcgiField('${key}','enabled')"><i class="fas fa-toggle-on"></i></button>
                         </div>
@@ -1557,7 +1839,7 @@
                     <div class="property-label">${displayValue}</div>
                 `;
                 if (isImportant) {
-                    importantFields.push({card, order: fieldConfig.order_index || 0, key});
+                    importantFields.push({ card, order: fieldConfig.order_index || 0, key });
                 } else {
                     allFields.push(card);
                 }
@@ -1576,55 +1858,156 @@
                     handle: '.drag-handle',
                     ghostClass: 'sortable-ghost',
                     chosenClass: 'sortable-chosen',
-                    onEnd: function(evt) {
+                    onEnd: function (evt) {
                         // Update order indices in acgiFieldConfig
                         const cards = importantDiv.querySelectorAll('.property-card');
                         cards.forEach((card, idx) => {
                             const fieldName = card.getAttribute('data-field-name');
-                            if (!acgiFieldConfig[fieldName]) acgiFieldConfig[fieldName] = {is_important: true, is_enabled: true};
+                            if (!acgiFieldConfig[fieldName]) acgiFieldConfig[fieldName] = { is_important: true, is_enabled: true };
                             acgiFieldConfig[fieldName].order_index = idx;
                         });
                         // Save config
-                        saveAcgiFieldConfig(acgiFieldConfig);
+                        saveAcgiFieldConfig('contacts', acgiFieldConfig);
                     }
                 });
             }
         }
 
+        function renderAcgiMembershipsFields(fields, config) {
+            if (!config) {
+                console.warn('renderAcgiMembershipsFields: config is not a valid object', config);
+                document.getElementById('membershipACGIImportantFields').innerHTML = '<div class="text-center text-muted">No important fields</div>';
+                document.getElementById('membershipACGIAllFields').innerHTML = '<div class="text-center text-muted">No fields loaded</div>';
+                return;
+            }
+            if (!fields || typeof fields !== 'object' || Array.isArray(fields)) {
+                console.warn('renderAcgiMembershipsFields: fields is not a valid object', fields);
+                document.getElementById('membershipACGIImportantFields').innerHTML = '<div class="text-center text-muted">No important fields</div>';
+                document.getElementById('membershipACGIAllFields').innerHTML = '<div class="text-center text-muted">No fields loaded</div>';
+                return;
+            }
+            console.log('Rendering ACGI memberships fields:', fields, config);
+            const importantDiv = document.getElementById('membershipACGIImportantFields');
+            const allDiv = document.getElementById('membershipACGIAllFields');
+            importantDiv.innerHTML = '';
+            allDiv.innerHTML = '';
+            let importantFields = [];
+            let allFields = [];
+            Object.entries(fields).forEach(([key, value]) => {
+                const fieldConfig = config[key] || {};
+                const isImportant = !!fieldConfig.is_important;
+                const isEnabled = fieldConfig.is_enabled !== false; // default true
+                let displayValue = value;
+                const card = document.createElement('div');
+                card.className = 'property-card' + (isImportant ? ' important' : '') + (isEnabled ? ' enabled' : '');
+                card.setAttribute('data-field-name', key);
+                card.innerHTML = `
+                    <div class="property-header d-flex justify-content-between align-items-center">
+                        ${isImportant ? '<div class="drag-handle me-2" style="cursor: grab; color: #6c757d;"><i class="fas fa-grip-vertical"></i></div>' : ''}      
+                        <span class="property-name" title="${key}">${key}</span>
+                        <div class="property-actions">
+                            <span class="badge badge-important" style="background:#28a745;${isImportant ? '' : 'display:none'}">Important</span>
+                            <span class="badge badge-enabled" style="background:#667eea;${isEnabled ? '' : 'display:none'}">Enabled</span>
+                            <button class="btn btn-outline-success btn-sm" onclick="toggleAcgiMembershipsField('${key}','important')"><i class="fas fa-star"></i></button>
+                            <button class="btn btn-outline-primary btn-sm" onclick="toggleAcgiMembershipsField('${key}','enabled')"><i class="fas fa-toggle-on"></i></button>
+                        </div>
+                    </div>
+                    <div class="property-label">${displayValue}</div>
+                `;
+                if (isImportant) {
+                    importantFields.push({ card, order: fieldConfig.order_index || 0, key });
+                } else {
+                    allFields.push(card);
+                }
+            });
+            // Sort important fields by order_index
+            importantFields.sort((a, b) => a.order - b.order);
+            importantFields.forEach(f => importantDiv.appendChild(f.card));
+            allFields.forEach(card => allDiv.appendChild(card));
+            if (importantFields.length === 0) importantDiv.innerHTML = `<div class="text-center text-muted"><i class="fas fa-info-circle"></i> No important fields</div>`;
+            if (allFields.length === 0) allDiv.innerHTML = `<div class="text-center text-muted"><i class="fas fa-info-circle"></i> No fields loaded</div>`;
+            // Enable drag-and-drop for important fields
+            if (importantFields.length > 1 && window.Sortable) {
+                if (importantDiv.sortable) importantDiv.sortable.destroy();
+                importantDiv.sortable = Sortable.create(importantDiv, {
+                    animation: 150,
+                    handle: '.drag-handle',
+                    ghostClass: 'sortable-ghost',
+                    chosenClass: 'sortable-chosen',
+                    onEnd: function (evt) {
+                        // Update order indices in acgiFieldConfig
+                        const cards = importantDiv.querySelectorAll('.property-card');
+                        cards.forEach((card, idx) => {
+                            const fieldName = card.getAttribute('data-field-name');
+                            if (!acgiMembershipsFieldConfig[fieldName]) acgiMembershipsFieldConfig[fieldName] = { is_important: true, is_enabled: true };
+                            acgiMembershipsFieldConfig[fieldName].order_index = idx;
+                        });
+                        // Save config
+                        saveAcgiFieldConfig('memberships', acgiMembershipsFieldConfig);
+                    }
+                }); 
+            }
+            // // Add event listeners for field toggles
+            // importantDiv.querySelectorAll('.toggle-field').forEach(btn => {
+            //     btn.addEventListener('click', function() {
+            //         toggleAcgiField(this.dataset.field, 'important');
+            //     });
+            // });
+            // // Add event listeners for field toggles
+            // allDiv.querySelectorAll('.toggle-field').forEach(btn => {
+            //     btn.addEventListener('click', function() {
+            //         toggleAcgiField(this.dataset.field, 'enabled');
+            //     });
+            // });
+        }
         function toggleAcgiField(field, type) {
-            if (!acgiFieldConfig[field]) acgiFieldConfig[field] = {is_important: false, is_enabled: true};
+            if (!acgiFieldConfig[field]) acgiFieldConfig[field] = { is_important: false, is_enabled: true };
             if (type === 'important') acgiFieldConfig[field].is_important = !acgiFieldConfig[field].is_important;
             if (type === 'enabled') acgiFieldConfig[field].is_enabled = !acgiFieldConfig[field].is_enabled;
             renderAcgiFields(acgiFields, acgiFieldConfig);
-            saveAcgiFieldConfig(acgiFieldConfig);
+            saveAcgiFieldConfig('contacts', acgiFieldConfig);
+        }
+        function toggleAcgiMembershipsField(field, type) {
+            if (!acgiMembershipsFieldConfig[field]) acgiMembershipsFieldConfig[field] = { is_important: false, is_enabled: true };
+            if (type === 'important') acgiMembershipsFieldConfig[field].is_important = !acgiMembershipsFieldConfig[field].is_important;
+            if (type === 'enabled') acgiMembershipsFieldConfig[field].is_enabled = !acgiMembershipsFieldConfig[field].is_enabled;
+            renderAcgiMembershipsFields(acgiMemberships, acgiMembershipsFieldConfig);
+            saveAcgiFieldConfig('memberships', acgiMembershipsFieldConfig);
         }
 
-        function saveAcgiFieldConfig(config) {
+        function saveAcgiFieldConfig(object_type, config) {
             fetch('/api/acgi-field-config', {
                 method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({object_type: 'contacts', config})
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ object_type, config })
+            }).then(res => res.json()).then(data => {
+                console.log("saveAcgiFieldConfig RESPONSE", data)
             });
         }
 
-        function loadAcgiFieldConfig(cb) {
-            fetch('/api/acgi-field-config?object_type=contacts')
+        function loadAcgiFieldConfig(object_type, cb) {
+            fetch('/api/acgi-field-config?object_type=' + object_type)
                 .then(res => res.json())
                 .then(data => {
-                    acgiFieldConfig = data.config || {};
+                    console.log("loadAcgiFieldConfig RESPONSE", data)
+                    if (object_type === 'contacts') {
+                        acgiFieldConfig = data.config || {};
+                    } else if (object_type === 'memberships') {
+                        acgiMembershipsFieldConfig = data.config || {};
+                    }
                     if (cb) cb();
                 });
         }
 
         // On page load, load last ACGI fields and config
-        window.addEventListener('DOMContentLoaded', function() {
+        window.addEventListener('DOMContentLoaded', function () {
             fetch('/api/acgi-fields?object_type=contacts')
                 .then(res => res.json())
                 .then(data => {
                     if (data.success && data.fields && Object.keys(data.fields).length > 0) {
                         acgiFields = ensureAcgiFieldsObject(data.fields);
                         showAcgiJson(acgiFields);
-                        loadAcgiFieldConfig(() => {
+                        loadAcgiFieldConfig('contacts', () => {
                             loadAddressPreferences(acgiFields.addresses);
                             loadEmailPreference(acgiFields.emails);
                             loadPhonePreference(acgiFields.phones);
@@ -1637,6 +2020,24 @@
                         });
                     }
                 });
+
+            fetch('/api/acgi-fields?object_type=memberships')
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success && data.fields && Object.keys(data.fields).length > 0) {
+                        acgiMemberships = ensureAcgiFieldsObject(data.fields);
+                        showAcgiMembershipsJson(acgiMemberships);
+                        loadAcgiFieldConfig('memberships', () => {
+                            renderAcgiMembershipsFields(acgiMemberships, acgiMembershipsFieldConfig);
+                        });
+                    }
+                });
+
+            // Add event listener for membership selector
+            document.getElementById('membership-item-selector').addEventListener('change', function() {
+                currentMembershipIndex = parseInt(this.value);
+                updateMembershipDisplay();
+            });
         });
 
         // After fetching a customer, save the field list
@@ -1653,10 +2054,10 @@
                     // Save the field list to backend
                     fetch('/api/acgi-fields', {
                         method: 'POST',
-                        headers: {'Content-Type': 'application/json'},
-                        body: JSON.stringify({object_type: 'contacts', fields: acgiFields})
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ object_type: 'contacts', fields: acgiFields })
                     });
-                    loadAcgiFieldConfig(() => {
+                    loadAcgiFieldConfig('contacts', () => {
                         updateCurrentAddressPreference(() => {
                             updateCurrentEmailPreference(() => {
                                 updateCurrentPhonePreference(() => {
@@ -1674,7 +2075,7 @@
                     document.getElementById('fetch-acgi-btn').disabled = false;
                 })
                 .catch(error => {
-                    console.log("error",error)
+                    console.log("error", error)
                     document.getElementById('acgi-loading-spinner').style.display = 'none';
                     document.getElementById('fetch-acgi-btn').disabled = false;
                     let msg = 'Failed to fetch ACGI customer data.';
@@ -1682,7 +2083,51 @@
                     document.getElementById('acgiAllFields').innerHTML = `<div class='alert alert-danger text-center'>${msg}</div>`;
                 });
         }
-
+        function fetchAcgiCustomerMemberships() {
+            const customerId = document.getElementById('acgi-membership-customer-id').value;
+            if (!customerId) return;
+            document.getElementById('acgi-membership-loading-spinner').style.display = 'block';
+            document.getElementById('fetch-memberships-btn').disabled = true;
+            fetch(`/api/acgi/customer/${customerId}/memberships`)
+                .then(response => response.json())
+                .then(data => {
+                    console.log("data", data)
+                    let memberships_data = data.fields
+                    
+                    // Store the full list of memberships
+                    if (Array.isArray(memberships_data)) {
+                        acgiMembershipsList = memberships_data;
+                        acgiMemberships = ensureAcgiFieldsObject(memberships_data[0]);
+                    } else {
+                        acgiMembershipsList = [memberships_data];
+                        acgiMemberships = ensureAcgiFieldsObject(memberships_data);
+                    }
+                    
+                    // Populate the membership selector
+                    populateMembershipSelector(acgiMembershipsList);
+                    
+                    showAcgiMembershipsJson(memberships_data);
+                    // Save the field list to backend
+                    fetch('/api/acgi-fields', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ object_type: 'memberships', fields: acgiMemberships })
+                    });
+                    loadAcgiFieldConfig('memberships', () => {
+                        renderAcgiMembershipsFields(acgiMemberships, acgiMembershipsFieldConfig);
+                    });
+                    console.log("acgiMemberships", acgiMemberships)
+                    document.getElementById('acgi-membership-loading-spinner').style.display = 'none';
+                    document.getElementById('fetch-memberships-btn').disabled = false;
+                }).catch(error => {
+                    console.log("error", error)
+                    document.getElementById('acgi-membership-loading-spinner').style.display = 'none';
+                    document.getElementById('fetch-memberships-btn').disabled = false;
+                    let msg = 'Failed to fetch ACGI customer memberships.';
+                    document.getElementById('membershipACGIImportantFields').innerHTML = `<div class='alert alert-danger text-center'>${msg}</div>`;
+                    document.getElementById('membershipACGIAllFields').innerHTML = `<div class='alert alert-danger text-center'>${msg}</div>`;
+                });
+        }
         // Address Preferences logic (radio version)
         function showHideCriteriaSectionRadio() {
             const mode = document.querySelector('input[name="addressPreferenceMode"]:checked').value;
@@ -1698,7 +2143,7 @@
             radio.addEventListener('change', showHideCriteriaSectionRadio);
         });
 
-        document.getElementById('address-preferences-form').addEventListener('submit', function(e) {
+        document.getElementById('address-preferences-form').addEventListener('submit', function (e) {
             e.preventDefault();
             const mode = document.querySelector('input[name="addressPreferenceMode"]:checked').value;
             const format = document.querySelector('input[name="addressFormat"]:checked').value;
@@ -1711,8 +2156,8 @@
             currentAddressPreference = preference;
             fetch('/api/acgi-address-preference', {
                 method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({object_type: 'contacts', preference})
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ object_type: 'contacts', preference })
             }).then(() => {
                 alert('Address preferences saved!');
             });
@@ -1722,7 +2167,7 @@
         // When loading preferences, set the format radio button
         function loadAddressPreferences(addresses) {
             fetch('/api/acgi-address-preference?object_type=contacts')
-                .then(res => res.json().catch(() => ({success: false})))
+                .then(res => res.json().catch(() => ({ success: false })))
                 .then(data => {
                     let pref = data && data.preference ? data.preference : {};
                     if (!pref.mode) pref.mode = 'first';
@@ -1758,7 +2203,7 @@
             });
         }
 
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             attachAddressPreferenceRadioListeners();
         });
 
@@ -1771,7 +2216,7 @@
         document.querySelectorAll('input[name="addressPreferenceMode"]').forEach(radio => {
             radio.addEventListener('change', onAddressPreferenceChange);
         });
-        document.getElementById('address-preferences-form').addEventListener('submit', function(e) {
+        document.getElementById('address-preferences-form').addEventListener('submit', function (e) {
             setTimeout(onAddressPreferenceChange, 100); // update after save
         });
 
@@ -1822,11 +2267,17 @@
         });
 
         // Copy To HubSpot logic
-        function copyAcgiToHubspot() {
+        function copyAcgiToHubspot(object_type) {
             // 1. Get ordered ACGI important fields
-            const acgiCards = document.querySelectorAll('#acgiImportantFields .property-card');
+            let acgiCards = document.querySelectorAll('#acgiImportantFields .property-card');
+            if (object_type === 'memberships') {
+                acgiCards = document.querySelectorAll('#membershipACGIImportantFields .property-card');
+            }
             // 2. Get ordered enabled HubSpot important fields (as rendered in the form)
-            const hubspotForm = document.getElementById('contactsForm');
+            let hubspotForm = document.getElementById('contactsForm');
+            if (object_type === 'memberships') {
+                hubspotForm = document.getElementById('membershipsForm');   
+            }
             // Find all enabled fields in the form (inputs, selects, textareas)
             const hubspotInputs = Array.from(hubspotForm.querySelectorAll('.form-row input, .form-row select, .form-row textarea'))
                 .filter(input => !input.disabled && input.offsetParent !== null); // visible and enabled
@@ -1839,196 +2290,289 @@
                 const input = hubspotInputs[idx];
                 console.log(`Copying ACGI field #${idx + 1} value:`, value, 'to HubSpot input:', input);
 
+                // Convert value based on input type
+                let convertedValue = value;
+                
+                // Handle date and datetime fields
+                if (input.getAttribute('data-field-type') === 'date' || input.type === 'date') {
+                    convertedValue = convertToDateInputFormat(value);
+                } else if (input.getAttribute('data-field-type') === 'datetime' || input.type === 'datetime-local') {
+                    convertedValue = convertToDateTimeInputFormat(value);
+                }
+
                 if (input.tagName === 'SELECT') {
-                    if ([...input.options].some(opt => opt.value === value)) {
-                        input.value = value;
+                    if ([...input.options].some(opt => opt.value === convertedValue)) {
+                        input.value = convertedValue;
                     } else {
                         input.selectedIndex = 0;
                     }
                 } else if (input.type === 'checkbox' || input.type === 'radio') {
-                    input.checked = !!value;
+                    input.checked = !!convertedValue;
                 } else {
-                    input.value = value;
+                    input.value = convertedValue;
                 }
                 input.dispatchEvent(new Event('input', { bubbles: true }));
             });
         }
-        document.getElementById('copyToHubspotBtn').addEventListener('click', copyAcgiToHubspot);
 
+        // Helper function to convert various date formats to HTML date input format (yyyy-MM-dd)
+        function convertToDateInputFormat(value) {
+            if (!value || value.trim() === '') return '';
+            
+            try {
+                // Try to parse the value as a date
+                let date;
+                
+                // Handle different possible formats
+                if (typeof value === 'number' || /^\d+$/.test(value)) {
+                    // Unix timestamp (seconds or milliseconds)
+                    const timestamp = parseInt(value);
+                    date = new Date(timestamp > 1000000000000 ? timestamp : timestamp * 1000);
+                } else if (value.includes('T') || value.includes('Z')) {
+                    // ISO string format
+                    date = new Date(value);
+                } else if (value.match(/^\d{1,2}\/\d{1,2}\/\d{4}$/)) {
+                    // Handle mm/dd/yyyy format from ACGI
+                    const parts = value.split('/');
+                    const month = parseInt(parts[0]) - 1; // Month is 0-indexed in Date constructor
+                    const day = parseInt(parts[1]);
+                    const year = parseInt(parts[2]);
+                    date = new Date(year, month, day);
+                } else {
+                    // Try parsing as regular date string
+                    date = new Date(value);
+                }
+                
+                if (isNaN(date.getTime())) {
+                    console.warn('Could not parse date value:', value);
+                    return value; // Return original value if parsing fails
+                }
+                
+                // Format as yyyy-MM-dd for HTML date input
+                const year = date.getFullYear();
+                const month = String(date.getMonth() + 1).padStart(2, '0');
+                const day = String(date.getDate()).padStart(2, '0');
+                return `${year}-${month}-${day}`;
+            } catch (error) {
+                console.warn('Error converting date value:', value, error);
+                return value; // Return original value if conversion fails
+            }
+        }
+
+        // Helper function to convert various date formats to HTML datetime-local input format (YYYY-MM-DDTHH:MM)
+        function convertToDateTimeInputFormat(value) {
+            if (!value || value.trim() === '') return '';
+            
+            try {
+                // Try to parse the value as a date
+                let date;
+                
+                // Handle different possible formats
+                if (typeof value === 'number' || /^\d+$/.test(value)) {
+                    // Unix timestamp (seconds or milliseconds)
+                    const timestamp = parseInt(value);
+                    date = new Date(timestamp > 1000000000000 ? timestamp : timestamp * 1000);
+                } else if (value.includes('T') || value.includes('Z')) {
+                    // ISO string format
+                    date = new Date(value);
+                } else {
+                    // Try parsing as regular date string
+                    date = new Date(value);
+                }
+                
+                if (isNaN(date.getTime())) {
+                    console.warn('Could not parse datetime value:', value);
+                    return value; // Return original value if parsing fails
+                }
+                
+                // Format as YYYY-MM-DDTHH:MM for HTML datetime-local input
+                const year = date.getFullYear();
+                const month = String(date.getMonth() + 1).padStart(2, '0');
+                const day = String(date.getDate()).padStart(2, '0');
+                const hours = String(date.getHours()).padStart(2, '0');
+                const minutes = String(date.getMinutes()).padStart(2, '0');
+                return `${year}-${month}-${day}T${hours}:${minutes}`;
+            } catch (error) {
+                console.warn('Error converting datetime value:', value, error);
+                return value; // Return original value if conversion fails
+            }
+        }
+        document.getElementById('copyToHubspotBtn').addEventListener('click', () => copyAcgiToHubspot('contacts'));
+        document.getElementById('copyMembershipsToHubspotBtn').addEventListener('click', () => copyAcgiToHubspot('memberships'));
         // --- Email and Phone Preferences Logic ---
 
         function selectItemByPreference(list, preference) {
-          if (!Array.isArray(list) || list.length === 0) return null;
-          if (!preference || !preference.mode || preference.mode === 'first') {
+            if (!Array.isArray(list) || list.length === 0) return null;
+            if (!preference || !preference.mode || preference.mode === 'first') {
+                return list[0];
+            }
+            if (preference.mode === 'last') {
+                return list[list.length - 1];
+            }
+            if (preference.mode === 'criteria' && preference.property && preference.operator) {
+                return list.find(item => {
+                    const val = item[preference.property];
+                    const cmp = preference.value;
+                    switch (preference.operator) {
+                        case '=':
+                            if (typeof val === 'boolean') return val === (cmp === 'true');
+                            if (typeof val === 'number') return val === Number(cmp);
+                            return val == cmp;
+                        case '!=':
+                            if (typeof val === 'boolean') return val !== (cmp === 'true');
+                            if (typeof val === 'number') return val !== Number(cmp);
+                            return val != cmp;
+                        case 'contains': return val && typeof val === 'string' && val.includes(cmp);
+                        case '>': return val > cmp;
+                        case '<': return val < cmp;
+                        case 'is null': return val === null || val === undefined;
+                        case 'is not null': return val !== null && val !== undefined;
+                        default: return false;
+                    }
+                }) || null;
+            }
             return list[0];
-          }
-          if (preference.mode === 'last') {
-            return list[list.length - 1];
-          }
-          if (preference.mode === 'criteria' && preference.property && preference.operator) {
-            return list.find(item => {
-              const val = item[preference.property];
-              const cmp = preference.value;
-              switch (preference.operator) {
-                case '=':
-                  if (typeof val === 'boolean') return val === (cmp === 'true');
-                  if (typeof val === 'number') return val === Number(cmp);
-                  return val == cmp;
-                case '!=':
-                  if (typeof val === 'boolean') return val !== (cmp === 'true');
-                  if (typeof val === 'number') return val !== Number(cmp);
-                  return val != cmp;
-                case 'contains': return val && typeof val === 'string' && val.includes(cmp);
-                case '>': return val > cmp;
-                case '<': return val < cmp;
-                case 'is null': return val === null || val === undefined;
-                case 'is not null': return val !== null && val !== undefined;
-                default: return false;
-              }
-            }) || null;
-          }
-          return list[0];
         }
 
         function formatEmailFlat(emailObj) {
-          return emailObj && emailObj.address ? emailObj.address : '';
+            return emailObj && emailObj.address ? emailObj.address : '';
         }
         function formatPhoneFlat(phoneObj) {
-          return phoneObj && phoneObj.number ? phoneObj.number : '';
+            return phoneObj && phoneObj.number ? phoneObj.number : '';
         }
 
         // Save/load preferences for email and phone
         function saveEmailPreference(preference) {
-          fetch('/api/acgi-email-preference', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({object_type: 'contacts', preference})
-          });
+            fetch('/api/acgi-email-preference', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ object_type: 'contacts', preference })
+            });
         }
         function savePhonePreference(preference) {
-          fetch('/api/acgi-phone-preference', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({object_type: 'contacts', preference})
-          });
+            fetch('/api/acgi-phone-preference', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ object_type: 'contacts', preference })
+            });
         }
         function loadEmailPreference(emails) {
-          fetch('/api/acgi-email-preference?object_type=contacts')
-            .then(res => res.json().catch(() => ({success: false})))
-            .then(data => {
-              let pref = data && data.preference ? data.preference : {};
-              if (!pref.mode) pref.mode = 'first';
-              if (!pref.format) pref.format = 'json';
+            fetch('/api/acgi-email-preference?object_type=contacts')
+                .then(res => res.json().catch(() => ({ success: false })))
+                .then(data => {
+                    let pref = data && data.preference ? data.preference : {};
+                    if (!pref.mode) pref.mode = 'first';
+                    if (!pref.format) pref.format = 'json';
 
-              document.getElementById('emailModeFirst').checked = pref.mode === 'first';
-              document.getElementById('emailModeLast').checked = pref.mode === 'last';
-              document.getElementById('emailModeCriteria').checked = pref.mode === 'criteria';
-              document.getElementById('emailFormatJson').checked = pref.format === 'json';
-              document.getElementById('emailFormatFlat').checked = pref.format === 'flat';
+                    document.getElementById('emailModeFirst').checked = pref.mode === 'first';
+                    document.getElementById('emailModeLast').checked = pref.mode === 'last';
+                    document.getElementById('emailModeCriteria').checked = pref.mode === 'criteria';
+                    document.getElementById('emailFormatJson').checked = pref.format === 'json';
+                    document.getElementById('emailFormatFlat').checked = pref.format === 'flat';
 
-              currentEmailPreference = pref;
+                    currentEmailPreference = pref;
 
-              attachEmailPreferenceRadioListeners();
-              showHideEmailCriteriaSection();
+                    attachEmailPreferenceRadioListeners();
+                    showHideEmailCriteriaSection();
 
-              if (pref.mode === 'criteria' && emails && emails.length > 0) {
-                populateEmailPropertiesDropdown(emails);
-                document.getElementById('email-criteria-property').value = pref.property || '';
-                document.getElementById('email-criteria-operator').value = pref.operator || '=';
-                document.getElementById('email-criteria-value').value = pref.value || '';
-              }
+                    if (pref.mode === 'criteria' && emails && emails.length > 0) {
+                        populateEmailPropertiesDropdown(emails);
+                        document.getElementById('email-criteria-property').value = pref.property || '';
+                        document.getElementById('email-criteria-operator').value = pref.operator || '=';
+                        document.getElementById('email-criteria-value').value = pref.value || '';
+                    }
 
-              renderAcgiFields(acgiFields, acgiFieldConfig);
-            });
+                    renderAcgiFields(acgiFields, acgiFieldConfig);
+                });
         }
         function loadPhonePreference(phones) {
-          fetch('/api/acgi-phone-preference?object_type=contacts')
-            .then(res => res.json().catch(() => ({success: false})))
-            .then(data => {
-              let pref = data && data.preference ? data.preference : {};
-              if (!pref.mode) pref.mode = 'first';
-              if (!pref.format) pref.format = 'json';
+            fetch('/api/acgi-phone-preference?object_type=contacts')
+                .then(res => res.json().catch(() => ({ success: false })))
+                .then(data => {
+                    let pref = data && data.preference ? data.preference : {};
+                    if (!pref.mode) pref.mode = 'first';
+                    if (!pref.format) pref.format = 'json';
 
-              document.getElementById('phoneModeFirst').checked = pref.mode === 'first';
-              document.getElementById('phoneModeLast').checked = pref.mode === 'last';
-              document.getElementById('phoneModeCriteria').checked = pref.mode === 'criteria';
-              document.getElementById('phoneFormatJson').checked = pref.format === 'json';
-              document.getElementById('phoneFormatFlat').checked = pref.format === 'flat';
+                    document.getElementById('phoneModeFirst').checked = pref.mode === 'first';
+                    document.getElementById('phoneModeLast').checked = pref.mode === 'last';
+                    document.getElementById('phoneModeCriteria').checked = pref.mode === 'criteria';
+                    document.getElementById('phoneFormatJson').checked = pref.format === 'json';
+                    document.getElementById('phoneFormatFlat').checked = pref.format === 'flat';
 
-              currentPhonePreference = pref;
+                    currentPhonePreference = pref;
 
-              attachPhonePreferenceRadioListeners();
-              showHidePhoneCriteriaSection();
+                    attachPhonePreferenceRadioListeners();
+                    showHidePhoneCriteriaSection();
 
-              if (pref.mode === 'criteria' && phones && phones.length > 0) {
-                populatePhonePropertiesDropdown(phones);
-                document.getElementById('phone-criteria-property').value = pref.property || '';
-                document.getElementById('phone-criteria-operator').value = pref.operator || '=';
-                document.getElementById('phone-criteria-value').value = pref.value || '';
-              }
+                    if (pref.mode === 'criteria' && phones && phones.length > 0) {
+                        populatePhonePropertiesDropdown(phones);
+                        document.getElementById('phone-criteria-property').value = pref.property || '';
+                        document.getElementById('phone-criteria-operator').value = pref.operator || '=';
+                        document.getElementById('phone-criteria-value').value = pref.value || '';
+                    }
 
-              renderAcgiFields(acgiFields, acgiFieldConfig);
-            });
+                    renderAcgiFields(acgiFields, acgiFieldConfig);
+                });
         }
 
         // Show/hide criteria sections for email/phone
         function showHideEmailCriteriaSection() {
-          const mode = document.querySelector('input[name="emailPreferenceMode"]:checked').value;
-          document.getElementById('email-criteria-section').style.display = (mode === 'criteria') ? '' : 'none';
+            const mode = document.querySelector('input[name="emailPreferenceMode"]:checked').value;
+            document.getElementById('email-criteria-section').style.display = (mode === 'criteria') ? '' : 'none';
         }
         function showHidePhoneCriteriaSection() {
-          const mode = document.querySelector('input[name="phonePreferenceMode"]:checked').value;
-          document.getElementById('phone-criteria-section').style.display = (mode === 'criteria') ? '' : 'none';
+            const mode = document.querySelector('input[name="phonePreferenceMode"]:checked').value;
+            document.getElementById('phone-criteria-section').style.display = (mode === 'criteria') ? '' : 'none';
         }
         function attachEmailPreferenceRadioListeners() {
-          document.querySelectorAll('input[name="emailPreferenceMode"]').forEach(radio => {
-            radio.removeEventListener('change', showHideEmailCriteriaSection);
-            radio.addEventListener('change', showHideEmailCriteriaSection);
-          });
+            document.querySelectorAll('input[name="emailPreferenceMode"]').forEach(radio => {
+                radio.removeEventListener('change', showHideEmailCriteriaSection);
+                radio.addEventListener('change', showHideEmailCriteriaSection);
+            });
         }
         function attachPhonePreferenceRadioListeners() {
-          document.querySelectorAll('input[name="phonePreferenceMode"]').forEach(radio => {
-            radio.removeEventListener('change', showHidePhoneCriteriaSection);
-            radio.addEventListener('change', showHidePhoneCriteriaSection);
-          });
+            document.querySelectorAll('input[name="phonePreferenceMode"]').forEach(radio => {
+                radio.removeEventListener('change', showHidePhoneCriteriaSection);
+                radio.addEventListener('change', showHidePhoneCriteriaSection);
+            });
         }
         // Populate property dropdowns for email/phone
         function populateEmailPropertiesDropdown(emails) {
-          const propertySelect = document.getElementById('email-criteria-property');
-          propertySelect.innerHTML = '';
-          if (emails && emails.length > 0) {
-            Object.keys(emails[0]).forEach(key => {
-              const opt = document.createElement('option');
-              opt.value = key;
-              opt.textContent = key;
-              propertySelect.appendChild(opt);
-            });
-          }
+            const propertySelect = document.getElementById('email-criteria-property');
+            propertySelect.innerHTML = '';
+            if (emails && emails.length > 0) {
+                Object.keys(emails[0]).forEach(key => {
+                    const opt = document.createElement('option');
+                    opt.value = key;
+                    opt.textContent = key;
+                    propertySelect.appendChild(opt);
+                });
+            }
         }
         function populatePhonePropertiesDropdown(phones) {
-          const propertySelect = document.getElementById('phone-criteria-property');
-          propertySelect.innerHTML = '';
-          if (phones && phones.length > 0) {
-            Object.keys(phones[0]).forEach(key => {
-              const opt = document.createElement('option');
-              opt.value = key;
-              opt.textContent = key;
-              propertySelect.appendChild(opt);
-            });
-          }
+            const propertySelect = document.getElementById('phone-criteria-property');
+            propertySelect.innerHTML = '';
+            if (phones && phones.length > 0) {
+                Object.keys(phones[0]).forEach(key => {
+                    const opt = document.createElement('option');
+                    opt.value = key;
+                    opt.textContent = key;
+                    propertySelect.appendChild(opt);
+                });
+            }
         }
 
         // When email preference changes, update and re-render
         function onEmailPreferenceChange() {
-          const mode = document.querySelector('input[name="emailPreferenceMode"]:checked').value;
-          const format = document.querySelector('input[name="emailFormat"]:checked').value;
-          currentEmailPreference = { mode, format };
-          renderAcgiFields(acgiFields, acgiFieldConfig);
+            const mode = document.querySelector('input[name="emailPreferenceMode"]:checked').value;
+            const format = document.querySelector('input[name="emailFormat"]:checked').value;
+            currentEmailPreference = { mode, format };
+            renderAcgiFields(acgiFields, acgiFieldConfig);
         }
         function onEmailFormatChange() {
-          const format = document.querySelector('input[name="emailFormat"]:checked').value;
-          currentEmailPreference.format = format;
-          renderAcgiFields(acgiFields, acgiFieldConfig);
+            const format = document.querySelector('input[name="emailFormat"]:checked').value;
+            currentEmailPreference.format = format;
+            renderAcgiFields(acgiFields, acgiFieldConfig);
         }
         document.querySelectorAll('input[name="emailPreferenceMode"]').forEach(radio => {
             radio.addEventListener('change', onEmailPreferenceChange);
@@ -2039,15 +2583,15 @@
 
         // When phone preference changes, update and re-render
         function onPhonePreferenceChange() {
-          const mode = document.querySelector('input[name="phonePreferenceMode"]:checked').value;
-          const format = document.querySelector('input[name="phoneFormat"]:checked').value;
-          currentPhonePreference = { mode, format };
-          renderAcgiFields(acgiFields, acgiFieldConfig);
+            const mode = document.querySelector('input[name="phonePreferenceMode"]:checked').value;
+            const format = document.querySelector('input[name="phoneFormat"]:checked').value;
+            currentPhonePreference = { mode, format };
+            renderAcgiFields(acgiFields, acgiFieldConfig);
         }
         function onPhoneFormatChange() {
-          const format = document.querySelector('input[name="phoneFormat"]:checked').value;
-          currentPhonePreference.format = format;
-          renderAcgiFields(acgiFields, acgiFieldConfig);
+            const format = document.querySelector('input[name="phoneFormat"]:checked').value;
+            currentPhonePreference.format = format;
+            renderAcgiFields(acgiFields, acgiFieldConfig);
         }
         document.querySelectorAll('input[name="phonePreferenceMode"]').forEach(radio => {
             radio.addEventListener('change', onPhonePreferenceChange);
@@ -2057,38 +2601,38 @@
         });
 
         // Save preference forms
-        document.getElementById('email-preferences-form').addEventListener('submit', function(e) {
-          e.preventDefault();
-          const mode = document.querySelector('input[name="emailPreferenceMode"]:checked').value;
-          const format = document.querySelector('input[name="emailFormat"]:checked').value;
-          let preference = { mode, format };
-          if (mode === 'criteria') {
-            preference.property = document.getElementById('email-criteria-property').value;
-            preference.operator = document.getElementById('email-criteria-operator').value;
-            preference.value = document.getElementById('email-criteria-value').value;
-          }
-          currentEmailPreference = preference;
-          saveEmailPreference(preference);
-          renderAcgiFields(acgiFields, acgiFieldConfig);
+        document.getElementById('email-preferences-form').addEventListener('submit', function (e) {
+            e.preventDefault();
+            const mode = document.querySelector('input[name="emailPreferenceMode"]:checked').value;
+            const format = document.querySelector('input[name="emailFormat"]:checked').value;
+            let preference = { mode, format };
+            if (mode === 'criteria') {
+                preference.property = document.getElementById('email-criteria-property').value;
+                preference.operator = document.getElementById('email-criteria-operator').value;
+                preference.value = document.getElementById('email-criteria-value').value;
+            }
+            currentEmailPreference = preference;
+            saveEmailPreference(preference);
+            renderAcgiFields(acgiFields, acgiFieldConfig);
         });
-        document.getElementById('phone-preferences-form').addEventListener('submit', function(e) {
-          e.preventDefault();
-          const mode = document.querySelector('input[name="phonePreferenceMode"]:checked').value;
-          const format = document.querySelector('input[name="phoneFormat"]:checked').value;
-          let preference = { mode, format };
-          if (mode === 'criteria') {
-            preference.property = document.getElementById('phone-criteria-property').value;
-            preference.operator = document.getElementById('phone-criteria-operator').value;
-            preference.value = document.getElementById('phone-criteria-value').value;
-          }
-          currentPhonePreference = preference;
-          savePhonePreference(preference);
-          renderAcgiFields(acgiFields, acgiFieldConfig);
+        document.getElementById('phone-preferences-form').addEventListener('submit', function (e) {
+            e.preventDefault();
+            const mode = document.querySelector('input[name="phonePreferenceMode"]:checked').value;
+            const format = document.querySelector('input[name="phoneFormat"]:checked').value;
+            let preference = { mode, format };
+            if (mode === 'criteria') {
+                preference.property = document.getElementById('phone-criteria-property').value;
+                preference.operator = document.getElementById('phone-criteria-operator').value;
+                preference.value = document.getElementById('phone-criteria-value').value;
+            }
+            currentPhonePreference = preference;
+            savePhonePreference(preference);
+            renderAcgiFields(acgiFields, acgiFieldConfig);
         });
 
         // Email preference change listeners
         document.querySelectorAll('input[name="emailPreferenceMode"]').forEach(radio => {
-            radio.addEventListener('change', function() {
+            radio.addEventListener('change', function () {
                 showHideEmailCriteriaSection();
                 onEmailPreferenceChange();
             });
@@ -2099,7 +2643,7 @@
 
         // Phone preference change listeners
         document.querySelectorAll('input[name="phonePreferenceMode"]').forEach(radio => {
-            radio.addEventListener('change', function() {
+            radio.addEventListener('change', function () {
                 showHidePhoneCriteriaSection();
                 onPhonePreferenceChange();
             });
@@ -2107,6 +2651,320 @@
         document.querySelectorAll('input[name="phoneFormat"]').forEach(radio => {
             radio.addEventListener('change', onPhoneFormatChange);
         });
+
+        // // Memberships tab logic
+        // let membershipsData = [];
+        // let membershipMapping = {};
+        // let hubspotMembershipFields = [];
+
+        // const fetchMembershipsBtn = document.getElementById('fetch-memberships-btn');
+        // const acgiMembershipCustomerId = document.getElementById('acgi-membership-customer-id');
+        // const acgiMembershipLoadingSpinner = document.getElementById('acgi-membership-loading-spinner');
+        // const acgiMembershipJsonViewer = document.getElementById('acgi-membership-json-viewer');
+        // const membershipImportantFields = document.getElementById('membershipACGIImportantFields');
+        // const membershipAllFields = document.getElementById('membershipACGIAllFields');
+        // const membershipMappingFields = document.getElementById('membershipMappingFields');
+        // const hubspotMembershipFieldsDiv = document.getElementById('hubspotMembershipFields');
+        // const membershipMappingForm = document.getElementById('membership-mapping-form');
+        // const hubspotMembershipForm = document.getElementById('hubspot-membership-form');
+        // const hubspotMembershipOutput = document.getElementById('hubspotMembershipOutput');
+        // const hubspotMembershipOutputContent = document.getElementById('hubspotMembershipOutputContent');
+
+        // // --- Merge preferences into HubSpot fields for memberships ---
+        // function mergeMembershipPreferences(fields, mappingPrefs, fieldPrefs) {
+        //     // mappingPrefs: { [hubspotField]: acgiField }
+        //     // fieldPrefs: { [hubspotField]: { is_important, is_enabled } }
+        //     return fields.map(f => {
+        //         const merged = { ...f };
+        //         if (fieldPrefs && fieldPrefs[f.name]) {
+        //             merged.is_important = !!fieldPrefs[f.name].is_important;
+        //             merged.is_enabled = fieldPrefs[f.name].is_enabled !== undefined ? !!fieldPrefs[f.name].is_enabled : true;
+        //         } else {
+        //             merged.is_important = false;
+        //             merged.is_enabled = true;
+        //         }
+        //         return merged;
+        //     });
+        // }
+
+        // // Update loadHubspotMembershipProperties to also fetch field preferences and mapping
+        // function loadHubspotMembershipProperties() {
+        //     Promise.all([
+        //         fetch('/api/hubspot-properties/memberships').then(res => res.json()),
+        //         fetch('/api/mapping/membership').then(res => res.json()),
+        //         // fetch('/api/field-prefs/membership').then(res => res.json()).catch(() => ({ prefs: {} }))
+        //     ]).then(([fieldsData, mappingData, fieldPrefsData]) => {
+        //         const mappingPrefs = mappingData.mapping || {};
+        //         const fieldPrefs = fieldPrefsData.prefs || {};
+        //         if (fieldsData && fieldsData.properties) {
+        //             hubspotMembershipFields = mergeMembershipPreferences(fieldsData.properties.map(p => ({
+        //                 name: p.name,
+        //                 label: p.label || p.name,
+        //                 type: p.type
+        //             })), mappingPrefs, fieldPrefs);
+        //         } else {
+        //             hubspotMembershipFields = [];
+        //         }
+        //         membershipMapping = mappingPrefs;
+        //         renderMembershipFields();
+        //     }).catch(() => {
+        //         hubspotMembershipFields = [];
+        //         membershipMapping = {};
+        //         renderMembershipFields();
+        //     });
+        // }
+
+        // // Update createMembershipPropertyCard to always show star and toggle buttons
+        // function createMembershipPropertyCard(property, isImportant) {
+        //     const objectType = 'membership';
+        //     const firstMembership = membershipsData[0] || {};
+        //     const dragHandle = isImportant ?
+        //         '<div class="drag-handle me-2" style="cursor: grab; color: #6c757d;"><i class="fas fa-grip-vertical"></i></div>' : '';
+        //     const badges = [];
+        //     if (isImportant) badges.push('<span class="badge badge-important">Important</span>');
+        //     if (property.is_enabled !== false) badges.push('<span class="badge badge-enabled">Enabled</span>');
+        //     return `
+        //         <div class="property-card ${isImportant ? 'important' : ''} ${property.is_enabled ? 'enabled' : ''}" data-field-name="${property.name}">
+        //             <div class="property-header">
+        //                 <div class="d-flex align-items-center">
+        //                     ${dragHandle}
+        //                     <div>
+        //                         <div class="property-name" title="${property.name}">${property.name}</div>
+        //                         <div class="property-label">${property.label || property.name}</div>
+        //                     </div>
+        //                 </div>
+        //                 <div class="property-actions">
+        //                     ${badges.join('')}
+        //                     <span class="property-type">${property.type || ''}</span>
+        //                     <div class="btn-group btn-group-sm">
+        //                         <button type="button" class="btn btn-outline-primary btn-sm" onclick="toggleMembershipField('${property.name}', 'important')">
+        //                             <i class="fas fa-star"></i>
+        //                         </button>
+        //                         <button type="button" class="btn btn-outline-success btn-sm" onclick="toggleMembershipField('${property.name}', 'enabled')">
+        //                             <i class="fas fa-toggle-on"></i>
+        //                         </button>
+        //                     </div>
+        //                 </div>
+        //             </div>
+        //             <div class="mt-2">
+        //                 <select class="form-select membership-mapping-dropdown" data-hubspot="${property.name}">
+        //                     <option value="">-- Map from ACGI --</option>
+        //                     ${Object.keys(firstMembership).map(acgiKey => `<option value="${acgiKey}"${membershipMapping[property.name] === acgiKey ? ' selected' : ''}>${acgiKey}</option>`).join('')}
+        //                 </select>
+        //             </div>
+        //         </div>
+        //     `;
+        // }
+
+        // // Load mapping preferences for memberships
+        // function loadMembershipMapping() {
+        //     fetch('/api/mapping/membership')
+        //         .then(res => res.json())
+        //         .then(data => {
+        //             membershipMapping = data.mapping || {};
+        //             renderMembershipFields();
+        //         })
+        //         .catch(() => {
+        //             membershipMapping = {};
+        //             renderMembershipFields();
+        //         });
+        // }
+
+        // // Save mapping preferences for memberships
+        // function saveMembershipMapping(mapping) {
+        //     fetch('/api/mapping/membership', {
+        //         method: 'POST',
+        //         headers: { 'Content-Type': 'application/json' },
+        //         body: JSON.stringify({ mapping })
+        //     });
+        // }
+
+        // // Load properties and mapping on page load and when tab is activated
+        // function setupMembershipsTabPropertyLoading() {
+        //     loadHubspotMembershipProperties();
+        //     const membershipsTabBtn = document.getElementById('memberships-tab');
+        //     if (membershipsTabBtn) {
+        //         membershipsTabBtn.addEventListener('click', loadHubspotMembershipProperties);
+        //     }
+        // }
+        // setupMembershipsTabPropertyLoading();
+
+        // if (fetchMembershipsBtn) {
+        //     fetchMembershipsBtn.addEventListener('click', function () {
+        //         const customerId = acgiMembershipCustomerId.value.trim();
+        //         if (!customerId) {
+        //             showMessage('warning', 'Please enter a customer ID');
+        //             return;
+        //         }
+        //         acgiMembershipLoadingSpinner.style.display = '';
+        //         fetch(`/api/acgi/customer/${customerId}/memberships`)
+        //             .then(res => res.json())
+        //             .then(data => {
+        //                 membershipsData = data.fields.memberships || [];
+        //                 acgiMembershipJsonViewer.textContent = JSON.stringify(membershipsData, null, 2);
+        //                 renderMembershipFields();
+        //                 showMessage('success', 'Memberships data fetched successfully');
+        //             })
+        //             .catch(() => {
+        //                 acgiMembershipJsonViewer.textContent = '';
+        //                 membershipImportantFields.innerHTML = '<div class="text-center text-muted"><i class="fas fa-info-circle"></i> No important fields</div>';
+        //                 membershipAllFields.innerHTML = '<div class="text-center text-muted"><i class="fas fa-info-circle"></i> No fields loaded</div>';
+        //                 membershipMappingFields.innerHTML = '<div class="text-center text-muted"><i class="fas fa-info-circle"></i> Load memberships to map fields</div>';
+        //                 hubspotMembershipFieldsDiv.innerHTML = '<div class="text-center text-muted"><i class="fas fa-info-circle"></i> Load mapping to see the form</div>';
+        //                 showMessage('danger', 'Failed to fetch memberships data');
+        //             })
+        //             .finally(() => {
+        //                 acgiMembershipLoadingSpinner.style.display = 'none';
+        //             });
+        //     });
+        // }
+
+        // function renderMembershipFields() {
+        //     // Column 2: Show ACGI fields from first membership (reference only, no toggles, no badges)
+        //     if (!membershipsData.length) {
+        //         membershipImportantFields.innerHTML = '<div class="text-center text-muted"><i class="fas fa-info-circle"></i> No membership fields loaded</div>';
+        //         membershipAllFields.innerHTML = '';
+        //     } else {
+        //         const firstMembership = membershipsData[0];
+        //         let acgiHtml = '<h4><i class="fas fa-list"></i> ACGI Membership Fields</h4>';
+        //         Object.entries(firstMembership).forEach(([key, value]) => {
+        //             acgiHtml += `<div class="property-card mb-2"><div class="property-header"><span class="property-name">${key}</span></div><div class="property-label">${value ?? ''}</div></div>`;
+        //         });
+        //         membershipImportantFields.innerHTML = acgiHtml;
+        //         membershipAllFields.innerHTML = '';
+        //     }
+        //     // Column 3: HubSpot mapping cards
+        //     if (!hubspotMembershipFields.length || !membershipsData.length) {
+        //         membershipMappingFields.innerHTML = '<div class="text-center text-muted"><i class="fas fa-info-circle"></i> Load memberships to map fields</div>';
+        //         hubspotMembershipFieldsDiv.innerHTML = '<div class="text-center text-muted"><i class="fas fa-info-circle"></i> Load mapping to see the form</div>';
+        //         return;
+        //     }
+        //     // Split into important and other properties
+        //     let important_properties = hubspotMembershipFields.filter(f => f.is_important);
+        //     let other_properties = hubspotMembershipFields.filter(f => !f.is_important);
+        //     // Render important properties
+        //     let importantCards = '';
+        //     important_properties.forEach(hf => {
+        //         importantCards += createMembershipPropertyCard(hf, true);
+        //     });
+        //     // Render other properties
+        //     let otherCards = '';
+        //     other_properties.forEach(hf => {
+        //         otherCards += createMembershipPropertyCard(hf, false);
+        //     });
+        //     membershipMappingFields.innerHTML = `
+        //         <h4><i class="fas fa-star"></i> Important Fields</h4>
+        //         <div id="membershipImportantMappingFields">${importantCards || '<div class="text-center text-muted">No important fields configured</div>'}</div>
+        //         <h4><i class="fas fa-list"></i> All Available Fields</h4>
+        //         <div id="membershipAllMappingFields">${otherCards || '<div class="text-center text-muted">No additional fields available</div>'}</div>
+        //     `;
+        //     renderHubspotMembershipForm();
+        // }
+
+        // // Toggle important/enabled for membership fields
+        // window.toggleMembershipField = function (fieldName, toggleType) {
+        //     const idx = hubspotMembershipFields.findIndex(f => f.name === fieldName);
+        //     if (idx === -1) return;
+        //     const field = hubspotMembershipFields[idx];
+        //     if (toggleType === 'important') {
+        //         field.is_important = !field.is_important;
+        //     } else if (toggleType === 'enabled') {
+        //         field.is_enabled = !field.is_enabled;
+        //     }
+        //     saveMembershipFieldConfiguration(field, toggleType);
+        //     renderMembershipFields();
+        // };
+
+        // function saveMembershipFieldConfiguration(field, toggleType) {
+        //     let data = {
+        //         object_type: 'membership',
+        //         field_name: field.name,
+        //         field_label: field.label || field.name,
+        //         field_type: field.type,
+        //         is_enabled: field.is_enabled,
+        //         is_important: field.is_important
+        //     };
+        //     fetch('/api/save-form-field', {
+        //         method: 'POST',
+        //         headers: { 'Content-Type': 'application/json' },
+        //         body: JSON.stringify(data)
+        //     });
+        // }
+
+        // if (membershipMappingForm) {
+        //     membershipMappingForm.addEventListener('submit', function (e) {
+        //         e.preventDefault();
+        //         membershipMapping = {};
+        //         const dropdowns = membershipMappingFields.querySelectorAll('.membership-mapping-dropdown');
+        //         dropdowns.forEach(function (dropdown) {
+        //             const hubspot = dropdown.getAttribute('data-hubspot');
+        //             const acgi = dropdown.value;
+        //             if (acgi) membershipMapping[hubspot] = acgi;
+        //         });
+        //         saveMembershipMapping(membershipMapping);
+        //         renderHubspotMembershipForm();
+        //         showMessage('success', 'Mapping saved!');
+        //     });
+        // }
+
+        // function renderHubspotMembershipForm() {
+        //     if (!membershipsData.length || !Object.keys(membershipMapping).length || !hubspotMembershipFields.length) {
+        //         hubspotMembershipFieldsDiv.innerHTML = '<div class="text-center text-muted"><i class="fas fa-info-circle"></i> Load mapping to see the form</div>';
+        //         return;
+        //     }
+        //     const firstMembership = membershipsData[0];
+        //     let formHtml = '';
+        //     hubspotMembershipFields.forEach(hf => {
+        //         const acgiKey = membershipMapping[hf.name];
+        //         const value = acgiKey ? (firstMembership[acgiKey] ?? '') : '';
+        //         formHtml += `<div class="mb-2 form-row"><label class="form-label">${hf.label}</label><input type="text" class="form-control" name="${hf.name}" value="${value}" /></div>`;
+        //     });
+        //     hubspotMembershipFieldsDiv.innerHTML = formHtml;
+        // }
+
+        // if (hubspotMembershipForm) {
+        //     hubspotMembershipForm.addEventListener('submit', function (e) {
+        //         e.preventDefault();
+        //         const formData = {};
+        //         const inputs = hubspotMembershipForm.querySelectorAll('input, select, textarea');
+        //         inputs.forEach(function (input) {
+        //             formData[input.name] = input.value;
+        //         });
+        //         fetch('/api/hubspot-create-membership', {
+        //             method: 'POST',
+        //             headers: { 'Content-Type': 'application/json' },
+        //             body: JSON.stringify({ data: formData })
+        //         })
+        //             .then(res => res.json())
+        //             .then(resp => {
+        //                 hubspotMembershipOutputContent.textContent = resp.message || 'Created successfully!';
+        //                 hubspotMembershipOutput.style.display = '';
+        //             })
+        //             .catch(xhr => {
+        //                 hubspotMembershipOutputContent.textContent = (xhr && xhr.error) ? xhr.error : 'Failed to create membership';
+        //                 hubspotMembershipOutput.style.display = '';
+        //             });
+        //     });
+        // }
+
+        // function showMessage(type, message) {
+        //     const statusDiv = document.getElementById('statusMessages');
+        //     const alertDiv = document.createElement('div');
+        //     alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+        //     alertDiv.innerHTML = `
+        //         ${message}
+        //         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        //     `;
+        //     statusDiv.appendChild(alertDiv);
+        //     setTimeout(() => {
+        //         if (alertDiv.parentNode) {
+        //             alertDiv.remove();
+        //         }
+        //     }, 5000);
+        // }
+
+        
     </script>
 </body>
-</html> 
+
+</html>
