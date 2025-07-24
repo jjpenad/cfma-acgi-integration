@@ -1,29 +1,18 @@
 #!/bin/bash
 
-# Simple CFMA Deployment Script
-# Just sets up Nginx and keeps the app running
+# Fix CFMA Deployment Issues
+echo "🔧 Fixing CFMA deployment issues..."
 
-echo "🚀 Simple CFMA Deployment..."
+# Stop the broken service
+echo "🛑 Stopping broken service..."
+sudo systemctl stop cfma 2>/dev/null || true
 
-# Install Nginx if not already installed
-if ! command -v nginx &> /dev/null; then
-    echo "📦 Installing Nginx..."
-    if command -v yum &> /dev/null; then
-        # Amazon Linux / CentOS / RHEL
-        sudo yum update -y
-        sudo yum install -y nginx
-    elif command -v apt-get &> /dev/null; then
-        # Ubuntu / Debian
-        sudo apt-get update
-        sudo apt-get install -y nginx
-    else
-        echo "❌ Unsupported package manager. Please install Nginx manually."
-        exit 1
-    fi
-fi
+# Remove the broken service file
+echo "🗑️ Removing broken service file..."
+sudo rm -f /etc/systemd/system/cfma.service
 
-# Create Nginx configuration
-echo "🌐 Setting up Nginx configuration..."
+# Fix Nginx configuration
+echo "🌐 Fixing Nginx configuration..."
 if [ -d "/etc/nginx/sites-available" ]; then
     # Ubuntu/Debian style
     sudo tee /etc/nginx/sites-available/cfma > /dev/null <<EOF
@@ -71,35 +60,12 @@ fi
 echo "🧪 Testing Nginx configuration..."
 sudo nginx -t
 
-# Start Nginx
-echo "🚀 Starting Nginx..."
-sudo systemctl enable nginx
-sudo systemctl start nginx
+# Restart Nginx
+echo "🔄 Restarting Nginx..."
+sudo systemctl restart nginx
 
-# Create a simple startup script
-echo "📝 Creating startup script..."
-cat > start_app.sh <<EOF
-#!/bin/bash
-cd \$(dirname "\$0")
-source venv/bin/activate
-export FLASK_ENV=production
-export FLASK_APP=src.app:app
-python3 -c "
-from src.models import init_db, create_default_admin
-try:
-    init_db()
-    create_default_admin()
-    print('Database ready')
-except Exception as e:
-    print(f'Database already exists: {e}')
-"
-gunicorn --workers 2 --bind 0.0.0.0:5000 --timeout 120 src.app:app
-EOF
-
-chmod +x start_app.sh
-
-# Create a systemd service for the app
-echo "⚙️ Creating systemd service..."
+# Create correct systemd service
+echo "⚙️ Creating correct systemd service..."
 CURRENT_DIR=$(pwd)
 sudo tee /etc/systemd/system/cfma.service > /dev/null <<EOF
 [Unit]
@@ -122,7 +88,7 @@ RestartSec=10
 WantedBy=multi-user.target
 EOF
 
-# Initialize database first
+# Initialize database
 echo "🗄️ Initializing database..."
 source venv/bin/activate
 python3 -c "
@@ -135,7 +101,7 @@ except Exception as e:
     print(f'Database already exists: {e}')
 "
 
-# Enable and start the service
+# Start the service
 echo "🚀 Starting CFMA service..."
 sudo systemctl daemon-reload
 sudo systemctl enable cfma
@@ -151,12 +117,6 @@ echo "CFMA status:"
 sudo systemctl status cfma --no-pager
 
 echo ""
-echo "✅ Simple deployment completed!"
-echo "🌐 Application should be available at: http://\$(curl -s http://169.254.169.254/latest/meta-data/public-ipv4 2>/dev/null || hostname -I | awk '{print \$1}')"
-echo "📋 Default login: admin / admin"
-echo ""
-echo "📊 Useful commands:"
-echo "  sudo systemctl status cfma    # Check app status"
-echo "  sudo systemctl restart cfma   # Restart app"
-echo "  sudo systemctl status nginx   # Check nginx status"
-echo "  sudo journalctl -u cfma -f    # View app logs" 
+echo "✅ Fix completed!"
+echo "🌐 Application should be available at: http://$(curl -s http://169.254.169.254/latest/meta-data/public-ipv4 2>/dev/null || hostname -I | awk '{print $1}')"
+echo "📋 Default login: admin / admin" 
