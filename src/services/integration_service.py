@@ -163,7 +163,9 @@ class IntegrationService:
             
             # Map ACGI data to HubSpot format using saved mapping
             hubspot_contact = self._map_contact_data(acgi_customer, contact_mapping)
-            
+            print("CONTACT MAPPING",contact_mapping)
+            print("ACGI CUSTOMER",acgi_customer)
+            print("HUBSPOT CONTACT",hubspot_contact)
             # Create or update contact in HubSpot using the search strategy
             hubspot_result = self.hubspot_client.create_or_update_contact(hubspot_contact, search_strategy)
             
@@ -342,17 +344,17 @@ class IntegrationService:
             return ''
         
         if preference == 'first':
-            return emails[0].get('email', '')
+            return emails[0].get('address', '')
         elif preference == 'first_non_bad':
             for email_data in emails:
-                if not email_data.get('isBad', False):
-                    return email_data.get('email', '')
+                # if not email_data.get('isBad', False):
+                return email_data.get('address', '')
             # If no non-bad emails, return first
-            return emails[0].get('email', '')
+            return emails[0].get('address', '')
         elif preference == 'primary':
             for email_data in emails:
                 if email_data.get('isPrimary', False):
-                    return email_data.get('email', '')
+                    return email_data.get('address', '')
             # If no primary, fall back to first non-bad
             return self._select_best_email(emails, 'first_non_bad')
         else:
@@ -365,22 +367,22 @@ class IntegrationService:
             return ''
         
         if preference == 'first':
-            return phones[0].get('phone', '')
+            return phones[0].get('number', '')
         elif preference == 'primary':
             for phone_data in phones:
                 if phone_data.get('isPrimary', False):
-                    return phone_data.get('phone', '')
+                    return phone_data.get('number', '')
             # If no primary, return first
-            return phones[0].get('phone', '')
+            return phones[0].get('number', '')
         elif preference == 'mobile':
             for phone_data in phones:
                 if phone_data.get('type', '').lower() == 'mobile':
-                    return phone_data.get('phone', '')
+                    return phone_data.get('number', '')
             # If no mobile, return first
-            return phones[0].get('phone', '')
+            return phones[0].get('number', '')
         else:
             # Default to first
-            return phones[0].get('phone', '')
+            return phones[0].get('number', '')
 
     def _select_best_address(self, addresses: List[Dict], preference: str) -> str:
         """Select the best address based on preference"""
