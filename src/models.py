@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from sqlalchemy import create_engine, Column, String, Text, DateTime, Integer, inspect
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
@@ -34,7 +34,7 @@ class User(Base):
     id = Column(Integer, primary_key=True)
     username = Column(String(50), unique=True, nullable=False)
     password_hash = Column(String(255), nullable=False)
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
     last_login = Column(DateTime)
 
 class AppState(Base):
@@ -43,8 +43,8 @@ class AppState(Base):
     id = Column(Integer, primary_key=True)
     key = Column(String(100), unique=True, nullable=False)
     value = Column(Text)
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
 
 class FormField(Base):
     __tablename__ = 'form_fields'
@@ -65,8 +65,8 @@ class SearchPreference(Base):
     id = Column(Integer, primary_key=True)
     object_type = Column(String(50), nullable=False)  # contacts, deals, etc.
     search_strategy = Column(String(50), nullable=False)  # email_only, customer_id_only, email_then_customer_id, customer_id_then_email
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
 
 class ContactFieldMapping(Base):
     __tablename__ = 'contact_field_mapping'
@@ -141,6 +141,78 @@ class MembershipFieldMapping(Base):
         except Exception as e:
             logger.error(f"Error loading mapping: {str(e)}")
             return {}
+        finally:
+            session.close()
+
+class SchedulingConfig(Base):
+    __tablename__ = 'scheduling_config'
+    
+    id = Column(Integer, primary_key=True)
+    frequency = Column(Integer, nullable=False)  # 5, 10, or 15 minutes
+    enabled = Column(String(10), default='false')  # true/false as string
+    customer_ids = Column(Text, nullable=False)  # Comma or newline separated customer IDs
+    sync_contacts = Column(String(10), default='true')  # true/false as string
+    sync_memberships = Column(String(10), default='true')  # true/false as string
+    last_sync = Column(DateTime)  # Last successful sync timestamp
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
+
+    @staticmethod
+    def get_config():
+        session = Session()
+        try:
+            config = session.query(SchedulingConfig).first()
+            if config:
+                return {
+                    'frequency': config.frequency,
+                    'enabled': config.enabled == 'true',
+                    'customer_ids': config.customer_ids,
+                    'sync_contacts': config.sync_contacts == 'true',
+                    'sync_memberships': config.sync_memberships == 'true',
+                    'last_sync': config.last_sync.isoformat() if config.last_sync else None
+                }
+            return None
+        except Exception as e:
+            logger.error(f"Error getting scheduling config: {str(e)}")
+            return None
+        finally:
+            session.close()
+
+    @staticmethod
+    def save_config(config_data):
+        session = Session()
+        try:
+            config = session.query(SchedulingConfig).first()
+            if not config:
+                config = SchedulingConfig()
+            
+            config.frequency = config_data.get('frequency')
+            config.enabled = str(config_data.get('enabled', False)).lower()
+            config.customer_ids = config_data.get('customer_ids', '')
+            config.sync_contacts = str(config_data.get('sync_contacts', True)).lower()
+            config.sync_memberships = str(config_data.get('sync_memberships', True)).lower()
+            
+            session.add(config)
+            session.commit()
+            return True
+        except Exception as e:
+            session.rollback()
+            logger.error(f"Error saving scheduling config: {str(e)}")
+            return False
+        finally:
+            session.close()
+
+    @staticmethod
+    def update_last_sync():
+        session = Session()
+        try:
+            config = session.query(SchedulingConfig).first()
+            if config:
+                config.last_sync = datetime.now(timezone.utc)
+                session.commit()
+        except Exception as e:
+            session.rollback()
+            logger.error(f"Error updating last sync: {str(e)}")
         finally:
             session.close()
 
@@ -223,4 +295,29 @@ def create_default_admin():
 
 def get_session():
     """Get a new database session"""
-    return Session() 
+    return Session()
+
+def get_app_credentials():
+    """Get application credentials from AppState"""
+    session = get_session()
+    try:
+        # Get ACGI credentials
+        acgi_username = session.query(AppState).filter_by(key='acgi_username').first()
+        acgi_password = session.query(AppState).filter_by(key='acgi_password').first()
+        acgi_environment = session.query(AppState).filter_by(key='acgi_environment').first()
+        hubspot_api_key = session.query(AppState).filter_by(key='hubspot_api_key').first()
+        
+        if not all([acgi_username, acgi_password, hubspot_api_key]):
+            return None
+        
+        return {
+            'acgi_username': acgi_username.value,
+            'acgi_password': acgi_password.value,
+            'acgi_environment': acgi_environment.value if acgi_environment else 'test',
+            'hubspot_api_key': hubspot_api_key.value
+        }
+    except Exception as e:
+        logger.error(f"Error getting app credentials: {str(e)}")
+        return None
+    finally:
+        session.close() 

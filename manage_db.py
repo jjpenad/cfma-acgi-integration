@@ -21,7 +21,8 @@ def get_required_tables():
         'app_state', 
         'form_fields',
         'search_preferences',
-        'contact_field_mapping'
+        'contact_field_mapping',
+        'scheduling_config'
     ]
 
 def check_and_create_tables():

@@ -253,6 +253,82 @@
                     <div id="testResultsContent"></div>
                 </div>
             </div>
+
+            <!-- Scheduling Section -->
+            <div class="form-section mt-4">
+                <h3><i class="fas fa-clock"></i> Sync Scheduling</h3>
+                <form id="schedulingForm">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="sync_frequency" class="form-label">Sync Frequency <span class="text-danger">*</span></label>
+                                <select class="form-control" id="sync_frequency" name="sync_frequency" required>
+                                    <option value="">Select frequency...</option>
+                                    <option value="5">Every 5 minutes</option>
+                                    <option value="10">Every 10 minutes</option>
+                                    <option value="15">Every 15 minutes</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="sync_enabled" class="form-label">Sync Status</label>
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" id="sync_enabled" name="sync_enabled">
+                                    <label class="form-check-label" for="sync_enabled">
+                                        Enable automatic synchronization
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="customer_ids" class="form-label">Customer IDs to Sync <span class="text-danger">*</span></label>
+                        <textarea class="form-control" id="customer_ids" name="customer_ids" rows="4" 
+                                placeholder="Enter customer IDs, one per line or separated by commas&#10;Example:&#10;12345&#10;67890&#10;11111" required></textarea>
+                        <div class="form-text">Enter the ACGI customer IDs that should be synchronized. One ID per line or separated by commas.</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Sync Options</label>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="sync_contacts" name="sync_contacts" checked>
+                            <label class="form-check-label" for="sync_contacts">
+                                Sync Contacts
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="sync_memberships" name="sync_memberships" checked>
+                            <label class="form-check-label" for="sync_memberships">
+                                Sync Memberships
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i> Save Schedule
+                        </button>
+                        <button type="button" class="btn btn-success" onclick="startSync()">
+                            <i class="fas fa-play"></i> Start Sync Now
+                        </button>
+                        <button type="button" class="btn btn-warning" onclick="stopSync()">
+                            <i class="fas fa-stop"></i> Stop Sync
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Sync Status Section -->
+            <div class="form-section mt-4">
+                <h3><i class="fas fa-info-circle"></i> Sync Status</h3>
+                <div id="syncStatus">
+                    <div class="alert alert-info">
+                        <i class="fas fa-clock"></i> No sync schedule configured
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -279,6 +355,7 @@
         document.addEventListener('DOMContentLoaded', function() {
             loadCredentials();
             updateNavigationLinks();
+            loadSchedulingConfig();
         });
         
         function updateNavigationLinks() {
@@ -476,6 +553,178 @@
             setTimeout(() => {
                 alertDiv.remove();
             }, 5000);
+        }
+
+        // Scheduling Functions
+        document.getElementById('schedulingForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            saveSchedulingConfig();
+        });
+
+        function loadSchedulingConfig() {
+            fetch('/api/scheduling-config')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success && data.config) {
+                        const config = data.config;
+                        document.getElementById('sync_frequency').value = config.frequency || '';
+                        document.getElementById('sync_enabled').checked = config.enabled || false;
+                        document.getElementById('customer_ids').value = config.customer_ids || '';
+                        document.getElementById('sync_contacts').checked = config.sync_contacts !== false;
+                        document.getElementById('sync_memberships').checked = config.sync_memberships !== false;
+                        
+                        // Load status separately for display
+                        loadSyncStatus();
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading scheduling config:', error);
+                });
+        }
+
+        function loadSyncStatus() {
+            fetch('/api/scheduling-status')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success && data.status) {
+                        updateSyncStatus(data.status);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading sync status:', error);
+                });
+        }
+
+        function saveSchedulingConfig() {
+            const formData = {
+                frequency: parseInt(document.getElementById('sync_frequency').value),
+                enabled: document.getElementById('sync_enabled').checked,
+                customer_ids: document.getElementById('customer_ids').value,
+                sync_contacts: document.getElementById('sync_contacts').checked,
+                sync_memberships: document.getElementById('sync_memberships').checked
+            };
+
+            // Validate required fields
+            if (!formData.frequency) {
+                showMessage('danger', 'Please select a sync frequency');
+                return;
+            }
+            if (!formData.customer_ids.trim()) {
+                showMessage('danger', 'Please enter customer IDs to sync');
+                return;
+            }
+
+            fetch('/api/scheduling-config', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(formData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showMessage('success', 'Scheduling configuration saved successfully!');
+                    // Refresh status after saving
+                    setTimeout(() => {
+                        loadSyncStatus();
+                    }, 1000);
+                } else {
+                    showMessage('danger', data.error || 'Failed to save scheduling configuration');
+                }
+            })
+            .catch(error => {
+                console.error('Error saving scheduling config:', error);
+                showMessage('danger', 'Error saving scheduling configuration: ' + error.message);
+            });
+        }
+
+        function updateSyncStatus(status) {
+            const statusDiv = document.getElementById('syncStatus');
+            
+            if (!status || !status.enabled) {
+                statusDiv.innerHTML = `
+                    <div class="alert alert-info">
+                        <i class="fas fa-clock"></i> No sync schedule configured
+                    </div>
+                `;
+                return;
+            }
+
+            const frequencyText = status.frequency === 5 ? '5 minutes' : 
+                                status.frequency === 10 ? '10 minutes' : 
+                                status.frequency === 15 ? '15 minutes' : 'Unknown';
+
+            let nextRunText = 'Unknown';
+            if (status.next_run) {
+                const nextRun = new Date(status.next_run);
+                nextRunText = nextRun.toLocaleString();
+            }
+            
+            statusDiv.innerHTML = `
+                <div class="alert alert-success">
+                    <h6><i class="fas fa-check-circle"></i> Sync Schedule Active</h6>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <strong>Frequency:</strong> Every ${frequencyText}<br>
+                            <strong>Last Sync:</strong> <span id="lastSyncTime">${status.last_sync ? new Date(status.last_sync).toLocaleString() : 'Never'}</span>
+                        </div>
+                        <div class="col-md-6">
+                            <strong>Next Run:</strong> ${nextRunText}<br>
+                            <strong>Active Jobs:</strong> ${status.active_jobs}<br>
+                            <strong>Status:</strong> <span class="badge ${status.is_running ? 'bg-success' : 'bg-warning'}">${status.is_running ? 'Running' : 'Stopped'}</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function startSync() {
+            showMessage('info', 'Starting manual sync...');
+            
+            fetch('/api/start-sync', {
+                method: 'POST'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showMessage('success', 'Manual sync started successfully!');
+                    // Refresh status after a short delay
+                    setTimeout(() => {
+                        loadSyncStatus();
+                    }, 2000);
+                } else {
+                    showMessage('danger', data.error || 'Failed to start sync');
+                }
+            })
+            .catch(error => {
+                console.error('Error starting sync:', error);
+                showMessage('danger', 'Error starting sync: ' + error.message);
+            });
+        }
+
+        function stopSync() {
+            showMessage('info', 'Stopping sync...');
+            
+            fetch('/api/stop-sync', {
+                method: 'POST'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showMessage('success', 'Sync stopped successfully!');
+                    // Refresh status after a short delay
+                    setTimeout(() => {
+                        loadSyncStatus();
+                    }, 2000);
+                } else {
+                    showMessage('danger', data.error || 'Failed to stop sync');
+                }
+            })
+            .catch(error => {
+                console.error('Error stopping sync:', error);
+                showMessage('danger', 'Error stopping sync: ' + error.message);
+            });
         }
     </script>
 </body>

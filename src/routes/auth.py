@@ -2,7 +2,7 @@ from flask import Blueprint, request, render_template, redirect, url_for, flash,
 from werkzeug.security import check_password_hash
 from functools import wraps
 from models import get_session, User
-from datetime import datetime
+from datetime import datetime, timezone
 import logging
 
 logger = logging.getLogger(__name__)
@@ -36,7 +36,7 @@ def login():
                 
                 if user and check_password_hash(user.password_hash, password):
                     # Update last login
-                    user.last_login = datetime.utcnow()
+                    user.last_login = datetime.now(timezone.utc)
                     db_session.commit()
                     
                     # Set session

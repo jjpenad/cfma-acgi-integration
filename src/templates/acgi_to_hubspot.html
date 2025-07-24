@@ -967,6 +967,15 @@
                 <button type="button" class="btn btn-outline-info" onclick="loadDealsProperties()">
                     <i class="fas fa-handshake"></i> Reload Deals Properties
                 </button>
+                <button type="button" class="btn btn-warning" onclick="testMapping()">
+                    <i class="fas fa-cog"></i> Test Mapping
+                </button>
+                <button type="button" class="btn btn-info" onclick="forceSaveMapping()">
+                    <i class="fas fa-save"></i> Force Save Mapping
+                </button>
+                <button type="button" class="btn btn-secondary" onclick="refreshMappingsFromDatabase()">
+                    <i class="fas fa-sync"></i> Refresh Mappings
+                </button>
             </div>
         </div>
     </div>
@@ -977,6 +986,12 @@
         let currentObjectType = 'contacts';
         let propertiesData = {};
         let currentAddressPreference = { mode: 'first' };
+        
+        // Mapping variables
+        let contactsMapping = {};
+        let membershipsMapping = {};
+        let acgiContactFields = {};
+        let acgiMembershipFields = {};
 
         function showLoading() {
             document.getElementById('loadingSpinner').style.display = 'block';
@@ -1149,10 +1164,17 @@
         }
 
         function updateFieldOrder(objectType) {
+            console.log(`updateFieldOrder called for ${objectType}`);
             const data = propertiesData[objectType];
-            if (!data || !data.important_properties) return;
+            if (!data || !data.important_properties) {
+                console.log(`No data or important properties for ${objectType}`);
+                return;
+            }
+            
             const importantContainer = document.getElementById(`${objectType}ImportantFields`);
             const cards = importantContainer.querySelectorAll('.property-card');
+            console.log(`Found ${cards.length} cards to reorder`);
+            
             // Update order indices based on new positions
             let newOrder = [];
             cards.forEach((card, index) => {
@@ -1161,15 +1183,25 @@
                 if (property) {
                     property.order_index = index;
                     newOrder.push(property);
+                    console.log(`Saving field configuration for ${fieldName} with order ${index}`);
                     // Save the updated order to database
                     saveFieldConfiguration(objectType, property, 'order');
                 }
             });
+            
             // Replace important_properties with new order
             data.important_properties = newOrder;
+            console.log(`New order for ${objectType}:`, newOrder.map(p => `${p.name} (${p.order_index})`));
+            
             // Re-render the HubSpot form to reflect new order
             renderForm(objectType, data);
             console.log('Field order updated for', objectType);
+            
+            // Force save mapping after a short delay to ensure all field configurations are saved
+            setTimeout(() => {
+                console.log(`Forcing mapping save for ${objectType} after order change...`);
+                saveMappingSilently(objectType);
+            }, 500);
         }
 
         function createPropertyCard(property, objectType, isImportant) {
@@ -1285,8 +1317,13 @@
         }
 
         function toggleField(objectType, fieldName, toggleType) {
+            console.log(`toggleField called: ${objectType}, ${fieldName}, ${toggleType}`);
+            
             const data = propertiesData[objectType];
-            if (!data) return;
+            if (!data) {
+                console.log('No data found for objectType:', objectType);
+                return;
+            }
 
             // Initialize arrays if they don't exist
             if (!data.important_properties) data.important_properties = [];
@@ -1301,7 +1338,10 @@
                 isInImportant = false;
             }
 
-            if (!property) return;
+            if (!property) {
+                console.log('Property not found:', fieldName);
+                return;
+            }
 
             console.log(`Toggling field: ${fieldName}, type: ${toggleType}, currently in important: ${isInImportant}`);
             console.log('Before toggle - Important:', data.important_properties.length, 'Other:', data.other_properties.length);
@@ -1310,6 +1350,7 @@
             if (toggleType === 'important') {
                 // Toggle the important state
                 property.is_important = !property.is_important;
+                console.log(`Property ${fieldName} is_important changed to:`, property.is_important);
 
                 // Remove from current array
                 if (isInImportant) {
@@ -1326,12 +1367,14 @@
                 }
             } else if (toggleType === 'enabled') {
                 property.is_enabled = !property.is_enabled;
+                console.log(`Property ${fieldName} is_enabled changed to:`, property.is_enabled);
             }
 
             console.log('After toggle - Important:', data.important_properties.length, 'Other:', data.other_properties.length);
             console.log('Property is_important:', property.is_important);
 
             // Save to database
+            console.log('Calling saveFieldConfiguration...');
             saveFieldConfiguration(objectType, property, toggleType);
 
             // Re-render
@@ -1340,6 +1383,8 @@
         }
 
         function saveFieldConfiguration(objectType, property, toggleType) {
+            console.log(`saveFieldConfiguration called: ${objectType}, ${property.name}, ${toggleType}`);
+            
             let data = {
                 object_type: objectType,
                 field_name: property.name,
@@ -1348,6 +1393,7 @@
 
             // Only send the relevant data based on toggle type
             if (toggleType === 'order') {
+                console.log(`Order update - sending data:`, data);
                 // Only send order_index for order updates
             } else {
                 // Send all field data for other updates
@@ -1355,6 +1401,7 @@
                 data.field_type = property.type;
                 data.is_enabled = property.is_enabled;
                 data.is_important = property.is_important;
+                console.log(`Other update - sending data:`, data);
             }
 
             fetch('/api/save-form-field', {
@@ -1368,6 +1415,10 @@
                 .then(result => {
                     if (!result.success) {
                         console.error('Failed to save field configuration:', result.error);
+                    } else {
+                        console.log(`Field configuration saved successfully for ${objectType}, now saving mapping...`);
+                        // After successfully saving field configuration, also save the current mappings
+                        saveMappingSilently(objectType);
                     }
                 })
                 .catch(error => {
@@ -1385,16 +1436,44 @@
             inputs.forEach(input => {
                 if (input.value.trim()) {
                     console.log("INPUT value",input.value)
+                    console.log("INPUT field type", input.getAttribute('data-field-type'))
+                    console.log("INPUT type", input.type)
+                    console.log("INPUT name", input.name)
                     let value = input.value;
 
                     // Convert datetime fields to milliseconds for HubSpot API
                     if (input.getAttribute('data-field-type') === 'datetime') {
+                        console.log("Processing datetime field:", input.name, value);
                         const date = new Date(value);
                         if (!isNaN(date.getTime())) {
                             value = date.getTime().toString();
+                            console.log("Converted datetime to:", value);
                         }
                     } else if (input.getAttribute('data-field-type') === 'date') {
+                        console.log("Processing date field:", input.name, value);
                         // For date fields, ensure the timestamp is at midnight UTC
+                        const dateParts = value.split('-');
+                        if (dateParts.length === 3) {
+                            const year = parseInt(dateParts[0]);
+                            const month = parseInt(dateParts[1]) - 1; // Month is 0-indexed
+                            const day = parseInt(dateParts[2]);
+                            // Create date at midnight UTC
+                            const date = new Date(Date.UTC(year, month, day));
+                        if (!isNaN(date.getTime())) {
+                            value = date.getTime().toString();
+                            console.log("Converted date to:", value);
+                            }
+                        } else {
+                            // Fallback to regular date parsing
+                            const date = new Date(value + 'T00:00:00Z');
+                            if (!isNaN(date.getTime())) {
+                                value = date.getTime().toString();
+                                console.log("Fallback date conversion to:", value);
+                            }
+                        }
+                    } else if (input.type === 'date') {
+                        console.log("Processing HTML5 date field:", input.name, value);
+                        // Handle HTML5 date inputs that might not have data-field-type
                         const dateParts = value.split('-');
                         if (dateParts.length === 3) {
                             const year = parseInt(dateParts[0]);
@@ -1404,12 +1483,7 @@
                             const date = new Date(Date.UTC(year, month, day));
                             if (!isNaN(date.getTime())) {
                                 value = date.getTime().toString();
-                            }
-                        } else {
-                            // Fallback to regular date parsing
-                            const date = new Date(value + 'T00:00:00Z');
-                            if (!isNaN(date.getTime())) {
-                                value = date.getTime().toString();
+                                console.log("Converted HTML5 date to:", value);
                             }
                         }
                     }
@@ -1885,7 +1959,12 @@
                             acgiFieldConfig[fieldName].order_index = idx;
                         });
                         // Save config
+                        console.log("acgiFieldConfig CONTACTS",acgiFieldConfig)
                         saveAcgiFieldConfig('contacts', acgiFieldConfig);
+                        // Save mapping after order change
+                        if (propertiesData['contacts']) {
+                            saveMappingSilently('contacts');
+                        }
                     }
                 });
             }
@@ -1957,11 +2036,16 @@
                         const cards = importantDiv.querySelectorAll('.property-card');
                         cards.forEach((card, idx) => {
                             const fieldName = card.getAttribute('data-field-name');
-                            if (!acgiMembershipsFieldConfig[fieldName]) acgiMembershipsFieldConfig[fieldName] = { is_important: true, is_enabled: true };
+                            if (!acgiMembershipsFieldConfig[fieldName]) acgiMembershipsFieldConfig[fieldName] = { is_important: false, is_enabled: false };
                             acgiMembershipsFieldConfig[fieldName].order_index = idx;
                         });
                         // Save config
+                        console.log("acgiMembershipsFieldConfig MEMBERSHIPS",acgiMembershipsFieldConfig)
                         saveAcgiFieldConfig('memberships', acgiMembershipsFieldConfig);
+                        // Save mapping after order change
+                        if (propertiesData['memberships']) {
+                            saveMappingSilently('memberships');
+                        }
                     }
                 }); 
             }
@@ -1984,13 +2068,25 @@
             if (type === 'enabled') acgiFieldConfig[field].is_enabled = !acgiFieldConfig[field].is_enabled;
             renderAcgiFields(acgiFields, acgiFieldConfig);
             saveAcgiFieldConfig('contacts', acgiFieldConfig);
+            // Save mapping after ACGI field configuration changes
+            if (propertiesData['contacts']) {
+                saveMappingSilently('contacts');
+            }
         }
         function toggleAcgiMembershipsField(field, type) {
             if (!acgiMembershipsFieldConfig[field]) acgiMembershipsFieldConfig[field] = { is_important: false, is_enabled: true };
             if (type === 'important') acgiMembershipsFieldConfig[field].is_important = !acgiMembershipsFieldConfig[field].is_important;
             if (type === 'enabled') acgiMembershipsFieldConfig[field].is_enabled = !acgiMembershipsFieldConfig[field].is_enabled;
+            // if not important, remove the order_index
+            if (!acgiMembershipsFieldConfig[field].is_important) {
+                delete acgiMembershipsFieldConfig[field].order_index;
+            }
             renderAcgiMembershipsFields(acgiMemberships, acgiMembershipsFieldConfig);
             saveAcgiFieldConfig('memberships', acgiMembershipsFieldConfig);
+            // Save mapping after ACGI field configuration changes
+            if (propertiesData['memberships']) {
+                saveMappingSilently('memberships');
+            }
         }
 
         function saveAcgiFieldConfig(object_type, config) {
@@ -2009,7 +2105,7 @@
                 .then(data => {
                     console.log("loadAcgiFieldConfig RESPONSE", data)
                     if (object_type === 'contacts') {
-                        acgiFieldConfig = data.config || {};
+                    acgiFieldConfig = data.config || {};
                     } else if (object_type === 'memberships') {
                         acgiMembershipsFieldConfig = data.config || {};
                     }
@@ -2055,7 +2151,7 @@
             document.getElementById('membership-item-selector').addEventListener('change', function() {
                 currentMembershipIndex = parseInt(this.value);
                 updateMembershipDisplay();
-            });
+                });
         });
 
         // After fetching a customer, save the field list
@@ -2068,6 +2164,8 @@
                 .then(response => response.json())
                 .then(data => {
                     acgiFields = ensureAcgiFieldsObject(data.fields);
+                    // Store ACGI fields globally for mapping
+                    acgiContactFields = acgiFields;
                     showAcgiJson(acgiFields);
                     // Save the field list to backend
                     fetch('/api/acgi-fields', {
@@ -2084,6 +2182,10 @@
                                     const mode = document.querySelector('input[name="addressPreferenceMode"]:checked').value;
                                     if (mode === 'criteria' && acgiFields && Array.isArray(acgiFields.addresses)) {
                                         populateAddressPropertiesDropdown(acgiFields.addresses);
+                                    }
+                                    // Generate and save mapping based on current order
+                                    if (propertiesData['contacts']) {
+                                        saveMappingSilently('contacts');
                                     }
                                 });
                             });
@@ -2105,7 +2207,7 @@
             const customerId = document.getElementById('acgi-membership-customer-id').value;
             if (!customerId) return;
             document.getElementById('acgi-membership-loading-spinner').style.display = 'block';
-            document.getElementById('fetch-memberships-btn').disabled = true;
+            document.getElementById('fetch-memberships-btn').disabled = false;
             fetch(`/api/acgi/customer/${customerId}/memberships`)
                 .then(response => response.json())
                 .then(data => {
@@ -2121,11 +2223,15 @@
                         acgiMemberships = ensureAcgiFieldsObject(memberships_data);
                     }
                     
+                    // Store ACGI membership fields globally for mapping
+                    acgiMembershipFields = acgiMemberships;
+                    
                     // Populate the membership selector
                     populateMembershipSelector(acgiMembershipsList);
                     
                     showAcgiMembershipsJson(memberships_data);
                     // Save the field list to backend
+                    console.log("acgiMemberships TTTT", acgiMemberships)
                     fetch('/api/acgi-fields', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
@@ -2133,6 +2239,10 @@
                     });
                     loadAcgiFieldConfig('memberships', () => {
                         renderAcgiMembershipsFields(acgiMemberships, acgiMembershipsFieldConfig);
+                        // Generate and save mapping based on current order
+                        if (propertiesData['memberships']) {
+                            saveMappingSilently('memberships');
+                        }
                     });
                     console.log("acgiMemberships", acgiMemberships)
                     document.getElementById('acgi-membership-loading-spinner').style.display = 'none';
@@ -2981,6 +3091,142 @@
         //     }, 5000);
         // }
 
+                // Mapping is now generated automatically by the backend
+        // The backend reads field configurations from the database and creates the mapping
+
+        function saveMappingSilently(objectType) {
+            console.log(`Silently saving ${objectType} mapping...`);
+            
+            const endpoint = objectType === 'contacts' ? '/api/mapping/contact' : '/api/mapping/membership';
+            console.log(`Sending request to endpoint: ${endpoint}`);
+            
+            // Backend will automatically generate mapping from current field configurations
+            fetch(endpoint, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({}) // No mapping data needed - backend generates it
+            })
+            .then(response => {
+                console.log(`Response status: ${response.status}`);
+                return response.json();
+            })
+            .then(data => {
+                console.log(`${objectType} mapping saved silently:`, data);
+                if (data.mapping) {
+                    console.log(`Generated mapping:`, data.mapping);
+                    // Update the global mapping variable
+                    if (objectType === 'contacts') {
+                        contactsMapping = data.mapping;
+                    } else if (objectType === 'memberships') {
+                        membershipsMapping = data.mapping;
+                    }
+                }
+                // Show a brief success message
+                showAlert(`${objectType} mapping updated automatically!`, 'success');
+            })
+            .catch(error => {
+                console.error(`Error saving ${objectType} mapping silently:`, error);
+                showAlert(`Error updating ${objectType} mapping: ${error.message}`, 'danger');
+            });
+        }
+
+        function testMapping() {
+            console.log('=== TESTING MAPPING ===');
+            console.log('ACGI Contact Fields:', acgiContactFields);
+            console.log('ACGI Membership Fields:', acgiMembershipFields);
+            console.log('Properties Data:', propertiesData);
+            console.log('Current Contacts Mapping:', contactsMapping);
+            console.log('Current Memberships Mapping:', membershipsMapping);
+            
+            // Test saving - backend will generate mappings automatically
+            saveMappingSilently('contacts');
+            saveMappingSilently('memberships');
+        }
+
+        function forceSaveMapping() {
+            console.log('=== FORCE SAVE MAPPING ===');
+            console.log('Forcing mapping save for both contacts and memberships...');
+            
+            // Backend will automatically generate mappings from database configurations
+            console.log('Saving contacts mapping...');
+            saveMappingSilently('contacts');
+            
+            console.log('Saving memberships mapping...');
+            saveMappingSilently('memberships');
+        }
+
+        function refreshMappingsFromDatabase() {
+            console.log('=== REFRESHING MAPPINGS FROM DATABASE ===');
+            
+            // Load mappings from database
+            loadMapping('contacts');
+            loadMapping('memberships');
+            
+            // Show success message
+            showAlert('Mappings refreshed from database!', 'success');
+        }
+
+        function loadMapping(objectType) {
+            console.log(`Loading ${objectType} mapping...`);
+            
+            const endpoint = objectType === 'contacts' ? '/api/mapping/contact' : '/api/mapping/membership';
+            
+            fetch(endpoint)
+            .then(response => response.json())
+            .then(data => {
+                console.log(`${objectType} mapping loaded:`, data);
+                if (objectType === 'contacts') {
+                    contactsMapping = data.mapping || {};
+                } else if (objectType === 'memberships') {
+                    membershipsMapping = data.mapping || {};
+                }
+                // Generate new mapping based on current order if ACGI fields are available
+                if ((objectType === 'contacts' && acgiContactFields) || 
+                    (objectType === 'memberships' && acgiMembershipFields)) {
+                    const newMapping = generateOrderBasedMapping(objectType);
+                    if (Object.keys(newMapping).length > 0) {
+                        if (objectType === 'contacts') {
+                            contactsMapping = newMapping;
+                        } else if (objectType === 'memberships') {
+                            membershipsMapping = newMapping;
+                        }
+                        // Save the new mapping
+                        saveMappingSilently(objectType);
+                    }
+                }
+            })
+            .catch(error => {
+                console.error(`Error loading ${objectType} mapping:`, error);
+                if (objectType === 'contacts') {
+                    contactsMapping = {};
+                } else if (objectType === 'memberships') {
+                    membershipsMapping = {};
+                }
+            });
+        }
+
+        // Load mappings when properties are loaded
+        function loadProperties() {
+            showLoading();
+
+            // Load properties for both object types
+            Promise.all([
+                loadObjectProperties('contacts'),
+                //loadObjectProperties('deals'),
+                loadObjectProperties('memberships')
+            ]).then(() => {
+                // Load mappings after properties are loaded
+                loadMapping('contacts');
+                loadMapping('memberships');
+                hideLoading();
+                showAlert('All properties and mappings loaded successfully!', 'success');
+            }).catch(error => {
+                console.log("error", error)
+                hideLoading();
+                console.error('Error loading properties:', error);
+                showAlert('Error loading properties: ' + error.message + '\nPlease set your HubSpot API key on the Integration page first.', 'danger');
+            });
+        }
         
     </script>
 </body>

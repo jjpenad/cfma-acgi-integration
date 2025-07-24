@@ -126,9 +126,30 @@ class HubSpotClient:
             # Prepare membership properties for HubSpot
             properties = {}
             
+            print("MEMBERSHIP DATA",membership_data)
             # Add all form data as properties
             for key, value in membership_data.items():
                 if value:  # Only add non-empty values
+                    # Ensure date fields are properly formatted for HubSpot
+                    if 'date' in key.lower() and isinstance(value, str) and value.isdigit():
+                        # Convert timestamp to ensure it's at midnight UTC
+                        try:
+                            timestamp = int(value)
+                            # Convert to datetime and back to ensure midnight UTC
+                            from datetime import datetime, timezone
+                            dt = datetime.fromtimestamp(timestamp / 1000, tz=timezone.utc)
+                            # Create new timestamp at midnight UTC
+                            midnight_utc = datetime.now(timezone.utc).replace(
+                                year=dt.year, 
+                                month=dt.month, 
+                                day=dt.day, 
+                                hour=0, minute=0, second=0, microsecond=0
+                            )
+                            value = str(int(midnight_utc.timestamp() * 1000))
+                            print(f"Converted date field {key}: {value}")
+                        except Exception as e:
+                            print(f"Error converting date field {key}: {e}")
+                    
                     properties[key] = value
 
             # Create membership
@@ -136,6 +157,7 @@ class HubSpotClient:
             create_data = {'properties': properties}
             print("CREATE DATA",create_data)
             create_response = self.session.post(create_url, json=create_data, timeout=30)
+            print("CREATE RESPONSE",create_response)
             
             if create_response.status_code == 201:
                 new_membership = create_response.json()
@@ -279,6 +301,26 @@ class HubSpotClient:
             # Add all form data as properties
             for key, value in contact_data.items():
                 if value:  # Only add non-empty values
+                    # Ensure date fields are properly formatted for HubSpot
+                    if 'date' in key.lower() and isinstance(value, str) and value.isdigit():
+                        # Convert timestamp to ensure it's at midnight UTC
+                        try:
+                            timestamp = int(value)
+                            # Convert to datetime and back to ensure midnight UTC
+                            from datetime import datetime, timezone
+                            dt = datetime.fromtimestamp(timestamp / 1000, tz=timezone.utc)
+                            # Create new timestamp at midnight UTC
+                            midnight_utc = datetime.now(timezone.utc).replace(
+                                year=dt.year, 
+                                month=dt.month, 
+                                day=dt.day, 
+                                hour=0, minute=0, second=0, microsecond=0
+                            )
+                            value = str(int(midnight_utc.timestamp() * 1000))
+                            print(f"Converted date field {key}: {value}")
+                        except Exception as e:
+                            print(f"Error converting date field {key}: {e}")
+                    
                     properties[key] = value
             
             # Always generate a unique ACGI customer ID (simulating ACGI record ID)
@@ -629,4 +671,167 @@ class HubSpotClient:
             
         except Exception as e:
             logger.error(f"Error getting contact by ACGI ID: {str(e)}")
-            return None 
+            return None
+
+    def search_membership(self, customer_id: str, raw_class_code: str, subgroup: str, raw_subclass_code: str) -> Optional[Dict[str, any]]:
+        """Search for existing membership by customer_id, raw_class_code, subgroup, and raw_subclass_code"""
+        try:
+            if not self.api_key:
+                return None
+            
+            # Search for membership with the specified criteria
+            url = f"{self.base_url}/crm/v3/objects/2-46896622/search"
+            payload = {
+                "filterGroups": [
+                    {
+                        "filters": [
+                            {
+                                "propertyName": "customer_id",
+                                "operator": "EQ",
+                                "value": customer_id
+                            },
+                            {
+                                "propertyName": "raw_class_code",
+                                "operator": "EQ",
+                                "value": raw_class_code
+                            },
+                            {
+                                "propertyName": "subgroup",
+                                "operator": "EQ",
+                                "value": subgroup
+                            },
+                            {
+                                "propertyName": "raw_subclass_code",
+                                "operator": "EQ",
+                                "value": raw_subclass_code
+                            }
+                        ]
+                    }
+                ],
+                "properties": ["customer_id", "raw_class_code", "subgroup", "raw_subclass_code", "dealname", "amount"],
+                "limit": 1
+            }
+            
+            response = self.session.post(url, json=payload, timeout=30)
+            
+            if response.status_code == 200:
+                data = response.json()
+                results = data.get('results', [])
+                if results:
+                    return results[0]
+            
+            return None
+            
+        except Exception as e:
+            logger.error(f"Error searching membership: {str(e)}")
+            return None
+
+    def update_membership(self, membership_id: str, membership_data: Dict[str, any]) -> Dict[str, any]:
+        """Update existing membership in HubSpot"""
+        try:
+            if not self.api_key:
+                return {'success': False, 'error': 'HubSpot client not initialized'}
+            
+            url = f"{self.base_url}/crm/v3/objects/2-46896622/{membership_id}"
+            
+            # Prepare properties for update
+            properties = {}
+            for key, value in membership_data.items():
+                if value:  # Only add non-empty values
+                    # Ensure date fields are properly formatted for HubSpot
+                    if 'date' in key.lower() and isinstance(value, str) and value.isdigit():
+                        # Convert timestamp to ensure it's at midnight UTC
+                        try:
+                            timestamp = int(value)
+                            # Convert to datetime and back to ensure midnight UTC
+                            from datetime import datetime, timezone
+                            dt = datetime.fromtimestamp(timestamp / 1000, tz=timezone.utc)
+                            # Create new timestamp at midnight UTC
+                            midnight_utc = datetime.now(timezone.utc).replace(
+                                year=dt.year, 
+                                month=dt.month, 
+                                day=dt.day, 
+                                hour=0, minute=0, second=0, microsecond=0
+                            )
+                            value = str(int(midnight_utc.timestamp() * 1000))
+                            print(f"Converted date field {key}: {value}")
+                        except Exception as e:
+                            print(f"Error converting date field {key}: {e}")
+                    
+                    properties[key] = value
+            
+            payload = {"properties": properties}
+            
+            response = self.session.patch(url, json=payload, timeout=30)
+            
+            if response.status_code == 200:
+                result = response.json()
+                return {
+                    'success': True,
+                    'message': 'Membership updated successfully',
+                    'membership_id': membership_id,
+                    'hubspot_response': result
+                }
+            else:
+                return {
+                    'success': False,
+                    'error': f'Failed to update membership: {response.status_code} - {response.text}',
+                    'hubspot_response': response.text
+                }
+                
+        except Exception as e:
+            logger.error(f"Error updating membership: {str(e)}")
+            return {
+                'success': False,
+                'error': f'Unexpected error: {str(e)}'
+            }
+
+    def create_or_update_membership(self, membership_data: Dict[str, any]) -> Dict[str, any]:
+        """Create or update membership based on unique criteria (customer_id, raw_class_code, subgroup, raw_subclass_code)"""
+        try:
+            if not self.api_key:
+                return {'success': False, 'error': 'HubSpot client not initialized'}
+            
+            # Extract the unique identifiers for searching
+            customer_id = membership_data.get('customer_id', '')
+            raw_class_code = membership_data.get('raw_class_code', '')
+            subgroup = membership_data.get('subgroup', '')
+            raw_subclass_code = membership_data.get('raw_subclass_code', '')
+            
+            if not all([customer_id, raw_class_code, subgroup, raw_subclass_code]):
+                return {
+                    'success': False, 
+                    'error': 'Missing required fields for membership search: customer_id, raw_class_code, subgroup, raw_subclass_code'
+                }
+            
+            # Search for existing membership
+            existing_membership = self.search_membership(
+                customer_id=customer_id,
+                raw_class_code=raw_class_code,
+                subgroup=subgroup,
+                raw_subclass_code=raw_subclass_code
+            )
+            print("MEMBERSHIP DATA",membership_data)
+            print("EXISTING MEMBERSHIP",existing_membership)
+            
+            if existing_membership:
+                # Update existing membership
+                membership_id = existing_membership['id']
+                result = self.update_membership(membership_id, membership_data)
+                if result['success']:
+                    result['action'] = 'updated'
+                    result['membership_id'] = membership_id
+                return result
+            else:
+                # Create new membership
+                result = self.create_membership(membership_data)
+                if result['success']:
+                    result['action'] = 'created'
+                return result
+                
+        except Exception as e:
+            logger.error(f"Error in create_or_update_membership: {str(e)}")
+            return {
+                'success': False,
+                'error': f'Unexpected error: {str(e)}'
+            } 

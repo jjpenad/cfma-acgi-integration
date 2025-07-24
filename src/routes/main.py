@@ -10,10 +10,7 @@ from routes.auth import login_required
 logger = setup_logging()
 
 # Initialize services
-acgi_client = ACGIClient()
-hubspot_client = HubSpotClient()
-data_mapper = DataMapper()
-integration_service = IntegrationService(acgi_client, hubspot_client, data_mapper)
+integration_service = IntegrationService()
 
 # Initialize scheduler
 scheduler = BackgroundScheduler()

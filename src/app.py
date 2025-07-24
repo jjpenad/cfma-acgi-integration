@@ -27,6 +27,15 @@ def create_app():
     # Initialize database
     init_db()
     
+    # Initialize scheduler service
+    try:
+        from services.scheduler_service import scheduler_service
+        scheduler_service.start()
+        logging.info("Scheduler service started successfully")
+    except Exception as e:
+        logging.error(f"Error starting scheduler service: {str(e)}")
+        # Don't fail the app startup, just log the error
+    
     # Register blueprints
     app.register_blueprint(auth_bp)
     app.register_blueprint(main_bp)

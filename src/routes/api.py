@@ -416,22 +416,110 @@ def init_api_routes(app):
         memberships_list = memberships_data.get("memberships", [])
         return jsonify({'fields': memberships_list})
 
+    def generate_mapping_from_fields(object_type):
+        """Generate mapping automatically from current field configurations in database"""
+        session = get_session()
+        try:
+            # Get HubSpot properties in order (important ones first, sorted by order_index)
+            hubspot_fields = session.query(FormField).filter_by(
+                object_type=object_type, 
+                is_important='true'
+            ).order_by(FormField.order_index).all()
+            print("hubspot_fields",hubspot_fields)
+            
+            logger.info(f"HubSpot fields for {object_type}:")
+            for field in hubspot_fields:
+                logger.info(f"  {field.field_name} (order: {field.order_index})")
+            
+            # Get ACGI field configuration
+            acgi_config_key = f'acgi_field_config_{object_type}'
+            acgi_config_obj = session.query(AppState).filter_by(key=acgi_config_key).first()
+            print("acgi_config_obj",acgi_config_obj)
+            
+            if not acgi_config_obj:
+                logger.warning(f"No ACGI field config found for {object_type}")
+                return {}
+            
+            import json
+            acgi_config = json.loads(acgi_config_obj.value) if acgi_config_obj.value else {}
+            print("acgi_config object", object_type, " " , acgi_config)
+            logger.info(f"ACGI config for {object_type}: {acgi_config}")
+            
+            # Get ACGI fields in order (important ones first, sorted by order_index)
+            acgi_fields = []
+            for field_name, config in acgi_config.items():
+                if config.get('is_important') == True or config.get('is_important') == 'true':
+                    acgi_fields.append({
+                        'name': field_name,
+                        'order_index': config.get('order_index', 0)
+                    })
+            
+            # Sort ACGI fields by order_index
+            acgi_fields.sort(key=lambda x: x['order_index'])
+            
+            logger.info(f"ACGI fields for {object_type}:")
+            for field in acgi_fields:
+                logger.info(f"  {field['name']} (order: {field['order_index']})")
+            
+            # Create mapping based on visual order: first HubSpot field maps to first ACGI field
+            mapping = {}
+            max_length = min(len(hubspot_fields), len(acgi_fields))
+            
+            logger.info(f"Creating order-based mapping for {max_length} fields:")
+            logger.info(f"HubSpot fields count: {len(hubspot_fields)}")
+            logger.info(f"ACGI fields count: {len(acgi_fields)}")
+            
+            for i in range(max_length):
+                hubspot_field = hubspot_fields[i]
+                acgi_field = acgi_fields[i]
+                mapping[hubspot_field.field_name] = acgi_field['name']
+                logger.info(f"Mapping {i}: {hubspot_field.field_name} -> {acgi_field['name']}")
+            
+            logger.info(f"Generated mapping for {object_type}: {mapping}")
+            return mapping
+            
+        except Exception as e:
+            logger.error(f"Error generating mapping for {object_type}: {str(e)}")
+            return {}
+        finally:
+            session.close()
+
     @app.route('/api/mapping/contact', methods=['GET', 'POST'])
     def contact_mapping():
         if request.method == 'POST':
-            mapping = request.json.get('mapping', {})
+            # Generate mapping automatically from current field configurations
+            mapping = generate_mapping_from_fields('contacts')
             ContactFieldMapping.set_mapping(mapping)
-            return jsonify({'status': 'success'})
+            return jsonify({'status': 'success', 'mapping': mapping})
         else:
             mapping = ContactFieldMapping.get_mapping()
             return jsonify({'mapping': mapping or {}})
+    
+    @app.route('/api/debug/mapping/contact', methods=['GET'])
+    def debug_contact_mapping():
+        """Debug endpoint to see what's happening with contact mapping"""
+        mapping = generate_mapping_from_fields('contacts')
+        return jsonify({
+            'generated_mapping': mapping,
+            'saved_mapping': ContactFieldMapping.get_mapping()
+        })
+    
+    @app.route('/api/debug/mapping/membership', methods=['GET'])
+    def debug_membership_mapping():
+        """Debug endpoint to see what's happening with membership mapping"""
+        mapping = generate_mapping_from_fields('memberships')
+        return jsonify({
+            'generated_mapping': mapping,
+            'saved_mapping': MembershipFieldMapping.get_mapping()
+        })
         
     @app.route('/api/mapping/membership', methods=['GET', 'POST'])
     def membership_mapping():
         if request.method == 'POST':
-            mapping = request.json.get('mapping', {})
+            # Generate mapping automatically from current field configurations
+            mapping = generate_mapping_from_fields('memberships')
             MembershipFieldMapping.set_mapping(mapping)
-            return jsonify({'status': 'success'})
+            return jsonify({'status': 'success', 'mapping': mapping})
         else:   
             mapping = MembershipFieldMapping.get_mapping()
             return jsonify({'mapping': mapping or {}})
@@ -695,4 +783,152 @@ def init_api_routes(app):
             else:
                 return jsonify({'error': f'HubSpot API error: {resp.status_code} {resp.text}'}), 400
         except Exception as e:
-            return jsonify({'error': str(e)}), 500 
+            return jsonify({'error': str(e)}), 500
+
+    @app.route('/api/scheduling-config', methods=['GET', 'POST'])
+    @login_required
+    def scheduling_config():
+        """Get or save scheduling configuration"""
+        from src.services.scheduler_service import scheduler_service
+        
+        if request.method == 'POST':
+            try:
+                data = request.get_json()
+                logger.info(f"Received scheduling config data: {data}")
+                
+                # Validate required fields
+                if not data.get('frequency') or data.get('frequency') not in [5, 10, 15]:
+                    return jsonify({'success': False, 'error': 'Frequency must be 5, 10, or 15 minutes'}), 400
+                
+                if not data.get('customer_ids', '').strip():
+                    return jsonify({'success': False, 'error': 'Customer IDs are required'}), 400
+                
+                # Update configuration using scheduler service
+                success = scheduler_service.update_config(data)
+                if success:
+                    return jsonify({'success': True, 'message': 'Scheduling configuration saved successfully'})
+                else:
+                    return jsonify({'success': False, 'error': 'Failed to save configuration'}), 500
+                    
+            except Exception as e:
+                logger.error(f"Error saving scheduling config: {str(e)}")
+                return jsonify({'success': False, 'error': str(e)}), 500
+        else:
+            try:
+                from src.models import SchedulingConfig
+                config = SchedulingConfig.get_config()
+                return jsonify({'success': True, 'config': config})
+            except Exception as e:
+                logger.error(f"Error getting scheduling config: {str(e)}")
+                return jsonify({'success': False, 'error': str(e)}), 500
+
+    @app.route('/api/scheduling-status', methods=['GET'])
+    @login_required
+    def scheduling_status():
+        """Get scheduling status information"""
+        try:
+            from src.services.scheduler_service import scheduler_service
+            from src.models import SchedulingConfig
+            
+            # Get raw config for debugging
+            raw_config = SchedulingConfig.get_config()
+            logger.info(f"Raw scheduling config: {raw_config}")
+            
+            status = scheduler_service.get_status()
+            logger.info(f"Scheduler status response: {status}")
+            
+            return jsonify({'success': True, 'status': status})
+        except Exception as e:
+            logger.error(f"Error getting scheduling status: {str(e)}")
+            return jsonify({'success': False, 'error': str(e)}), 500
+
+    @app.route('/api/start-sync', methods=['POST'])
+    @login_required
+    def start_sync():
+        """Start manual synchronization"""
+        try:
+            from src.services.scheduler_service import scheduler_service
+            
+            logger.info("Starting manual sync request")
+            result = scheduler_service.run_manual_sync()
+            logger.info(f"Manual sync result: {result}")
+            
+            if result.get('success'):
+                return jsonify({'success': True, 'message': 'Manual sync completed successfully', 'details': result})
+            else:
+                return jsonify({'success': False, 'error': result.get('error', 'Sync failed')}), 500
+                
+        except Exception as e:
+            logger.error(f"Error starting sync: {str(e)}")
+            import traceback
+            logger.error(f"Traceback: {traceback.format_exc()}")
+            return jsonify({'success': False, 'error': str(e)}), 500
+
+    @app.route('/api/stop-sync', methods=['POST'])
+    @login_required
+    def stop_sync():
+        """Stop synchronization (disable scheduling)"""
+        try:
+            from src.services.scheduler_service import scheduler_service
+            from src.models import SchedulingConfig
+            
+            # Get current config and disable it
+            current_config = SchedulingConfig.get_config()
+            if current_config:
+                current_config['enabled'] = False
+                success = scheduler_service.update_config(current_config)
+                if success:
+                    return jsonify({'success': True, 'message': 'Sync stopped successfully'})
+                else:
+                    return jsonify({'success': False, 'error': 'Failed to stop sync'}), 500
+            else:
+                return jsonify({'success': False, 'error': 'No scheduling configuration found'}), 400
+                
+        except Exception as e:
+            logger.error(f"Error stopping sync: {str(e)}")
+            return jsonify({'success': False, 'error': str(e)}), 500
+
+    @app.route('/api/test-scheduling', methods=['GET'])
+    @login_required
+    def test_scheduling():
+        """Test endpoint to debug scheduling configuration"""
+        try:
+            from src.services.scheduler_service import scheduler_service
+            from src.models import SchedulingConfig
+            
+            # Get raw config
+            config = SchedulingConfig.get_config()
+            
+            # Get scheduler status
+            status = scheduler_service.get_status()
+            
+            # Get scheduler jobs
+            jobs = scheduler_service.scheduler.get_jobs()
+            job_info = []
+            for job in jobs:
+                job_info.append({
+                    'id': job.id,
+                    'name': job.name,
+                    'trigger': str(job.trigger),
+                    'next_run_time': str(getattr(job, 'next_run_time', 'N/A'))
+                })
+            
+            return jsonify({
+                'success': True,
+                'debug_info': {
+                    'raw_config': config,
+                    'scheduler_status': status,
+                    'scheduler_jobs': job_info,
+                    'scheduler_running': scheduler_service.is_running,
+                    'scheduler_started': scheduler_service.scheduler.running
+                }
+            })
+            
+        except Exception as e:
+            logger.error(f"Error in test scheduling: {str(e)}")
+            import traceback
+            return jsonify({
+                'success': False, 
+                'error': str(e),
+                'traceback': traceback.format_exc()
+            }), 500 
