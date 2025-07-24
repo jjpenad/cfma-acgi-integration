@@ -314,7 +314,7 @@ class IntegrationService:
                                     value = int(date_obj.timestamp() * 1000)  # HubSpot expects milliseconds
                     except Exception as e:
                         logger.warning(f"Could not parse date {value}: {str(e)}")
-                
+ 
                 hubspot_membership[hubspot_field] = value
         
         return hubspot_membership
