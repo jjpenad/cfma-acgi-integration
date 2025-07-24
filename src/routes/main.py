@@ -11,6 +11,8 @@ logger = setup_logging()
 
 # Initialize services
 integration_service = IntegrationService()
+acgi_client = ACGIClient()
+hubspot_client = HubSpotClient()
 
 # Initialize scheduler
 scheduler = BackgroundScheduler()
