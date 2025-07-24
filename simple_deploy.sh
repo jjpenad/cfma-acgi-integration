@@ -83,7 +83,7 @@ cat > start_app.sh <<EOF
 cd \$(dirname "\$0")
 source venv/bin/activate
 export FLASK_ENV=production
-export FLASK_APP=src.app:app
+export FLASK_APP=wsgi:app
 python3 -c "
 from src.models import init_db, create_default_admin
 try:
@@ -93,10 +93,56 @@ try:
 except Exception as e:
     print(f'Database already exists: {e}')
 "
-gunicorn --workers 2 --bind 0.0.0.0:5000 --timeout 120 src.app:app
+gunicorn --workers 2 --bind 0.0.0.0:5000 --timeout 120 wsgi:app
 EOF
 
 chmod +x start_app.sh
+
+# Check for .env file and create if missing
+if [ ! -f ".env" ]; then
+    echo "📝 Creating .env file..."
+    cat > .env <<EOF
+# Database Configuration
+DATABASE_URL=sqlite:///cfma.db
+
+# Flask Configuration
+SECRET_KEY=your-secret-key-change-this-in-production
+FLASK_ENV=production
+FLASK_APP=wsgi:app
+
+# HubSpot Configuration
+HUBSPOT_API_KEY=your-hubspot-api-key-here
+
+# ACGI Configuration
+ACGI_BASE_URL=your-acgi-base-url-here
+ACGI_USERNAME=your-acgi-username-here
+ACGI_PASSWORD=your-acgi-password-here
+
+# Application Configuration
+DEBUG=False
+LOG_LEVEL=INFO
+EOF
+    echo "⚠️  Please edit .env file with your actual credentials!"
+fi
+
+# Read .env file and convert to systemd environment format
+echo "📋 Loading environment variables from .env..."
+ENV_VARS=""
+if [ -f ".env" ]; then
+    while IFS= read -r line; do
+        # Skip empty lines and comments
+        if [[ -n "$line" && ! "$line" =~ ^[[:space:]]*# ]]; then
+            # Extract key=value
+            key=$(echo "$line" | cut -d'=' -f1)
+            value=$(echo "$line" | cut -d'=' -f2-)
+            
+            # Skip if key is empty
+            if [[ -n "$key" ]]; then
+                ENV_VARS="${ENV_VARS}Environment=${key}=${value}"$'\n'
+            fi
+        fi
+    done < .env
+fi
 
 # Create a systemd service for the app
 echo "⚙️ Creating systemd service..."
@@ -112,11 +158,12 @@ User=$USER
 Group=$USER
 WorkingDirectory=$CURRENT_DIR
 Environment=PATH=$CURRENT_DIR/venv/bin
-Environment=FLASK_ENV=production
-Environment=FLASK_APP=src.app:app
-ExecStart=$CURRENT_DIR/venv/bin/gunicorn --workers 2 --bind 0.0.0.0:5000 --timeout 120 src.app:app
+$ENV_VARS
+ExecStart=$CURRENT_DIR/venv/bin/gunicorn --workers 2 --bind 0.0.0.0:5000 --timeout 120 wsgi:app
 Restart=always
 RestartSec=10
+StandardOutput=journal
+StandardError=journal
 
 [Install]
 WantedBy=multi-user.target

@@ -13,11 +13,11 @@ def test_imports():
     print("🔍 Testing imports...")
     
     try:
-        print("  Testing src.app...")
-        from src.app import app
-        print("  ✅ src.app imported successfully")
+        print("  Testing wsgi...")
+        from wsgi import app
+        print("  ✅ wsgi imported successfully")
     except Exception as e:
-        print(f"  ❌ src.app import failed: {e}")
+        print(f"  ❌ wsgi import failed: {e}")
         import traceback
         traceback.print_exc()
         return False
@@ -64,7 +64,7 @@ def test_app_creation():
     print("🚀 Testing app creation...")
     
     try:
-        from src.app import app
+        from wsgi import app
         print("  ✅ Flask app created successfully")
         print(f"  📋 App name: {app.name}")
         print(f"  📋 App config: {app.config.get('ENV', 'unknown')}")

@@ -46,7 +46,7 @@ fi
 echo "🧪 Testing app manually..."
 source venv/bin/activate
 export FLASK_ENV=production
-export FLASK_APP=src.app:app
+export FLASK_APP=wsgi:app
 
 echo "📋 Testing imports..."
 python3 -c "
@@ -72,7 +72,7 @@ except Exception as e:
 
 # Test gunicorn manually
 echo "🚀 Testing gunicorn manually..."
-timeout 10s venv/bin/gunicorn --workers 1 --bind 127.0.0.1:5001 --timeout 30 src.app:app &
+timeout 10s venv/bin/gunicorn --workers 1 --bind 127.0.0.1:5001 --timeout 30 wsgi:app &
 GUNICORN_PID=$!
 sleep 3
 
