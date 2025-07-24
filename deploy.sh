@@ -1,115 +1,145 @@
 #!/bin/bash
 
-# ACGI to HubSpot Integration - Heroku Deployment Script
+# CFMA Production Deployment Script for EC2
+# This script sets up the application to run as a production service
 
-echo "🚀 Starting Heroku deployment..."
+set -e  # Exit on any error
 
-# Check if Heroku CLI is installed
-if ! command -v heroku &> /dev/null; then
-    echo "❌ Heroku CLI is not installed. Please install it first:"
-    echo "   https://devcenter.heroku.com/articles/heroku-cli"
-    exit 1
-fi
+echo "🚀 Starting CFMA Production Deployment..."
 
-# Check if we're in a Git repository
-if ! git rev-parse --git-dir > /dev/null 2>&1; then
-    echo "❌ Not in a Git repository. Please initialize Git first:"
-    echo "   git init"
-    echo "   git add ."
-    echo "   git commit -m 'Initial commit'"
-    exit 1
-fi
+# Update system packages
+echo "📦 Updating system packages..."
+sudo yum update -y
 
-# Get app name from user
-read -p "Enter your Heroku app name (or press Enter to create a new one): " APP_NAME
+# Install required system dependencies
+echo "🔧 Installing system dependencies..."
+sudo yum install -y python3 python3-pip python3-devel gcc git nginx
 
-if [ -z "$APP_NAME" ]; then
-    echo "Creating new Heroku app..."
-    heroku create
-    APP_NAME=$(heroku apps:info --json | grep -o '"name":"[^"]*"' | cut -d'"' -f4)
-    echo "Created app: $APP_NAME"
-else
-    echo "Using existing app: $APP_NAME"
-    heroku git:remote -a $APP_NAME
-fi
+# Create application directory
+echo "📁 Setting up application directory..."
+sudo mkdir -p /opt/cfma
+sudo chown ec2-user:ec2-user /opt/cfma
 
-# Add PostgreSQL addon
-echo "📦 Adding PostgreSQL addon..."
-heroku addons:create heroku-postgresql:mini
+# Clone or copy application files
+echo "📋 Copying application files..."
+# If using git:
+# git clone https://github.com/your-repo/cfma.git /opt/cfma
+# Or copy files manually to /opt/cfma
 
-# Set environment variables
-echo "🔧 Setting environment variables..."
-heroku config:set SECRET_KEY="$(python -c 'import secrets; print(secrets.token_hex(32))')"
-heroku config:set DATABASE_TYPE="postgres"
-heroku config:set DEBUG="false"
-heroku config:set SESSION_COOKIE_SECURE="true"
+# Set up Python virtual environment
+echo "🐍 Setting up Python virtual environment..."
+cd /opt/cfma
+python3 -m venv venv
+source venv/bin/activate
 
-# Prompt for admin credentials
-read -p "Enter admin username (default: admin): " ADMIN_USERNAME
-ADMIN_USERNAME=${ADMIN_USERNAME:-admin}
+# Install Python dependencies
+echo "📚 Installing Python dependencies..."
+pip install --upgrade pip
+pip install -r requirements.txt
 
-read -s -p "Enter admin password: " ADMIN_PASSWORD
-echo
-read -s -p "Confirm admin password: " ADMIN_PASSWORD_CONFIRM
-echo
+# Set up environment variables
+echo "🔐 Setting up environment variables..."
+sudo tee /opt/cfma/.env > /dev/null <<EOF
+FLASK_ENV=production
+FLASK_APP=src.app:app
+SECRET_KEY=$(python3 -c 'import secrets; print(secrets.token_hex(32))')
+DATABASE_URL=sqlite:////opt/cfma/cfma.db
+LOG_LEVEL=INFO
+HOST=0.0.0.0
+PORT=5000
+DEBUG=False
+SESSION_COOKIE_SECURE=False
+SESSION_COOKIE_HTTPONLY=True
+PERMANENT_SESSION_LIFETIME=3600
+EOF
 
-if [ "$ADMIN_PASSWORD" != "$ADMIN_PASSWORD_CONFIRM" ]; then
-    echo "❌ Passwords don't match!"
-    exit 1
-fi
+# Create systemd service file
+echo "⚙️ Creating systemd service..."
+sudo tee /etc/systemd/system/cfma.service > /dev/null <<EOF
+[Unit]
+Description=CFMA Application
+After=network.target
 
-heroku config:set ADMIN_USERNAME="$ADMIN_USERNAME"
-heroku config:set ADMIN_PASSWORD="$ADMIN_PASSWORD"
+[Service]
+Type=simple
+User=ec2-user
+Group=ec2-user
+WorkingDirectory=/opt/cfma
+Environment=PATH=/opt/cfma/venv/bin
+ExecStart=/opt/cfma/venv/bin/gunicorn --workers 4 --bind 0.0.0.0:5000 --timeout 120 src.app:app
+Restart=always
+RestartSec=10
 
-# Optional: Set default API credentials
-read -p "Do you want to set default API credentials? (y/n): " SET_CREDENTIALS
+[Install]
+WantedBy=multi-user.target
+EOF
 
-if [ "$SET_CREDENTIALS" = "y" ] || [ "$SET_CREDENTIALS" = "Y" ]; then
-    read -p "Enter HubSpot API key (optional): " HUBSPOT_API_KEY
-    if [ ! -z "$HUBSPOT_API_KEY" ]; then
-        heroku config:set HUBSPOT_API_KEY="$HUBSPOT_API_KEY"
-    fi
-    
-    read -p "Enter ACGI username (optional): " ACGI_USERNAME
-    if [ ! -z "$ACGI_USERNAME" ]; then
-        heroku config:set ACGI_USERNAME="$ACGI_USERNAME"
-    fi
-    
-    read -s -p "Enter ACGI password (optional): " ACGI_PASSWORD
-    echo
-    if [ ! -z "$ACGI_PASSWORD" ]; then
-        heroku config:set ACGI_PASSWORD="$ACGI_PASSWORD"
-    fi
-    
-    read -p "Enter ACGI environment (test/prod, default: test): " ACGI_ENVIRONMENT
-    ACGI_ENVIRONMENT=${ACGI_ENVIRONMENT:-test}
-    heroku config:set ACGI_ENVIRONMENT="$ACGI_ENVIRONMENT"
-fi
+# Set up Nginx configuration
+echo "🌐 Setting up Nginx..."
+sudo tee /etc/nginx/conf.d/cfma.conf > /dev/null <<EOF
+server {
+    listen 80;
+    server_name _;
 
-# Deploy to Heroku
-echo "📤 Deploying to Heroku..."
-git add .
-git commit -m "Deploy to Heroku" || git commit -m "Update for Heroku deployment"
-git push heroku main
+    location / {
+        proxy_pass http://127.0.0.1:5000;
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto \$scheme;
+        proxy_connect_timeout 60s;
+        proxy_send_timeout 60s;
+        proxy_read_timeout 60s;
+    }
 
-# Run database migrations
-echo "🗄️ Setting up database..."
-heroku run python -c "from src.models import init_db; init_db()"
+    # Static files (if any)
+    location /static {
+        alias /opt/cfma/static;
+        expires 30d;
+    }
+}
+EOF
 
-# Open the application
-echo "🌐 Opening application..."
-heroku open
+# Remove default nginx site
+sudo rm -f /etc/nginx/conf.d/default.conf
 
-echo "✅ Deployment complete!"
-echo ""
-echo "📋 Next steps:"
-echo "1. Visit your app at: https://$APP_NAME.herokuapp.com"
-echo "2. Login with username: $ADMIN_USERNAME"
-echo "3. Configure your API credentials via the web interface"
-echo "4. Test your connections using the test buttons"
-echo ""
-echo "🔧 Useful commands:"
-echo "  heroku logs --tail          # View application logs"
-echo "  heroku config               # View environment variables"
-echo "  heroku restart              # Restart the application"
-echo "  heroku ps                   # Check application status" 
+# Test nginx configuration
+sudo nginx -t
+
+# Start and enable services
+echo "🚀 Starting services..."
+sudo systemctl daemon-reload
+sudo systemctl enable cfma
+sudo systemctl start cfma
+sudo systemctl enable nginx
+sudo systemctl start nginx
+
+# Set up firewall (if using security groups, this may not be needed)
+echo "🔥 Configuring firewall..."
+sudo yum install -y firewalld
+sudo systemctl enable firewalld
+sudo systemctl start firewalld
+sudo firewall-cmd --permanent --add-service=http
+sudo firewall-cmd --permanent --add-service=https
+sudo firewall-cmd --reload
+
+# Create log directory
+echo "📝 Setting up logging..."
+sudo mkdir -p /var/log/cfma
+sudo chown ec2-user:ec2-user /var/log/cfma
+
+# Initialize database
+echo "🗄️ Initializing database..."
+cd /opt/cfma
+source venv/bin/activate
+python3 -c "
+from src.models import init_db, create_default_admin
+init_db()
+create_default_admin()
+print('Database initialized successfully')
+"
+
+echo "✅ Deployment completed successfully!"
+echo "🌐 Application should be available at: http://$(curl -s http://169.254.169.254/latest/meta-data/public-ipv4)"
+echo "📊 Check service status with: sudo systemctl status cfma"
+echo "📋 View logs with: sudo journalctl -u cfma -f" 

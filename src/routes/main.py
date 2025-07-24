@@ -233,4 +233,32 @@ def init_routes(app):
         return jsonify({
             'scheduler_running': scheduler.running,
             'jobs': [{'id': job.id, 'name': job.name, 'next_run': str(job.next_run_time)} for job in jobs]
-        }) 
+        })
+
+    @app.route('/health')
+    def health():
+        """Health check endpoint for monitoring"""
+        try:
+            from datetime import datetime
+            # Check database connection
+            from src.models import get_session
+            session = get_session()
+            session.execute("SELECT 1")
+            session.close()
+            
+            # Check scheduler status
+            from src.services.scheduler_service import scheduler_service
+            scheduler_status = scheduler_service.get_status()
+            
+            return jsonify({
+                'status': 'healthy',
+                'timestamp': datetime.now().isoformat(),
+                'scheduler': scheduler_status.get('is_running', False),
+                'version': '1.0.0'
+            }), 200
+        except Exception as e:
+            return jsonify({
+                'status': 'unhealthy',
+                'error': str(e),
+                'timestamp': datetime.now().isoformat()
+            }), 500 

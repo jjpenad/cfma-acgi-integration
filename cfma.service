@@ -1,0 +1,20 @@
+[Unit]
+Description=CFMA Application
+After=network.target
+
+[Service]
+Type=simple
+User=ec2-user
+Group=ec2-user
+WorkingDirectory=/opt/cfma
+Environment=PATH=/opt/cfma/venv/bin
+Environment=FLASK_ENV=production
+Environment=FLASK_APP=src.app:app
+ExecStart=/opt/cfma/venv/bin/gunicorn --workers 4 --bind 0.0.0.0:5000 --timeout 120 --access-logfile /var/log/cfma/access.log --error-logfile /var/log/cfma/error.log src.app:app
+Restart=always
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target 
