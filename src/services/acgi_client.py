@@ -290,6 +290,129 @@ class ACGIClient:
                 'memberships': {}
             }
     
+    def get_purchased_products(self, credentials: Dict[str, str], customer_id: str) -> Dict[str, any]:
+        """Get purchased products for a specific customer"""
+        try:
+            print("Getting purchased products for customer_id:", customer_id)
+            
+            purchased_products_xml = f"""p_input_xml_doc=<?xml version="1.0" encoding="UTF-8" ?>
+<ecord-request>           
+    <vendorId>{credentials['userid']}</vendorId>                 <!-- provided by ACGI -->
+    <vendorPassword>{credentials['password']}</vendorPassword> <!-- provided by ACGI -->
+    <custId>{customer_id}</custId> 
+    <orderSerno></orderSerno> <!-- optional -->
+    <productType></productType> <!-- optional -->      
+</ecord-request>"""
+            
+            print("purchased_products_xml:", purchased_products_xml)
+            
+            url = f"{self.base_url}/{credentials['environment']}/ECSSAWEBSVCLIB.GET_PURCHASED_PRODUCTS_XML"
+            
+            response = self.session.post(
+                url,
+                data=purchased_products_xml,
+                timeout=30
+            )
+            print("URL:", url)
+            print("Response status:", response.status_code)
+            print("Response text:", response.text)
+            
+            if response.status_code == 200:
+                try:
+                    root = ET.fromstring(response.text)
+                    
+                    # Parse purchased products data
+                    purchased_products_data = self._parse_purchased_products_xml(root)
+                    print("PURCHASED PRODUCTS DATA:", purchased_products_data)
+                    for product in purchased_products_data['orders']:
+                        product['customerId'] = customer_id
+                    return {
+                        'success': True,
+                        'purchased_products': purchased_products_data
+                    }
+                    
+                except ET.ParseError as e:
+                    logger.error(f"Failed to parse purchased products XML for customer {customer_id}: {str(e)}")
+                    return {
+                        'success': False,
+                        'message': f"XML parsing failed: {str(e)}",
+                        'raw_response': response.text
+                    }
+            else:
+                return {
+                    'success': False,
+                    'message': f"HTTP {response.status_code}: {response.text}",
+                    'raw_response': response.text
+                }
+            
+        except Exception as e:
+            return {
+                'success': False,
+                'message': f"Error getting purchased products: {str(e)}",
+                'purchased_products': []
+            }
+
+    def get_customer_events(self, credentials: Dict[str, str], customer_id: str) -> Dict[str, any]:
+        """Get customer events for a specific customer"""
+        try:
+            print("Getting customer events for customer_id:", customer_id)
+            
+            events_xml = f"""p_input_xml_doc=<?xml version="1.0" encoding="UTF-8" ?>
+<event-request>           
+    <vendor-id>{credentials['userid']}</vendor-id>                 <!-- provided by ACGI -->
+    <vendor-password>{credentials['password']}</vendor-password> <!-- provided by ACGI -->
+    <cust-id>{customer_id}</cust-id>      
+</event-request>"""
+            
+            print("events_xml:", events_xml)
+            
+            url = f"{self.base_url}/{credentials['environment']}/EVTSSAWEBSVCLIB.GET_EVENT_INFO_XML"
+            
+            response = self.session.post(
+                url,
+                data=events_xml,
+                timeout=30
+            )
+            print("URL:", url)
+            print("Response status:", response.status_code)
+            print("Response text:", response.text)
+            
+            if response.status_code == 200:
+                try:
+                    root = ET.fromstring(response.text)
+                    
+                    # Parse customer events data
+                    events_data = self._parse_customer_events_xml(root)
+                    print("CUSTOMER EVENTS DATA:", events_data)
+                    for event in events_data['events']:
+                        event['customerId'] = customer_id
+                    return {
+                        'success': True,
+                        'events': events_data
+                    }
+                    
+                except ET.ParseError as e:
+                    logger.error(f"Failed to parse customer events XML for customer {customer_id}: {str(e)}")
+                    return {
+                        'success': False,
+                        'message': f"XML parsing failed: {str(e)}",
+                        'raw_response': response.text
+                    }
+            else:
+                return {
+                    'success': False,
+                    'message': f"HTTP {response.status_code}: {response.text}",
+                    'raw_response': response.text
+                }
+            
+        except Exception as e:
+            return {
+                'success': False,
+                'message': f"Error getting customer events: {str(e)}",
+                'events': []
+            }
+
+    
     def _parse_customer_xml(self, root: ET.Element) -> Dict[str, any]:
         """Parse customer XML data into a structured format"""
         customer = {}
@@ -459,6 +582,140 @@ class ACGIClient:
         memberships_data['memberships'] = memberships
         
         return memberships_data
+
+    def _parse_purchased_products_xml(self, root: ET.Element) -> Dict[str, any]:
+        """Parse purchased products XML data into a structured format"""
+        purchased_products_data = {}
+        
+        # Get status
+        status_elem = root.find('.//status')
+        if status_elem is not None:
+            purchased_products_data['status'] = status_elem.text
+        
+        # Orders/Products
+        orders = []
+        for order_elem in root.findall('.//order'):
+            order_data = {
+                'productSerno': self._get_element_text(order_elem, 'productSerno'),
+                'productId': self._get_element_text(order_elem, 'productId'),
+                'productName': self._get_element_text(order_elem, 'productName'),
+                'length': self._get_element_text(order_elem, 'length'),
+                'width': self._get_element_text(order_elem, 'width'),
+                'height': self._get_element_text(order_elem, 'height'),
+                'weight': self._get_element_text(order_elem, 'weight'),
+                'activeFlag': self._get_element_text(order_elem, 'activeFlag'),
+                'internalOrderFlag': self._get_element_text(order_elem, 'internalOrderFlag'),
+                'firstAvailableDate': self._get_element_text(order_elem, 'firstAvailableDate'),
+                'defaultUnitCost': self._get_element_text(order_elem, 'defaultUnitCost'),
+                'showProductRelativeURL': self._get_element_text(order_elem, 'showProductRelativeURL'),
+                'imageThumbnail': self._get_element_text(order_elem, 'imageThumbnail'),
+                'imageFullsize': self._get_element_text(order_elem, 'imageFullsize'),
+                'orderDate': self._get_element_text(order_elem, 'orderDate'),
+                'orderStatus': self._get_element_text(order_elem, 'orderStatus'),
+                'orderSerno': self._get_element_text(order_elem, 'orderSerno'),
+                'productType': self._get_element_text(order_elem, 'productType'),
+                'priceProfile': self._get_element_text(order_elem, 'priceProfile'),
+                'invoiceBalanceStatus': self._get_element_text(order_elem, 'invoiceBalanceStatus'),
+                'invoiceBalance': self._get_element_text(order_elem, 'invoiceBalance'),
+                'quantity': self._get_element_text(order_elem, 'quantity')
+            }
+            
+            # # Parse attributes
+            # attributes = []
+            # for attr_elem in order_elem.findall('.//attributes/attribute'):
+            #     attr_data = {
+            #         'attributeType': self._get_element_text(attr_elem, 'attribute-type'),
+            #         'attributeText': self._get_element_text(attr_elem, 'attribute-text')
+            #     }
+            #     attributes.append(attr_data)
+            # order_data['attributes'] = attributes
+            
+            orders.append(order_data)
+            
+        purchased_products_data['orders'] = orders
+        
+        return purchased_products_data
+
+    def _parse_customer_events_xml(self, root: ET.Element) -> Dict[str, any]:
+        """Parse customer events XML data into a structured format"""
+        events_data = {}
+        
+        # Get status
+        status_elem = root.find('.//status')
+        if status_elem is not None:
+            events_data['status'] = status_elem.text
+        
+        # Events
+        events = []
+        for event_elem in root.findall('.//event'):
+            event_data = {
+                'id': self._get_element_text(event_elem, 'id'),
+                'programName': self._get_element_text(event_elem, 'program-name'),
+                'name': self._get_element_text(event_elem, 'name'),
+                'type': self._get_element_text(event_elem, 'type'),
+                'typeDescr': self._get_element_text(event_elem, 'type-descr'),
+                'status': self._get_element_text(event_elem, 'status'),
+                'startDt': self._get_element_text(event_elem, 'start-dt'),
+                'endDt': self._get_element_text(event_elem, 'end-dt'),
+                'deadlineDt': self._get_element_text(event_elem, 'deadline-dt'),
+                'requireSecondaryItem': self._get_element_text(event_elem, 'requireSecondaryItem'),
+                'locationNm': self._get_element_text(event_elem, 'location-nm'),
+                'locationStreet1': self._get_element_text(event_elem, 'location-street1'),
+                'locationStreet2': self._get_element_text(event_elem, 'location-street2'),
+                'locationCity': self._get_element_text(event_elem, 'location-city'),
+                'locationState': self._get_element_text(event_elem, 'location-state'),
+                'locationZip': self._get_element_text(event_elem, 'location-zip'),
+                'locationCountry': self._get_element_text(event_elem, 'location-country'),
+                'locationCountryDescr': self._get_element_text(event_elem, 'location-country-descr'),
+                'registerUrl': self._get_element_text(event_elem, 'register-url'),
+                'registrationStatus': self._get_element_text(event_elem, 'registration-status'),
+                'lastChangeDate': self._get_element_text(event_elem, 'lastChangeDate')
+            }
+            
+            # Parse attributes
+            attributes = []
+            for attr_elem in event_elem.findall('.//attribute-list/attribute'):
+                attr_data = {
+                    'type': self._get_element_text(attr_elem, 'type'),
+                    'code': self._get_element_text(attr_elem, 'code'),
+                    'characterValue': self._get_element_text(attr_elem, 'character-value'),
+                    'numberValue': self._get_element_text(attr_elem, 'number-value'),
+                    'dateValue': self._get_element_text(attr_elem, 'date-value'),
+                    'URLtoFile': self._get_element_text(attr_elem, 'URLtoFile'),
+                    'URLtoThumbnail': self._get_element_text(attr_elem, 'URLtoThumbnail')
+                }
+                attributes.append(attr_data)
+            event_data['attributes'] = attributes
+            
+            # Parse valid registration types
+            registration_types = []
+            for reg_type_elem in event_elem.findall('.//validRegistrationTypes/regType'):
+                reg_type_data = {
+                    'type': self._get_element_text(reg_type_elem, 'type'),
+                    'descr': self._get_element_text(reg_type_elem, 'descr'),
+                    'defaultCl': self._get_element_text(reg_type_elem, 'defaultCl'),
+                    'waitlistingFlag': self._get_element_text(reg_type_elem, 'waitlistingFlag'),
+                    'staffFlag': self._get_element_text(reg_type_elem, 'staffFlag')
+                }
+                registration_types.append(reg_type_data)
+            event_data['validRegistrationTypes'] = registration_types
+            
+            # Parse sponsor list (if any)
+            sponsors = []
+            for sponsor_elem in event_elem.findall('.//sponsor-list/sponsor'):
+                sponsor_data = {
+                    'sponsorId': self._get_element_text(sponsor_elem, 'sponsor-id'),
+                    'sponsorName': self._get_element_text(sponsor_elem, 'sponsor-name'),
+                    'sponsorType': self._get_element_text(sponsor_elem, 'sponsor-type')
+                }
+                sponsors.append(sponsor_data)
+            event_data['sponsors'] = sponsors
+            
+            events.append(event_data)
+            
+        events_data['events'] = events
+        
+        return events_data
 
     def _parse_customer_xml_old(self, root: ET.Element) -> Dict[str, any]:
         """Parse customer XML data into a structured format"""

@@ -144,6 +144,80 @@ class MembershipFieldMapping(Base):
         finally:
             session.close()
 
+class EventFieldMapping(Base):
+    __tablename__ = 'event_field_mapping'
+    id = Column(Integer, primary_key=True)
+    mapping = Column(Text)  # Store JSON as text instead of PickleType
+    
+    @staticmethod
+    def set_mapping(mapping):
+        session = Session()
+        try:
+            obj = session.query(EventFieldMapping).first()
+            if not obj:
+                obj = EventFieldMapping()
+            obj.mapping = json.dumps(mapping) if mapping else '{}'
+            session.add(obj)
+            session.commit()
+        except Exception as e:
+            session.rollback()
+            logger.error(f"Error saving mapping: {str(e)}")
+            raise
+        finally:
+            session.close()
+
+    @staticmethod
+    def get_mapping():
+        session = Session()
+        try:
+            obj = session.query(EventFieldMapping).first()
+            if obj and obj.mapping:
+                # Parse JSON string back to dict
+                return json.loads(obj.mapping)
+            return {}
+        except Exception as e:
+            logger.error(f"Error loading mapping: {str(e)}")
+            return {}
+        finally:
+            session.close()
+
+class OrderFieldMapping(Base):
+    __tablename__ = 'order_field_mapping'
+    id = Column(Integer, primary_key=True)
+    mapping = Column(Text)  # Store JSON as text instead of PickleType
+
+    @staticmethod
+    def set_mapping(mapping):
+        session = Session()
+        try:
+            obj = session.query(OrderFieldMapping).first()
+            if not obj:
+                obj = OrderFieldMapping()
+            obj.mapping = json.dumps(mapping) if mapping else '{}'
+            session.add(obj)
+            session.commit()
+        except Exception as e:
+            session.rollback()
+            logger.error(f"Error saving mapping: {str(e)}")
+            raise   
+        finally:
+            session.close()
+
+    @staticmethod
+    def get_mapping():
+        session = Session()
+        try:
+            obj = session.query(OrderFieldMapping).first()
+            if obj and obj.mapping:
+                # Parse JSON string back to dict
+                return json.loads(obj.mapping)
+            return {}
+        except Exception as e:  
+            logger.error(f"Error loading mapping: {str(e)}")
+            return {}
+        finally:
+            session.close()
+
 class SchedulingConfig(Base):
     __tablename__ = 'scheduling_config'
     

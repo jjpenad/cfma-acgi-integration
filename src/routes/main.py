@@ -32,11 +32,7 @@ def acgi_to_hubspot():
     """ACGI to HubSpot field mapping page"""
     return render_template('acgi_to_hubspot.html', username=session.get('username'))
 
-@main_bp.route('/memberships')
-@login_required
-def memberships():
-    """Memberships page"""
-    return render_template('memberships.html', username=session.get('username'))
+
 
 def init_routes(app):
     """Initialize main routes"""

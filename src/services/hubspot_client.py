@@ -183,7 +183,79 @@ class HubSpotClient:
                 'message': f"Error creating membership: {str(e)}",
                 'membership_id': None
             }
-        
+    
+    def get_event_properties(self) -> List[Dict[str, any]]:
+        """Get all available event properties from HubSpot"""
+        try:
+            if not self.api_key:
+                return []
+            
+            url = f"{self.base_url}/crm/v3/properties/2-48134484"
+            response = self.session.get(url, timeout=30)
+            print("RESPONSE",response)
+            if response.status_code == 200:
+                data = response.json()
+                properties = data.get('results', [])
+                print("RESULT PROPERTIES",properties)
+
+                formatted_properties = []
+                for prop in properties:
+                    if prop.get('name') not in ['hs_object_id', 'createdate', 'lastmodifieddate']:
+                        formatted_properties.append({
+                            'name': prop.get('name', ''),
+                            'label': prop.get('label', ''),
+                            'type': prop.get('type', ''),
+                            'fieldType': prop.get('fieldType', ''),
+                            'groupName': prop.get('groupName', ''),
+                            'description': prop.get('description', ''),
+                            'options': prop.get('options', [])
+                        })
+                
+                return formatted_properties 
+            else:
+                logger.error(f"Failed to get event properties: {response.status_code} - {response.text}")
+                return []
+            
+        except Exception as e:
+            logger.error(f"Error getting event properties: {str(e)}")
+            return []
+
+    def get_order_properties(self) -> List[Dict[str, any]]:
+        """Get all available order properties from HubSpot"""
+        try:
+            if not self.api_key:
+                return []
+            
+            url = f"{self.base_url}/crm/v3/properties/orders"
+            response = self.session.get(url, timeout=30)
+            print("RESPONSE",response)
+            if response.status_code == 200:
+                data = response.json()
+                properties = data.get('results', [])
+                print("RESULT PROPERTIES",properties)
+                
+                formatted_properties = []
+                for prop in properties:
+                    if prop.get('name') not in ['hs_object_id', 'createdate', 'lastmodifieddate']:
+                        formatted_properties.append({
+                            'name': prop.get('name', ''),
+                            'label': prop.get('label', ''),
+                            'type': prop.get('type', ''),
+                            'fieldType': prop.get('fieldType', ''),
+                            'groupName': prop.get('groupName', ''),
+                            'description': prop.get('description', ''),
+                            'options': prop.get('options', [])
+                        })
+                
+                return formatted_properties
+            else:
+                logger.error(f"Failed to get order properties: {response.status_code} - {response.text}")
+                return []
+            
+        except Exception as e:
+            logger.error(f"Error getting order properties: {str(e)}")
+            return []
+
     def get_membership_properties(self) -> List[Dict[str, any]]:
         """Get all available membership properties from HubSpot"""
         try:
@@ -215,11 +287,46 @@ class HubSpotClient:
             else:
                 logger.error(f"Failed to get membership properties: {response.status_code} - {response.text}")
                 return []
-            
-        except Exception as e:  
+                
+        except Exception as e:
             logger.error(f"Error getting membership properties: {str(e)}")
             return []
-    
+
+    def get_custom_object_properties(self, object_type: str) -> List[Dict[str, any]]:
+        """Get all available properties for a custom object from HubSpot"""
+        try:
+            if not self.api_key:
+                return []
+            
+            url = f"{self.base_url}/crm/v3/properties/{object_type}"
+            response = self.session.get(url, timeout=30)
+            
+            if response.status_code == 200:
+                data = response.json()
+                properties = data.get('results', [])
+                
+                # Filter and format properties
+                formatted_properties = []
+                for prop in properties:
+                    if prop.get('name') not in ['hs_object_id', 'createdate', 'lastmodifieddate']:
+                        formatted_properties.append({
+                            'name': prop.get('name', ''),
+                            'label': prop.get('label', ''),
+                            'type': prop.get('type', ''),
+                            'groupName': prop.get('groupName', ''),
+                            'description': prop.get('description', ''),
+                            'options': prop.get('options', [])
+                        })
+                
+                return formatted_properties
+            else:
+                logger.error(f"Failed to get {object_type} properties: {response.status_code} - {response.text}")
+                return []
+                
+        except Exception as e:
+            logger.error(f"Error getting {object_type} properties: {str(e)}")
+            return []
+
     def get_deal_properties(self) -> List[Dict[str, any]]:
         """Get all available deal properties from HubSpot"""
         try:
@@ -831,6 +938,66 @@ class HubSpotClient:
                 
         except Exception as e:
             logger.error(f"Error in create_or_update_membership: {str(e)}")
+            return {
+                'success': False,
+                'error': f'Unexpected error: {str(e)}'
+            } 
+
+    def create_custom_object(self, object_type: str, object_data: Dict[str, any]) -> Dict[str, any]:
+        """Create a custom object in HubSpot"""
+        try:
+            if not self.api_key:
+                return {'success': False, 'error': 'HubSpot client not initialized'}
+            
+            url = f"{self.base_url}/crm/v3/objects/{object_type}"
+            
+            # Prepare properties, filtering out empty values
+            properties = {}
+            for key, value in object_data.items():
+                if value:  # Only add non-empty values
+                    # Ensure date fields are properly formatted for HubSpot
+                    if 'date' in key.lower() and isinstance(value, str) and value.isdigit():
+                        # Convert timestamp to ensure it's at midnight UTC
+                        try:
+                            timestamp = int(value)
+                            # Convert to datetime and back to ensure midnight UTC
+                            from datetime import datetime, timezone
+                            dt = datetime.fromtimestamp(timestamp / 1000, tz=timezone.utc)
+                            # Create new timestamp at midnight UTC
+                            midnight_utc = datetime.now(timezone.utc).replace(
+                                year=dt.year, 
+                                month=dt.month, 
+                                day=dt.day, 
+                                hour=0, minute=0, second=0, microsecond=0
+                            )
+                            value = str(int(midnight_utc.timestamp() * 1000))
+                            print(f"Converted date field {key}: {value}")
+                        except Exception as e:
+                            print(f"Error converting date field {key}: {e}")
+                    
+                    properties[key] = value
+            
+            payload = {"properties": properties}
+            
+            response = self.session.post(url, json=payload, timeout=30)
+            
+            if response.status_code == 201:
+                result = response.json()
+                return {
+                    'success': True,
+                    'message': f'{object_type} created successfully',
+                    'object_id': result.get('id'),
+                    'hubspot_response': result
+                }
+            else:
+                return {
+                    'success': False,
+                    'error': f'Failed to create {object_type}: {response.status_code} - {response.text}',
+                    'hubspot_response': response.text
+                }
+                
+        except Exception as e:
+            logger.error(f"Error creating {object_type}: {str(e)}")
             return {
                 'success': False,
                 'error': f'Unexpected error: {str(e)}'

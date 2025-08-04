@@ -4,7 +4,7 @@ from models import get_session, FormField, SearchPreference
 from services.hubspot_client import HubSpotClient
 from routes.auth import login_required
 from src.services.acgi_client import ACGIClient
-from src.models import  ContactFieldMapping, AppState, MembershipFieldMapping
+from src.models import  ContactFieldMapping, AppState, MembershipFieldMapping, OrderFieldMapping, EventFieldMapping
 
 logger = setup_logging()
 hubspot_client = HubSpotClient()
@@ -55,6 +55,12 @@ def init_api_routes(app):
             elif object_type == 'memberships':
                 properties = hubspot_client.get_membership_properties()
                 print("properties",properties)
+            elif object_type == 'orders':
+                properties = hubspot_client.get_order_properties()
+                print("order properties",properties)
+            elif object_type == 'events':
+                properties = hubspot_client.get_event_properties()
+                print("events properties",properties)
             else:
                 return jsonify({'error': f'Unsupported object type: {object_type}'}), 400
             
@@ -192,6 +198,8 @@ def init_api_routes(app):
                 result = hubspot_client.create_deal(object_data)
             elif object_type == 'memberships':
                 result = hubspot_client.create_membership(object_data)
+            elif object_type == 'events':
+                result = hubspot_client.create_custom_object('2-48134484', object_data)
             else:
                 return jsonify({'error': f'Unsupported object type: {object_type}'}), 400
             
@@ -416,6 +424,60 @@ def init_api_routes(app):
         memberships_list = memberships_data.get("memberships", [])
         return jsonify({'fields': memberships_list})
 
+    @app.route('/api/acgi/customer/<customer_id>/purchased-products', methods=['GET'])
+    def fetch_acgi_purchased_products(customer_id):
+        print("purchased_products_customer_id_get", customer_id)
+        # Get global credentials from AppState
+        creds = get_app_credentials()
+        print("creds", creds)
+        #check if acgi_credentials is set in the database
+        if not creds:
+            print("acgi_credentials not set")
+            return jsonify({'error': 'ACGI credentials not set'}), 400
+        credentials = {
+            'userid': creds['acgi_username'],
+            'password': creds['acgi_password'],
+            'environment': "cetdigitdev" if creds['acgi_environment'] == "test" else "cetdigit"
+        }
+        acgi_client = ACGIClient()
+        result = acgi_client.get_purchased_products(credentials, customer_id)
+        print("result", result)
+        if not result['success']:
+            return jsonify({'error': 'Purchased products not found or fetch failed', 'details': result.get('message', '')}), 404
+        # Return the purchased products data
+        purchased_products_data = result['purchased_products']
+        print("purchased_products_data",purchased_products_data)
+        purchased_products_list = purchased_products_data.get("orders", [])
+        print("purchased_products_list",purchased_products_list)
+        return jsonify({'fields': purchased_products_list})
+
+    @app.route('/api/acgi/customer/<customer_id>/events', methods=['GET'])
+    def fetch_acgi_events(customer_id):
+        print("events_customer_id_get", customer_id)
+        # Get global credentials from AppState
+        creds = get_app_credentials()
+        print("creds", creds)
+        #check if acgi_credentials is set in the database
+        if not creds:
+            print("acgi_credentials not set")
+            return jsonify({'error': 'ACGI credentials not set'}), 400
+        credentials = {
+            'userid': creds['acgi_username'],
+            'password': creds['acgi_password'],
+            'environment': "cetdigitdev" if creds['acgi_environment'] == "test" else "cetdigit"
+        }
+        acgi_client = ACGIClient()
+        result = acgi_client.get_customer_events(credentials, customer_id)
+        print("result", result)
+        if not result['success']:
+            return jsonify({'error': 'Events not found or fetch failed', 'details': result.get('message', '')}), 404
+        # Return the events data
+        events_data = result['events']
+        print("events_data",events_data)
+        events_list = events_data.get("events", [])
+        print("events_list",events_list)
+        return jsonify({'fields': events_list})
+
     def generate_mapping_from_fields(object_type):
         """Generate mapping automatically from current field configurations in database"""
         session = get_session()
@@ -524,6 +586,27 @@ def init_api_routes(app):
             mapping = MembershipFieldMapping.get_mapping()
             return jsonify({'mapping': mapping or {}})
         
+    @app.route('/api/mapping/event', methods=['GET', 'POST'])
+    def event_mapping():
+        if request.method == 'POST':
+            # Generate mapping automatically from current field configurations
+            mapping = generate_mapping_from_fields('events')
+            EventFieldMapping.set_mapping(mapping)
+            return jsonify({'status': 'success', 'mapping': mapping})
+        else:
+            mapping = EventFieldMapping.get_mapping()
+            return jsonify({'mapping': mapping or {}})
+        
+    @app.route('/api/mapping/order', methods=['GET', 'POST'])
+    def order_mapping():
+        if request.method == 'POST':
+            # Generate mapping automatically from current field configurations
+            mapping = generate_mapping_from_fields('orders')
+            OrderFieldMapping.set_mapping(mapping)
+            return jsonify({'status': 'success', 'mapping': mapping})
+        else:
+            mapping = OrderFieldMapping.get_mapping()
+            return jsonify({'mapping': mapping or {}})
 
     @app.route('/api/acgi-field-config', methods=['POST'])
     @login_required

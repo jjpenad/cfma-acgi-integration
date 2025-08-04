@@ -441,6 +441,18 @@
                         <i class="fas fa-users"></i> Memberships
                     </button>
                 </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="purchased-products-tab" data-bs-toggle="tab" data-bs-target="#purchased-products"
+                        type="button" role="tab">
+                        <i class="fas fa-shopping-cart"></i> Orders
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="events-tab" data-bs-toggle="tab" data-bs-target="#events"
+                        type="button" role="tab">
+                        <i class="fas fa-calendar-alt"></i> Events
+                    </button>
+                </li>
             </ul>
 
             <!-- Tab Content -->
@@ -946,6 +958,226 @@
                         </div>
                     </div>
                 </div>
+                <!-- Purchased Products Tab -->
+                <div class="tab-pane fade" id="purchased-products" role="tabpanel">
+                    <div class="mt-4">
+                        <div class="row">
+                            <div class="d-flex justify-content-center">
+                                <button id="copyOrdersToHubspotBtn" class="btn btn-outline-primary btn-sm mb-2"
+                                    style="width: 10rem;">
+                                    <i class="fas fa-arrow-right"></i> Copy To HubSpot
+                                </button>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <!-- COLUMN 1: Fetch Purchased Products -->
+                            <div class="col-md-3 mb-4">
+                                <div class="card mb-3">
+                                    <div class="card-header bg-info text-white">
+                                        <i class="fas fa-database"></i> ACGI Orders Data
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="mb-3">
+                                            <label for="acgi-products-customer-id">ACGI Customer ID:</label>
+                                            <input type="text" id="acgi-products-customer-id" class="form-control" />
+                                            <button id="fetch-products-btn"
+                                                class="btn btn-primary mt-2 w-100" onclick="fetchAcgiCustomerProducts()">Fetch</button>
+                                            <div id="acgi-products-loading-spinner" class="text-center my-2"
+                                                style="display:none;">
+                                                <div class="spinner-border text-primary" role="status">
+                                                    <span class="visually-hidden">Loading...</span>
+                                                </div>
+                                                <div>Loading orders...</div>
+                                            </div>
+                                        </div>
+                                        <div class="mt-3">
+                                            <div class="mb-2" id="products-selector-container" style="display: none;">
+                                                <label class="form-label">Select Order Item:</label>
+                                                <select class="form-select" id="products-item-selector">
+                                                    <option value="">Loading...</option>
+                                                </select>
+                                            </div>
+                                            <label class="form-label">Fetched Data (JSON):</label>
+                                            <pre id="acgi-products-json-viewer"
+                                                style="background:#f8f9fa; border-radius:8px; padding:1em; min-height:120px; max-height:300px; overflow:auto; font-size:0.9em;"></pre>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- COLUMN 2: Important Fields from First Product -->
+                            <div class="col-md-3 mb-4">
+                                <h4><i class="fas fa-star"></i> Important Fields</h4>
+                                <div id="ordersACGIImportantFields" class="mb-4">
+                                    <div class="text-center text-muted">
+                                        <i class="fas fa-info-circle"></i> No important fields
+                                    </div>
+                                </div>
+                                <h4><i class="fas fa-list"></i> All Available Fields</h4>
+                                <div id="ordersACGIAllFields">
+                                    <div class="text-center text-muted">
+                                        <i class="fas fa-info-circle"></i> No fields loaded
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- COLUMN 3: Mapping UI -->
+                            <div class="col-md-3">
+                                <h4><i class="fas fa-link"></i> Map to HubSpot Fields</h4>
+                                <div id="ordersImportantFields" class="mb-4"> 
+                                    <div class="text-center text-muted">
+                                        <i class="fas fa-info-circle"></i> Load properties to see important fields
+                                    </div>
+                                </div>
+                                <h4><i class="fas fa-list"></i> All Available Fields</h4>
+                                <div id="ordersAllFields">
+                                    <div class="text-center text-muted">
+                                        <i class="fas fa-info-circle"></i> Load properties to see all available fields
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- COLUMN 4: HubSpot Form for Custom Object -->
+                            <div class="col-md-3">
+                                <div class="card">
+                                    <div class="card-header bg-primary text-white">
+                                        <i class="fas fa-save"></i> Save to HubSpot (ACGI Orders)
+                                    </div>
+                                    <div class="card-body">
+                                        <div id="productsForm">
+                                            <div class="text-center text-muted">
+                                                <i class="fas fa-info-circle"></i> Load properties to see the form
+                                            </div>
+                                        </div>
+                                        <div class="mt-3">
+                                            <button type="button" class="btn btn-success w-100 mb-2"
+                                                onclick="saveToHubSpot('orders')">
+                                                <i class="fas fa-save"></i> Save to HubSpot
+                                            </button>
+                                            <button type="button" class="btn btn-warning w-100 mb-3"
+                                                onclick="resetForm('orders')">
+                                                <i class="fas fa-undo"></i> Reset Form
+                                            </button>
+                                        </div>
+                                        <div id="ordersOutput" class="mt-3" style="display: none;">
+                                            <h6><i class="fas fa-terminal"></i> Output:</h6>
+                                            <div class="alert alert-info" id="ordersOutputContent">
+                                                <!-- Output will be displayed here -->
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Events Tab -->
+                <div class="tab-pane fade" id="events" role="tabpanel">
+                    <div class="mt-4">
+                        <div class="row">
+                            <div class="d-flex justify-content-center">
+                                <button id="copyEventsToHubspotBtn" class="btn btn-outline-primary btn-sm mb-2"
+                                    style="width: 10rem;">
+                                    <i class="fas fa-arrow-right"></i> Copy To HubSpot
+                                </button>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <!-- COLUMN 1: Fetch Events -->
+                            <div class="col-md-3 mb-4">
+                                <div class="card mb-3">
+                                    <div class="card-header bg-info text-white">
+                                        <i class="fas fa-database"></i> ACGI Events Data
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="mb-3">
+                                            <label for="acgi-events-customer-id">ACGI Customer ID:</label>
+                                            <input type="text" id="acgi-events-customer-id" class="form-control" />
+                                            <button id="fetch-events-btn"
+                                                class="btn btn-primary mt-2 w-100" onclick="fetchAcgiCustomerEvents()">Fetch</button>
+                                            <div id="acgi-events-loading-spinner" class="text-center my-2"
+                                                style="display:none;">
+                                                <div class="spinner-border text-primary" role="status">
+                                                    <span class="visually-hidden">Loading...</span>
+                                                </div>
+                                                <div>Loading events...</div>
+                                            </div>
+                                        </div>
+                                        <div class="mt-3">
+                                            <div class="mb-2" id="events-selector-container" style="display: none;">
+                                                <label class="form-label">Select Event Item:</label>
+                                                <select class="form-select" id="events-item-selector">
+                                                    <option value="">Loading...</option>
+                                                </select>
+                                            </div>
+                                            <label class="form-label">Fetched Data (JSON):</label>
+                                            <pre id="acgi-events-json-viewer"
+                                                style="background:#f8f9fa; border-radius:8px; padding:1em; min-height:120px; max-height:300px; overflow:auto; font-size:0.9em;"></pre>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- COLUMN 2: Important Fields from First Event -->
+                            <div class="col-md-3 mb-4">
+                                <h4><i class="fas fa-star"></i> Important Fields</h4>
+                                <div id="eventsACGIImportantFields" class="mb-4">
+                                    <div class="text-center text-muted">
+                                        <i class="fas fa-info-circle"></i> No important fields
+                                    </div>
+                                </div>
+                                <h4><i class="fas fa-list"></i> All Available Fields</h4>
+                                <div id="eventsACGIAllFields">
+                                    <div class="text-center text-muted">
+                                        <i class="fas fa-info-circle"></i> No fields loaded
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- COLUMN 3: Mapping UI -->
+                            <div class="col-md-3">
+                                <h4><i class="fas fa-link"></i> Map to HubSpot Fields</h4>
+                                <div id="eventsImportantFields" class="mb-4"> 
+                                    <div class="text-center text-muted">
+                                        <i class="fas fa-info-circle"></i> Load properties to see important fields
+                                    </div>
+                                </div>
+                                <h4><i class="fas fa-list"></i> All Available Fields</h4>
+                                <div id="eventsAllFields">
+                                    <div class="text-center text-muted">
+                                        <i class="fas fa-info-circle"></i> Load properties to see all available fields
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- COLUMN 4: HubSpot Form for Custom Object -->
+                            <div class="col-md-3">
+                                <div class="card">
+                                    <div class="card-header bg-primary text-white">
+                                        <i class="fas fa-save"></i> Save to HubSpot (ACGI Events)
+                                    </div>
+                                    <div class="card-body">
+                                        <div id="eventsForm">
+                                            <div class="text-center text-muted">
+                                                <i class="fas fa-info-circle"></i> Load properties to see the form
+                                            </div>
+                                        </div>
+                                        <div class="mt-3">
+                                            <button type="button" class="btn btn-success w-100 mb-2"
+                                                onclick="saveToHubSpot('events')">
+                                                <i class="fas fa-save"></i> Save to HubSpot
+                                            </button>
+                                            <button type="button" class="btn btn-warning w-100 mb-3"
+                                                onclick="resetForm('events')">
+                                                <i class="fas fa-undo"></i> Reset Form
+                                            </button>
+                                        </div>
+                                        <div id="eventsOutput" class="mt-3" style="display: none;">
+                                            <h6><i class="fas fa-terminal"></i> Output:</h6>
+                                            <div class="alert alert-info" id="eventsOutputContent">
+                                                <!-- Output will be displayed here -->
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <!-- Loading Spinner -->
@@ -990,8 +1222,12 @@
         // Mapping variables
         let contactsMapping = {};
         let membershipsMapping = {};
+        let productsMapping = {};
+        let eventsMapping = {};
         let acgiContactFields = {};
         let acgiMembershipFields = {};
+        let acgiProductsFields = {};
+        let acgiEventsFields = {};
 
         function showLoading() {
             document.getElementById('loadingSpinner').style.display = 'block';
@@ -1030,7 +1266,9 @@
             Promise.all([
                 loadObjectProperties('contacts'),
                 //loadObjectProperties('deals'),
-                loadObjectProperties('memberships')
+                loadObjectProperties('memberships'),
+                loadObjectProperties('orders'),
+                loadObjectProperties('events')
             ]).then(() => {
                 hideLoading();
                 showAlert('All properties loaded successfully!', 'success');
@@ -1615,6 +1853,36 @@
                 membershipsPane.classList.add('show', 'active');
                 
                 currentObjectType = 'memberships';
+            } else if (activeTab === 'purchased-products') {
+                const productsTab = document.getElementById('purchased-products-tab');
+                const productsPane = document.getElementById('purchased-products');
+                const contactsTab = document.getElementById('contacts-tab');
+                const contactsPane = document.getElementById('contacts');
+                
+                // Remove active class from contacts
+                contactsTab.classList.remove('active');
+                contactsPane.classList.remove('show', 'active');
+                
+                // Add active class to products
+                productsTab.classList.add('active');
+                productsPane.classList.add('show', 'active');
+                
+                currentObjectType = 'orders';
+            } else if (activeTab === 'events') {
+                const eventsTab = document.getElementById('events-tab');
+                const eventsPane = document.getElementById('events');
+                const contactsTab = document.getElementById('contacts-tab');
+                const contactsPane = document.getElementById('contacts');
+                
+                // Remove active class from contacts
+                contactsTab.classList.remove('active');
+                contactsPane.classList.remove('show', 'active');
+                
+                // Add active class to events
+                eventsTab.classList.add('active');
+                eventsPane.classList.add('show', 'active');
+                
+                currentObjectType = 'events';
             } else {
                 // Default to contacts tab
                 currentObjectType = 'contacts';
@@ -1632,6 +1900,12 @@
                     } else if (target === '#memberships') {
                         currentObjectType = 'memberships';
                         newTab = 'memberships';
+                    } else if (target === '#purchased-products') {
+                        currentObjectType = 'orders';
+                        newTab = 'purchased-products';
+                    } else if (target === '#events') {
+                        currentObjectType = 'events';
+                        newTab = 'events';
                     }
                     
                     // Update URL with the new tab parameter
@@ -1728,6 +2002,14 @@
         let acgiMembershipsFieldConfig = {};
         let acgiMembershipsList = []; // Store the full list of memberships
         let currentMembershipIndex = 0; // Track which membership is currently selected
+        let acgiProducts = {};
+        let acgiProductsFieldConfig = {};
+        let acgiProductsList = []; // Store the full list of products
+        let currentProductsIndex = 0; // Track which product is currently selected
+        let acgiEvents = {};
+        let acgiEventsFieldConfig = {};
+        let acgiEventsList = []; // Store the full list of events
+        let currentEventsIndex = 0; // Track which event is currently selected
 
         function showAcgiJson(data) {
             const jsonViewer = document.getElementById('acgi-json-viewer');
@@ -1736,6 +2018,16 @@
         
         function showAcgiMembershipsJson(data) {
             const jsonViewer = document.getElementById('acgi-memberships-json-viewer');
+            jsonViewer.textContent = JSON.stringify(data, null, 2);
+        }
+
+        function showAcgiOrdersJson(data) {
+            const jsonViewer = document.getElementById('acgi-products-json-viewer');
+            jsonViewer.textContent = JSON.stringify(data, null, 2);
+        }
+
+        function showAcgiEventsJson(data) {
+            const jsonViewer = document.getElementById('acgi-events-json-viewer');
             jsonViewer.textContent = JSON.stringify(data, null, 2);
         }
 
@@ -1763,6 +2055,84 @@
             container.style.display = 'block';
             selector.value = '0';
             currentMembershipIndex = 0;
+        }
+
+        function populateProductsSelector(productsList) {
+            const container = document.getElementById('products-selector-container');
+            const selector = document.getElementById('products-item-selector');
+            
+            if (!productsList || productsList.length === 0) {
+                container.style.display = 'none';
+                return;
+            }
+            
+            // Clear existing options
+            selector.innerHTML = '';
+            
+            // Add options for each product (1-based indexing for user display)
+            productsList.forEach((product, index) => {
+                const option = document.createElement('option');
+                option.value = index;
+                option.textContent = `Item ${index + 1}`;
+                selector.appendChild(option);
+            });
+            
+            // Show the selector and set default to first item
+            container.style.display = 'block';
+            selector.value = '0';
+            currentProductsIndex = 0;
+        }
+
+        function populateEventsSelector(eventsList) {
+            const container = document.getElementById('events-selector-container');
+            const selector = document.getElementById('events-item-selector');
+            
+            if (!eventsList || eventsList.length === 0) {
+                container.style.display = 'none';
+                return;
+            }
+            
+            // Clear existing options
+            selector.innerHTML = '';
+            
+            // Add options for each event (1-based indexing for user display)
+            eventsList.forEach((event, index) => {
+                const option = document.createElement('option');
+                option.value = index;
+                option.textContent = `Event ${index + 1}`;
+                selector.appendChild(option);
+            });
+            
+            // Show the selector and set default to first item
+            container.style.display = 'block';
+            selector.value = '0';
+            currentEventsIndex = 0;
+        }
+
+        function updateEventsDisplay() {
+            if (acgiEventsList.length === 0) return;
+            
+            // Update the current event data
+            acgiEvents = ensureAcgiFieldsObject(acgiEventsList[currentEventsIndex]);
+            
+            // Update JSON viewer
+            showAcgiEventsJson(acgiEventsList);
+            
+            // Re-render the fields with the new event data
+            renderAcgiEventsFields(acgiEvents, acgiEventsFieldConfig);
+        }
+
+        function updateProductsDisplay() {
+            if (acgiProductsList.length === 0) return;
+            
+            // Update the current product data
+            acgiProducts = ensureAcgiFieldsObject(acgiProductsList[currentProductsIndex]);
+            
+            // Update JSON viewer
+            showAcgiProductsJson(acgiProductsList);
+            
+            // Re-render the fields with the new product data
+            renderAcgiProductsFields(acgiProducts, acgiProductsFieldConfig);
         }
 
         function updateMembershipDisplay() {
@@ -2062,6 +2432,169 @@
             //     });
             // });
         }
+        
+        function renderAcgiOrdersFields(fields, config) {
+            if (!config) {
+                console.warn('renderAcgiOrdersFields: config is not a valid object', config);
+                document.getElementById('ordersACGIImportantFields').innerHTML = '<div class="text-center text-muted">No important fields</div>';
+                document.getElementById('ordersACGIAllFields').innerHTML = '<div class="text-center text-muted">No fields loaded</div>';
+                return;
+            }
+            if (!fields || typeof fields !== 'object' || Array.isArray(fields)) {
+                console.warn('renderAcgiOrdersFields: fields is not a valid object', fields);
+                document.getElementById('ordersACGIImportantFields').innerHTML = '<div class="text-center text-muted">No important fields</div>';
+                document.getElementById('ordersACGIAllFields').innerHTML = '<div class="text-center text-muted">No fields loaded</div>';
+                return;
+            }
+            console.log('Rendering ACGI orders fields:', fields, config);
+            const importantDiv = document.getElementById('ordersACGIImportantFields');
+            const allDiv = document.getElementById('ordersACGIAllFields');
+            importantDiv.innerHTML = '';
+            allDiv.innerHTML = '';
+            let importantFields = [];
+            let allFields = [];
+            Object.entries(fields).forEach(([key, value]) => {
+                const fieldConfig = config[key] || {};
+                const isImportant = !!fieldConfig.is_important;
+                const isEnabled = fieldConfig.is_enabled !== false; // default true
+                let displayValue = value;
+                const card = document.createElement('div');
+                card.className = 'property-card' + (isImportant ? ' important' : '') + (isEnabled ? ' enabled' : '');
+                card.setAttribute('data-field-name', key);
+                card.innerHTML = `
+                    <div class="property-header d-flex justify-content-between align-items-center">
+                        ${isImportant ? '<div class="drag-handle me-2" style="cursor: grab; color: #6c757d;"><i class="fas fa-grip-vertical"></i></div>' : ''}          
+                        <span class="property-name" title="${key}">${key}</span>
+                        <div class="property-actions">
+                            <span class="badge badge-important" style="background:#28a745;${isImportant ? '' : 'display:none'}">Important</span>
+                            <span class="badge badge-enabled" style="background:#667eea;${isEnabled ? '' : 'display:none'}">Enabled</span>
+                            <button class="btn btn-outline-success btn-sm" onclick="toggleAcgiOrdersField('${key}','important')"><i class="fas fa-star"></i></button>
+                            <button class="btn btn-outline-primary btn-sm" onclick="toggleAcgiOrdersField('${key}','enabled')"><i class="fas fa-toggle-on"></i></button>
+                        </div>
+                    </div>
+                    <div class="property-label">${displayValue}</div>
+                `;
+                if (isImportant) {
+                    importantFields.push({ card, order: fieldConfig.order_index || 0, key });
+                } else {
+                    allFields.push(card);
+                }
+            });
+            // Sort important fields by order_index
+            importantFields.sort((a, b) => a.order - b.order);
+            importantFields.forEach(f => importantDiv.appendChild(f.card));
+            allFields.forEach(card => allDiv.appendChild(card));
+            if (importantFields.length === 0) importantDiv.innerHTML = `<div class="text-center text-muted"><i class="fas fa-info-circle"></i> No important fields</div>`;
+            if (allFields.length === 0) allDiv.innerHTML = `<div class="text-center text-muted"><i class="fas fa-info-circle"></i> No fields loaded</div>`;
+            // Enable drag-and-drop for important fields
+            if (importantFields.length > 1 && window.Sortable) {
+                if (importantDiv.sortable) importantDiv.sortable.destroy();
+                importantDiv.sortable = Sortable.create(importantDiv, {
+                    animation: 150,
+                    handle: '.drag-handle',
+                    ghostClass: 'sortable-ghost',
+                    chosenClass: 'sortable-chosen',
+                    onEnd: function (evt) {
+                        // Update order indices in acgiFieldConfig
+                        const cards = importantDiv.querySelectorAll('.property-card');
+                        cards.forEach((card, idx) => {
+                            const fieldName = card.getAttribute('data-field-name');
+                            if (!acgiFieldConfig[fieldName]) acgiFieldConfig[fieldName] = { is_important: true, is_enabled: true };
+                            acgiFieldConfig[fieldName].order_index = idx;
+                        });
+                        // Save config
+                        console.log("acgiFieldConfig ORDERS",acgiFieldConfig)
+                        saveAcgiFieldConfig('orders', acgiFieldConfig);
+                        // Save mapping after order change
+                        if (propertiesData['orders']) {
+                            saveMappingSilently('orders');
+                        }
+                    }
+                });
+            }
+        }
+
+        function renderAcgiEventsFields(fields, config) {
+            if (!config) {
+                console.warn('renderAcgiEventsFields: config is not a valid object', config);
+                document.getElementById('eventsACGIImportantFields').innerHTML = '<div class="text-center text-muted">No important fields</div>';
+                document.getElementById('eventsACGIAllFields').innerHTML = '<div class="text-center text-muted">No fields loaded</div>';
+                return;
+            }
+            if (!fields || typeof fields !== 'object' || Array.isArray(fields)) {
+                console.warn('renderAcgiEventsFields: fields is not a valid object', fields);
+                document.getElementById('eventsACGIImportantFields').innerHTML = '<div class="text-center text-muted">No important fields</div>';
+                document.getElementById('eventsACGIAllFields').innerHTML = '<div class="text-center text-muted">No fields loaded</div>';
+                return;
+            }
+            console.log('Rendering ACGI events fields:', fields, config);
+            const importantDiv = document.getElementById('eventsACGIImportantFields');
+            const allDiv = document.getElementById('eventsACGIAllFields');
+            importantDiv.innerHTML = '';
+            allDiv.innerHTML = '';
+            let importantFields = [];
+            let allFields = [];
+            Object.entries(fields).forEach(([key, value]) => {
+                const fieldConfig = config[key] || {};
+                const isImportant = !!fieldConfig.is_important;
+                const isEnabled = fieldConfig.is_enabled !== false; // default true
+                let displayValue = value;
+                const card = document.createElement('div');
+                card.className = 'property-card' + (isImportant ? ' important' : '') + (isEnabled ? ' enabled' : '');
+                card.setAttribute('data-field-name', key);
+                card.innerHTML = `
+                    <div class="property-header d-flex justify-content-between align-items-center">
+                        ${isImportant ? '<div class="drag-handle me-2" style="cursor: grab; color: #6c757d;"><i class="fas fa-grip-vertical"></i></div>' : ''}          
+                        <span class="property-name" title="${key}">${key}</span>
+                        <div class="property-actions">
+                            <span class="badge badge-important" style="background:#28a745;${isImportant ? '' : 'display:none'}">Important</span>
+                            <span class="badge badge-enabled" style="background:#667eea;${isEnabled ? '' : 'display:none'}">Enabled</span>
+                            <button class="btn btn-outline-success btn-sm" onclick="toggleAcgiEventsField('${key}','important')"><i class="fas fa-star"></i></button>
+                            <button class="btn btn-outline-primary btn-sm" onclick="toggleAcgiEventsField('${key}','enabled')"><i class="fas fa-toggle-on"></i></button>
+                        </div>
+                    </div>
+                    <div class="property-label">${displayValue}</div>
+                `;
+                if (isImportant) {
+                    importantFields.push({ card, order: fieldConfig.order_index || 0, key });
+                } else {
+                    allFields.push(card);
+                }
+            });
+            // Sort important fields by order_index
+            importantFields.sort((a, b) => a.order - b.order);
+            importantFields.forEach(f => importantDiv.appendChild(f.card));
+            allFields.forEach(card => allDiv.appendChild(card));
+            if (importantFields.length === 0) importantDiv.innerHTML = `<div class="text-center text-muted"><i class="fas fa-info-circle"></i> No important fields</div>`;
+            if (allFields.length === 0) allDiv.innerHTML = `<div class="text-center text-muted"><i class="fas fa-info-circle"></i> No fields loaded</div>`;
+            // Enable drag-and-drop for important fields
+            if (importantFields.length > 1 && window.Sortable) {
+                if (importantDiv.sortable) importantDiv.sortable.destroy();
+                importantDiv.sortable = Sortable.create(importantDiv, {
+                    animation: 150,
+                    handle: '.drag-handle',
+                    ghostClass: 'sortable-ghost',
+                    chosenClass: 'sortable-chosen',
+                    onEnd: function (evt) {
+                        // Update order indices in acgiFieldConfig
+                        const cards = importantDiv.querySelectorAll('.property-card');
+                        cards.forEach((card, idx) => {
+                            const fieldName = card.getAttribute('data-field-name');
+                            if (!acgiFieldConfig[fieldName]) acgiFieldConfig[fieldName] = { is_important: true, is_enabled: true };
+                            acgiFieldConfig[fieldName].order_index = idx;
+                        });
+                        // Save config
+                        console.log("acgiFieldConfig EVENTS",acgiFieldConfig)
+                        saveAcgiFieldConfig('events', acgiFieldConfig);
+                        // Save mapping after order change
+                        if (propertiesData['events']) {
+                            saveMappingSilently('events');
+                        }
+                    }
+                });
+            }
+        }
+
         function toggleAcgiField(field, type) {
             if (!acgiFieldConfig[field]) acgiFieldConfig[field] = { is_important: false, is_enabled: true };
             if (type === 'important') acgiFieldConfig[field].is_important = !acgiFieldConfig[field].is_important;
@@ -2089,6 +2622,38 @@
             }
         }
 
+        function toggleAcgiOrdersField(field, type) {
+            if (!acgiOrdersFieldConfig[field]) acgiOrdersFieldConfig[field] = { is_important: false, is_enabled: true };
+            if (type === 'important') acgiOrdersFieldConfig[field].is_important = !acgiOrdersFieldConfig[field].is_important;
+            if (type === 'enabled') acgiOrdersFieldConfig[field].is_enabled = !acgiOrdersFieldConfig[field].is_enabled;
+            // if not important, remove the order_index
+            if (!acgiOrdersFieldConfig[field].is_important) {
+                delete acgiOrdersFieldConfig[field].order_index;
+            }
+            renderAcgiOrdersFields(acgiOrders, acgiOrdersFieldConfig);
+            saveAcgiFieldConfig('orders', acgiOrdersFieldConfig);
+            // Save mapping after ACGI field configuration changes
+            if (propertiesData['orders']) {
+                saveMappingSilently('orders');
+            }
+        }
+
+        function toggleAcgiEventsField(field, type) {
+            if (!acgiEventsFieldConfig[field]) acgiEventsFieldConfig[field] = { is_important: false, is_enabled: true };
+            if (type === 'important') acgiEventsFieldConfig[field].is_important = !acgiEventsFieldConfig[field].is_important;
+            if (type === 'enabled') acgiEventsFieldConfig[field].is_enabled = !acgiEventsFieldConfig[field].is_enabled;
+            // if not important, remove the order_index
+            if (!acgiEventsFieldConfig[field].is_important) {
+                delete acgiEventsFieldConfig[field].order_index;
+            }
+            renderAcgiEventsFields(acgiEvents, acgiEventsFieldConfig);
+            saveAcgiFieldConfig('events', acgiEventsFieldConfig);
+            // Save mapping after ACGI field configuration changes
+            if (propertiesData['events']) {
+                saveMappingSilently('events');
+            }
+        }
+
         function saveAcgiFieldConfig(object_type, config) {
             fetch('/api/acgi-field-config', {
                 method: 'POST',
@@ -2105,10 +2670,15 @@
                 .then(data => {
                     console.log("loadAcgiFieldConfig RESPONSE", data)
                     if (object_type === 'contacts') {
-                    acgiFieldConfig = data.config || {};
+                        acgiFieldConfig = data.config || {};
                     } else if (object_type === 'memberships') {
                         acgiMembershipsFieldConfig = data.config || {};
+                    } else if (object_type === 'orders') {
+                        acgiOrdersFieldConfig = data.config || {};
+                    } else if (object_type === 'events') {
+                        acgiEventsFieldConfig = data.config || {};
                     }
+
                     if (cb) cb();
                 });
         }
@@ -2147,10 +2717,40 @@
                     }
                 });
 
+            fetch('/api/acgi-fields?object_type=orders')
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success && data.fields && Object.keys(data.fields).length > 0) {
+                        acgiOrders = ensureAcgiFieldsObject(data.fields);
+                        showAcgiOrdersJson(acgiOrders);
+                        loadAcgiFieldConfig('orders', () => {
+                            renderAcgiOrdersFields(acgiOrders, acgiOrdersFieldConfig);
+                        });
+                    }
+                });
+
+            fetch('/api/acgi-fields?object_type=events')
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success && data.fields && Object.keys(data.fields).length > 0) {
+                        acgiEvents = ensureAcgiFieldsObject(data.fields);
+                        showAcgiEventsJson(acgiEvents);
+                        loadAcgiFieldConfig('events', () => {
+                            renderAcgiEventsFields(acgiEvents, acgiEventsFieldConfig);
+                        });
+                    }
+                });
+
             // Add event listener for membership selector
             document.getElementById('membership-item-selector').addEventListener('change', function() {
                 currentMembershipIndex = parseInt(this.value);
                 updateMembershipDisplay();
+                });
+
+            // Add event listener for events selector
+            document.getElementById('events-item-selector').addEventListener('change', function() {
+                currentEventsIndex = parseInt(this.value);
+                updateEventsDisplay();
                 });
         });
 
@@ -2256,6 +2856,115 @@
                     document.getElementById('membershipACGIAllFields').innerHTML = `<div class='alert alert-danger text-center'>${msg}</div>`;
                 });
         }
+        
+        function fetchAcgiCustomerProducts() {
+            const customerId = document.getElementById('acgi-products-customer-id').value;
+            if (!customerId) return;
+            document.getElementById('acgi-products-loading-spinner').style.display = 'block';
+            document.getElementById('fetch-products-btn').disabled = false;
+            fetch(`/api/acgi/customer/${customerId}/purchased-products`)
+                .then(response => response.json())
+                .then(data => {
+                    console.log("CustomerProducts data", data)
+                    let products_data = data.fields
+                    
+                    // Store the full list of products
+                    if (Array.isArray(products_data)) {
+                        acgiProductsList = products_data;
+                        acgiProducts = ensureAcgiFieldsObject(products_data[0]);
+                    } else {
+                        acgiProductsList = [products_data];
+                        acgiProducts = ensureAcgiFieldsObject(products_data);
+                    }
+                    
+                    // Store ACGI products fields globally for mapping
+                    acgiProductsFields = acgiProducts;
+                    
+                    // Populate the products selector
+                    populateProductsSelector(acgiProductsList);
+                    
+                    showAcgiProductsJson(products_data);
+                    // Save the field list to backend
+                    console.log("acgiProducts TTTT", acgiProducts)
+                    fetch('/api/acgi-fields', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ object_type: 'orders', fields: acgiProducts })
+                    });
+                    loadAcgiFieldConfig('orders', () => {
+                        renderAcgiOrdersFields(acgiProducts, acgiProductsFieldConfig);
+                        // Generate and save mapping based on current order
+                        if (propertiesData['orders']) {
+                            saveMappingSilently('orders');
+                        }
+                    });
+                    console.log("acgiProducts", acgiProducts)
+                    document.getElementById('acgi-products-loading-spinner').style.display = 'none';
+                    document.getElementById('fetch-products-btn').disabled = false;
+                }).catch(error => {
+                    console.log("error", error)
+                    document.getElementById('acgi-products-loading-spinner').style.display = 'none';
+                    document.getElementById('fetch-products-btn').disabled = false;
+                    let msg = 'Failed to fetch ACGI customer products.';
+                    document.getElementById('productsACGIImportantFields').innerHTML = `<div class='alert alert-danger text-center'>${msg}</div>`;
+                    document.getElementById('productsACGIAllFields').innerHTML = `<div class='alert alert-danger text-center'>${msg}</div>`;
+                });
+        }
+        
+        function fetchAcgiCustomerEvents() {
+            const customerId = document.getElementById('acgi-events-customer-id').value;
+            if (!customerId) return;
+            document.getElementById('acgi-events-loading-spinner').style.display = 'block';
+            document.getElementById('fetch-events-btn').disabled = false;
+            fetch(`/api/acgi/customer/${customerId}/events`)
+                .then(response => response.json())
+                .then(data => {
+                    console.log("events data", data)
+                    let events_data = data.fields
+                    
+                    // Store the full list of events
+                    if (Array.isArray(events_data)) {
+                        acgiEventsList = events_data;
+                        acgiEvents = ensureAcgiFieldsObject(events_data[0]);
+                    } else {
+                        acgiEventsList = [events_data];
+                        acgiEvents = ensureAcgiFieldsObject(events_data);
+                    }
+                    
+                    // Store ACGI events fields globally for mapping
+                    acgiEventsFields = acgiEvents;
+                    
+                    // Populate the events selector
+                    populateEventsSelector(acgiEventsList);
+                    
+                    showAcgiEventsJson(events_data);
+                    // Save the field list to backend
+                    console.log("acgiEvents TTTT", acgiEvents)
+                    fetch('/api/acgi-fields', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ object_type: 'events', fields: acgiEvents })
+                    });
+                    loadAcgiFieldConfig('events', () => {
+                        renderAcgiEventsFields(acgiEvents, acgiEventsFieldConfig);
+                        // Generate and save mapping based on current order
+                        if (propertiesData['events']) {
+                            saveMappingSilently('events');
+                        }
+                    });
+                    console.log("acgiEvents", acgiEvents)
+                    document.getElementById('acgi-events-loading-spinner').style.display = 'none';
+                    document.getElementById('fetch-events-btn').disabled = false;
+                }).catch(error => {
+                    console.log("error", error)
+                    document.getElementById('acgi-events-loading-spinner').style.display = 'none';
+                    document.getElementById('fetch-events-btn').disabled = false;
+                    let msg = 'Failed to fetch ACGI customer events.';
+                    document.getElementById('eventsACGIImportantFields').innerHTML = `<div class='alert alert-danger text-center'>${msg}</div>`;
+                    document.getElementById('eventsACGIAllFields').innerHTML = `<div class='alert alert-danger text-center'>${msg}</div>`;
+                });
+        }
+        
         // Address Preferences logic (radio version)
         function showHideCriteriaSectionRadio() {
             const mode = document.querySelector('input[name="addressPreferenceMode"]:checked').value;
@@ -2400,12 +3109,21 @@
             let acgiCards = document.querySelectorAll('#acgiImportantFields .property-card');
             if (object_type === 'memberships') {
                 acgiCards = document.querySelectorAll('#membershipACGIImportantFields .property-card');
+            } else if (object_type === 'orders') {
+                acgiCards = document.querySelectorAll('#ordersACGIImportantFields .property-card');
+            } else if (object_type === 'events') {
+                acgiCards = document.querySelectorAll('#eventsACGIImportantFields .property-card');
             }
             // 2. Get ordered enabled HubSpot important fields (as rendered in the form)
             let hubspotForm = document.getElementById('contactsForm');
             if (object_type === 'memberships') {
                 hubspotForm = document.getElementById('membershipsForm');   
+            } else if (object_type === 'orders') {
+                hubspotForm = document.getElementById('ordersForm');
+            } else if (object_type === 'events') {
+                hubspotForm = document.getElementById('eventsForm');
             }
+            
             // Find all enabled fields in the form (inputs, selects, textareas)
             const hubspotInputs = Array.from(hubspotForm.querySelectorAll('.form-row input, .form-row select, .form-row textarea'))
                 .filter(input => !input.disabled && input.offsetParent !== null); // visible and enabled
@@ -2527,6 +3245,8 @@
         }
         document.getElementById('copyToHubspotBtn').addEventListener('click', () => copyAcgiToHubspot('contacts'));
         document.getElementById('copyMembershipsToHubspotBtn').addEventListener('click', () => copyAcgiToHubspot('memberships'));
+        document.getElementById('copyOrdersToHubspotBtn').addEventListener('click', () => copyAcgiToHubspot('orders'));
+        document.getElementById('copyEventsToHubspotBtn').addEventListener('click', () => copyAcgiToHubspot('events'));
         // --- Email and Phone Preferences Logic ---
 
         function selectItemByPreference(list, preference) {
@@ -2780,324 +3500,23 @@
             radio.addEventListener('change', onPhoneFormatChange);
         });
 
-        // // Memberships tab logic
-        // let membershipsData = [];
-        // let membershipMapping = {};
-        // let hubspotMembershipFields = [];
+        
 
-        // const fetchMembershipsBtn = document.getElementById('fetch-memberships-btn');
-        // const acgiMembershipCustomerId = document.getElementById('acgi-membership-customer-id');
-        // const acgiMembershipLoadingSpinner = document.getElementById('acgi-membership-loading-spinner');
-        // const acgiMembershipJsonViewer = document.getElementById('acgi-membership-json-viewer');
-        // const membershipImportantFields = document.getElementById('membershipACGIImportantFields');
-        // const membershipAllFields = document.getElementById('membershipACGIAllFields');
-        // const membershipMappingFields = document.getElementById('membershipMappingFields');
-        // const hubspotMembershipFieldsDiv = document.getElementById('hubspotMembershipFields');
-        // const membershipMappingForm = document.getElementById('membership-mapping-form');
-        // const hubspotMembershipForm = document.getElementById('hubspot-membership-form');
-        // const hubspotMembershipOutput = document.getElementById('hubspotMembershipOutput');
-        // const hubspotMembershipOutputContent = document.getElementById('hubspotMembershipOutputContent');
-
-        // // --- Merge preferences into HubSpot fields for memberships ---
-        // function mergeMembershipPreferences(fields, mappingPrefs, fieldPrefs) {
-        //     // mappingPrefs: { [hubspotField]: acgiField }
-        //     // fieldPrefs: { [hubspotField]: { is_important, is_enabled } }
-        //     return fields.map(f => {
-        //         const merged = { ...f };
-        //         if (fieldPrefs && fieldPrefs[f.name]) {
-        //             merged.is_important = !!fieldPrefs[f.name].is_important;
-        //             merged.is_enabled = fieldPrefs[f.name].is_enabled !== undefined ? !!fieldPrefs[f.name].is_enabled : true;
-        //         } else {
-        //             merged.is_important = false;
-        //             merged.is_enabled = true;
-        //         }
-        //         return merged;
-        //     });
-        // }
-
-        // // Update loadHubspotMembershipProperties to also fetch field preferences and mapping
-        // function loadHubspotMembershipProperties() {
-        //     Promise.all([
-        //         fetch('/api/hubspot-properties/memberships').then(res => res.json()),
-        //         fetch('/api/mapping/membership').then(res => res.json()),
-        //         // fetch('/api/field-prefs/membership').then(res => res.json()).catch(() => ({ prefs: {} }))
-        //     ]).then(([fieldsData, mappingData, fieldPrefsData]) => {
-        //         const mappingPrefs = mappingData.mapping || {};
-        //         const fieldPrefs = fieldPrefsData.prefs || {};
-        //         if (fieldsData && fieldsData.properties) {
-        //             hubspotMembershipFields = mergeMembershipPreferences(fieldsData.properties.map(p => ({
-        //                 name: p.name,
-        //                 label: p.label || p.name,
-        //                 type: p.type
-        //             })), mappingPrefs, fieldPrefs);
-        //         } else {
-        //             hubspotMembershipFields = [];
-        //         }
-        //         membershipMapping = mappingPrefs;
-        //         renderMembershipFields();
-        //     }).catch(() => {
-        //         hubspotMembershipFields = [];
-        //         membershipMapping = {};
-        //         renderMembershipFields();
-        //     });
-        // }
-
-        // // Update createMembershipPropertyCard to always show star and toggle buttons
-        // function createMembershipPropertyCard(property, isImportant) {
-        //     const objectType = 'membership';
-        //     const firstMembership = membershipsData[0] || {};
-        //     const dragHandle = isImportant ?
-        //         '<div class="drag-handle me-2" style="cursor: grab; color: #6c757d;"><i class="fas fa-grip-vertical"></i></div>' : '';
-        //     const badges = [];
-        //     if (isImportant) badges.push('<span class="badge badge-important">Important</span>');
-        //     if (property.is_enabled !== false) badges.push('<span class="badge badge-enabled">Enabled</span>');
-        //     return `
-        //         <div class="property-card ${isImportant ? 'important' : ''} ${property.is_enabled ? 'enabled' : ''}" data-field-name="${property.name}">
-        //             <div class="property-header">
-        //                 <div class="d-flex align-items-center">
-        //                     ${dragHandle}
-        //                     <div>
-        //                         <div class="property-name" title="${property.name}">${property.name}</div>
-        //                         <div class="property-label">${property.label || property.name}</div>
-        //                     </div>
-        //                 </div>
-        //                 <div class="property-actions">
-        //                     ${badges.join('')}
-        //                     <span class="property-type">${property.type || ''}</span>
-        //                     <div class="btn-group btn-group-sm">
-        //                         <button type="button" class="btn btn-outline-primary btn-sm" onclick="toggleMembershipField('${property.name}', 'important')">
-        //                             <i class="fas fa-star"></i>
-        //                         </button>
-        //                         <button type="button" class="btn btn-outline-success btn-sm" onclick="toggleMembershipField('${property.name}', 'enabled')">
-        //                             <i class="fas fa-toggle-on"></i>
-        //                         </button>
-        //                     </div>
-        //                 </div>
-        //             </div>
-        //             <div class="mt-2">
-        //                 <select class="form-select membership-mapping-dropdown" data-hubspot="${property.name}">
-        //                     <option value="">-- Map from ACGI --</option>
-        //                     ${Object.keys(firstMembership).map(acgiKey => `<option value="${acgiKey}"${membershipMapping[property.name] === acgiKey ? ' selected' : ''}>${acgiKey}</option>`).join('')}
-        //                 </select>
-        //             </div>
-        //         </div>
-        //     `;
-        // }
-
-        // // Load mapping preferences for memberships
-        // function loadMembershipMapping() {
-        //     fetch('/api/mapping/membership')
-        //         .then(res => res.json())
-        //         .then(data => {
-        //             membershipMapping = data.mapping || {};
-        //             renderMembershipFields();
-        //         })
-        //         .catch(() => {
-        //             membershipMapping = {};
-        //             renderMembershipFields();
-        //         });
-        // }
-
-        // // Save mapping preferences for memberships
-        // function saveMembershipMapping(mapping) {
-        //     fetch('/api/mapping/membership', {
-        //         method: 'POST',
-        //         headers: { 'Content-Type': 'application/json' },
-        //         body: JSON.stringify({ mapping })
-        //     });
-        // }
-
-        // // Load properties and mapping on page load and when tab is activated
-        // function setupMembershipsTabPropertyLoading() {
-        //     loadHubspotMembershipProperties();
-        //     const membershipsTabBtn = document.getElementById('memberships-tab');
-        //     if (membershipsTabBtn) {
-        //         membershipsTabBtn.addEventListener('click', loadHubspotMembershipProperties);
-        //     }
-        // }
-        // setupMembershipsTabPropertyLoading();
-
-        // if (fetchMembershipsBtn) {
-        //     fetchMembershipsBtn.addEventListener('click', function () {
-        //         const customerId = acgiMembershipCustomerId.value.trim();
-        //         if (!customerId) {
-        //             showMessage('warning', 'Please enter a customer ID');
-        //             return;
-        //         }
-        //         acgiMembershipLoadingSpinner.style.display = '';
-        //         fetch(`/api/acgi/customer/${customerId}/memberships`)
-        //             .then(res => res.json())
-        //             .then(data => {
-        //                 membershipsData = data.fields.memberships || [];
-        //                 acgiMembershipJsonViewer.textContent = JSON.stringify(membershipsData, null, 2);
-        //                 renderMembershipFields();
-        //                 showMessage('success', 'Memberships data fetched successfully');
-        //             })
-        //             .catch(() => {
-        //                 acgiMembershipJsonViewer.textContent = '';
-        //                 membershipImportantFields.innerHTML = '<div class="text-center text-muted"><i class="fas fa-info-circle"></i> No important fields</div>';
-        //                 membershipAllFields.innerHTML = '<div class="text-center text-muted"><i class="fas fa-info-circle"></i> No fields loaded</div>';
-        //                 membershipMappingFields.innerHTML = '<div class="text-center text-muted"><i class="fas fa-info-circle"></i> Load memberships to map fields</div>';
-        //                 hubspotMembershipFieldsDiv.innerHTML = '<div class="text-center text-muted"><i class="fas fa-info-circle"></i> Load mapping to see the form</div>';
-        //                 showMessage('danger', 'Failed to fetch memberships data');
-        //             })
-        //             .finally(() => {
-        //                 acgiMembershipLoadingSpinner.style.display = 'none';
-        //             });
-        //     });
-        // }
-
-        // function renderMembershipFields() {
-        //     // Column 2: Show ACGI fields from first membership (reference only, no toggles, no badges)
-        //     if (!membershipsData.length) {
-        //         membershipImportantFields.innerHTML = '<div class="text-center text-muted"><i class="fas fa-info-circle"></i> No membership fields loaded</div>';
-        //         membershipAllFields.innerHTML = '';
-        //     } else {
-        //         const firstMembership = membershipsData[0];
-        //         let acgiHtml = '<h4><i class="fas fa-list"></i> ACGI Membership Fields</h4>';
-        //         Object.entries(firstMembership).forEach(([key, value]) => {
-        //             acgiHtml += `<div class="property-card mb-2"><div class="property-header"><span class="property-name">${key}</span></div><div class="property-label">${value ?? ''}</div></div>`;
-        //         });
-        //         membershipImportantFields.innerHTML = acgiHtml;
-        //         membershipAllFields.innerHTML = '';
-        //     }
-        //     // Column 3: HubSpot mapping cards
-        //     if (!hubspotMembershipFields.length || !membershipsData.length) {
-        //         membershipMappingFields.innerHTML = '<div class="text-center text-muted"><i class="fas fa-info-circle"></i> Load memberships to map fields</div>';
-        //         hubspotMembershipFieldsDiv.innerHTML = '<div class="text-center text-muted"><i class="fas fa-info-circle"></i> Load mapping to see the form</div>';
-        //         return;
-        //     }
-        //     // Split into important and other properties
-        //     let important_properties = hubspotMembershipFields.filter(f => f.is_important);
-        //     let other_properties = hubspotMembershipFields.filter(f => !f.is_important);
-        //     // Render important properties
-        //     let importantCards = '';
-        //     important_properties.forEach(hf => {
-        //         importantCards += createMembershipPropertyCard(hf, true);
-        //     });
-        //     // Render other properties
-        //     let otherCards = '';
-        //     other_properties.forEach(hf => {
-        //         otherCards += createMembershipPropertyCard(hf, false);
-        //     });
-        //     membershipMappingFields.innerHTML = `
-        //         <h4><i class="fas fa-star"></i> Important Fields</h4>
-        //         <div id="membershipImportantMappingFields">${importantCards || '<div class="text-center text-muted">No important fields configured</div>'}</div>
-        //         <h4><i class="fas fa-list"></i> All Available Fields</h4>
-        //         <div id="membershipAllMappingFields">${otherCards || '<div class="text-center text-muted">No additional fields available</div>'}</div>
-        //     `;
-        //     renderHubspotMembershipForm();
-        // }
-
-        // // Toggle important/enabled for membership fields
-        // window.toggleMembershipField = function (fieldName, toggleType) {
-        //     const idx = hubspotMembershipFields.findIndex(f => f.name === fieldName);
-        //     if (idx === -1) return;
-        //     const field = hubspotMembershipFields[idx];
-        //     if (toggleType === 'important') {
-        //         field.is_important = !field.is_important;
-        //     } else if (toggleType === 'enabled') {
-        //         field.is_enabled = !field.is_enabled;
-        //     }
-        //     saveMembershipFieldConfiguration(field, toggleType);
-        //     renderMembershipFields();
-        // };
-
-        // function saveMembershipFieldConfiguration(field, toggleType) {
-        //     let data = {
-        //         object_type: 'membership',
-        //         field_name: field.name,
-        //         field_label: field.label || field.name,
-        //         field_type: field.type,
-        //         is_enabled: field.is_enabled,
-        //         is_important: field.is_important
-        //     };
-        //     fetch('/api/save-form-field', {
-        //         method: 'POST',
-        //         headers: { 'Content-Type': 'application/json' },
-        //         body: JSON.stringify(data)
-        //     });
-        // }
-
-        // if (membershipMappingForm) {
-        //     membershipMappingForm.addEventListener('submit', function (e) {
-        //         e.preventDefault();
-        //         membershipMapping = {};
-        //         const dropdowns = membershipMappingFields.querySelectorAll('.membership-mapping-dropdown');
-        //         dropdowns.forEach(function (dropdown) {
-        //             const hubspot = dropdown.getAttribute('data-hubspot');
-        //             const acgi = dropdown.value;
-        //             if (acgi) membershipMapping[hubspot] = acgi;
-        //         });
-        //         saveMembershipMapping(membershipMapping);
-        //         renderHubspotMembershipForm();
-        //         showMessage('success', 'Mapping saved!');
-        //     });
-        // }
-
-        // function renderHubspotMembershipForm() {
-        //     if (!membershipsData.length || !Object.keys(membershipMapping).length || !hubspotMembershipFields.length) {
-        //         hubspotMembershipFieldsDiv.innerHTML = '<div class="text-center text-muted"><i class="fas fa-info-circle"></i> Load mapping to see the form</div>';
-        //         return;
-        //     }
-        //     const firstMembership = membershipsData[0];
-        //     let formHtml = '';
-        //     hubspotMembershipFields.forEach(hf => {
-        //         const acgiKey = membershipMapping[hf.name];
-        //         const value = acgiKey ? (firstMembership[acgiKey] ?? '') : '';
-        //         formHtml += `<div class="mb-2 form-row"><label class="form-label">${hf.label}</label><input type="text" class="form-control" name="${hf.name}" value="${value}" /></div>`;
-        //     });
-        //     hubspotMembershipFieldsDiv.innerHTML = formHtml;
-        // }
-
-        // if (hubspotMembershipForm) {
-        //     hubspotMembershipForm.addEventListener('submit', function (e) {
-        //         e.preventDefault();
-        //         const formData = {};
-        //         const inputs = hubspotMembershipForm.querySelectorAll('input, select, textarea');
-        //         inputs.forEach(function (input) {
-        //             formData[input.name] = input.value;
-        //         });
-        //         fetch('/api/hubspot-create-membership', {
-        //             method: 'POST',
-        //             headers: { 'Content-Type': 'application/json' },
-        //             body: JSON.stringify({ data: formData })
-        //         })
-        //             .then(res => res.json())
-        //             .then(resp => {
-        //                 hubspotMembershipOutputContent.textContent = resp.message || 'Created successfully!';
-        //                 hubspotMembershipOutput.style.display = '';
-        //             })
-        //             .catch(xhr => {
-        //                 hubspotMembershipOutputContent.textContent = (xhr && xhr.error) ? xhr.error : 'Failed to create membership';
-        //                 hubspotMembershipOutput.style.display = '';
-        //             });
-        //     });
-        // }
-
-        // function showMessage(type, message) {
-        //     const statusDiv = document.getElementById('statusMessages');
-        //     const alertDiv = document.createElement('div');
-        //     alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
-        //     alertDiv.innerHTML = `
-        //         ${message}
-        //         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        //     `;
-        //     statusDiv.appendChild(alertDiv);
-        //     setTimeout(() => {
-        //         if (alertDiv.parentNode) {
-        //             alertDiv.remove();
-        //         }
-        //     }, 5000);
-        // }
 
                 // Mapping is now generated automatically by the backend
         // The backend reads field configurations from the database and creates the mapping
 
         function saveMappingSilently(objectType) {
             console.log(`Silently saving ${objectType} mapping...`);
+
+            const EndpointForObject = {
+                "contacts": "/api/mapping/contact",
+                "memberships": "/api/mapping/membership",
+                "events": "/api/mapping/event",
+                "orders": "/api/mapping/order"
+            }
             
-            const endpoint = objectType === 'contacts' ? '/api/mapping/contact' : '/api/mapping/membership';
+            const endpoint = EndpointForObject[objectType];
             console.log(`Sending request to endpoint: ${endpoint}`);
             
             // Backend will automatically generate mapping from current field configurations
@@ -3205,28 +3624,6 @@
             });
         }
 
-        // Load mappings when properties are loaded
-        function loadProperties() {
-            showLoading();
-
-            // Load properties for both object types
-            Promise.all([
-                loadObjectProperties('contacts'),
-                //loadObjectProperties('deals'),
-                loadObjectProperties('memberships')
-            ]).then(() => {
-                // Load mappings after properties are loaded
-                loadMapping('contacts');
-                loadMapping('memberships');
-                hideLoading();
-                showAlert('All properties and mappings loaded successfully!', 'success');
-            }).catch(error => {
-                console.log("error", error)
-                hideLoading();
-                console.error('Error loading properties:', error);
-                showAlert('Error loading properties: ' + error.message + '\nPlease set your HubSpot API key on the Integration page first.', 'danger');
-            });
-        }
         
     </script>
 </body>

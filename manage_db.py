@@ -22,7 +22,10 @@ def get_required_tables():
         'form_fields',
         'search_preferences',
         'contact_field_mapping',
-        'scheduling_config'
+        'scheduling_config',
+        'membership_field_mapping',
+        'event_field_mapping',
+        'order_field_mapping'
     ]
 
 def check_and_create_tables():
