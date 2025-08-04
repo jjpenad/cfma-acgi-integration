@@ -200,6 +200,8 @@ def init_api_routes(app):
                 result = hubspot_client.create_membership(object_data)
             elif object_type == 'events':
                 result = hubspot_client.create_custom_object('2-48134484', object_data)
+            elif object_type == 'orders':
+                result = hubspot_client.create_order(object_data)
             else:
                 return jsonify({'error': f'Unsupported object type: {object_type}'}), 400
             

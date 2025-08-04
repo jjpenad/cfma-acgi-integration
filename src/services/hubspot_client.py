@@ -113,6 +113,59 @@ class HubSpotClient:
             logger.error(f"Error getting contact properties: {str(e)}")
             return []
         
+    def create_order(self, order_data: Dict[str, any]) -> Dict[str, any]:
+        """Create a new order in HubSpot"""
+        try:    
+            if not self.api_key:
+                return {
+                    'success': False,
+                    'message': 'HubSpot client not initialized',
+                    'order_id': None
+                }
+
+            # Prepare order properties for HubSpot
+            properties = {}
+
+            print("ORDER DATA",order_data)
+
+            # Add all form data as properties
+            for key, value in order_data.items():
+                if value:  # Only add non-empty values
+                    properties[key] = value
+
+            # Create order
+            create_url = f"{self.base_url}/crm/v3/objects/orders"
+            create_data = {'properties': properties}
+            print("CREATE DATA",create_data)
+            create_response = self.session.post(create_url, json=create_data, timeout=30)
+            print("CREATE RESPONSE",create_response)
+            
+            if create_response.status_code == 201:
+                new_order = create_response.json()
+                order_id = new_order['id']
+                print("NEW ORDER",new_order)
+                return {
+                    'success': True,
+                    'message': f"Created new order {new_order}",
+                    'order_id': order_id,
+                    'action': 'created'
+                }
+            else:
+                return {
+                    'success': False,
+                    'message': f"Failed to create order: {create_response.status_code} - {create_response.text}",
+                    'order_id': None
+                }
+            
+        except Exception as e:
+            logger.error(f"Error creating order: {str(e)}")
+            return {
+                'success': False,
+                'message': f"Error creating order: {str(e)}",
+                'order_id': None
+            }
+    
+
     def create_membership(self, membership_data: Dict[str, any]) -> Dict[str, any]:
         """Create a new membership in HubSpot"""
         try:
