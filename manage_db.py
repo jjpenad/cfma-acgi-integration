@@ -339,6 +339,7 @@ def main():
         reset_database()
     elif args.action == 'check':
         check_and_create_tables()
+        
 
 if __name__ == "__main__":
     main() 

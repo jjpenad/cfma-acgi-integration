@@ -594,6 +594,7 @@ class ACGIClient:
         
         # Orders/Products
         orders = []
+        limit = 200
         for order_elem in root.findall('.//order'):
             order_data = {
                 'productSerno': self._get_element_text(order_elem, 'productSerno'),
@@ -619,7 +620,8 @@ class ACGIClient:
                 'invoiceBalance': self._get_element_text(order_elem, 'invoiceBalance'),
                 'quantity': self._get_element_text(order_elem, 'quantity')
             }
-            
+            if len(orders) >= limit:
+                break
             # # Parse attributes
             # attributes = []
             # for attr_elem in order_elem.findall('.//attributes/attribute'):
@@ -647,6 +649,7 @@ class ACGIClient:
         
         # Events
         events = []
+        limit = 200
         for event_elem in root.findall('.//event'):
             event_data = {
                 'id': self._get_element_text(event_elem, 'id'),
@@ -711,6 +714,8 @@ class ACGIClient:
                 sponsors.append(sponsor_data)
             event_data['sponsors'] = sponsors
             
+            if len(events) >= limit:
+                break
             events.append(event_data)
             
         events_data['events'] = events
