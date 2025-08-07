@@ -324,7 +324,7 @@ class ACGIClient:
                     # Parse purchased products data
                     purchased_products_data = self._parse_purchased_products_xml(root)
                     print("PURCHASED PRODUCTS DATA:", purchased_products_data)
-                    for product in purchased_products_data['orders']:
+                    for product in purchased_products_data['purchased_products']:
                         product['customerId'] = customer_id
                     return {
                         'success': True,
@@ -632,7 +632,7 @@ class ACGIClient:
             
             orders.append(order_data)
             
-        purchased_products_data['orders'] = orders
+        purchased_products_data['purchased_products'] = orders
         
         return purchased_products_data
 

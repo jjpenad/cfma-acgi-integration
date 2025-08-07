@@ -229,7 +229,7 @@ def init_routes(app):
         return jsonify({
             'scheduler_running': scheduler.running,
             'jobs': [{'id': job.id, 'name': job.name, 'next_run': str(job.next_run_time)} for job in jobs]
-        })
+        }) 
 
     @app.route('/health')
     def health():

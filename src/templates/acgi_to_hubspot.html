@@ -444,7 +444,7 @@
                 <li class="nav-item" role="presentation">
                     <button class="nav-link" id="purchased-products-tab" data-bs-toggle="tab" data-bs-target="#purchased-products"
                         type="button" role="tab">
-                        <i class="fas fa-shopping-cart"></i> Orders
+                        <i class="fas fa-shopping-cart"></i> Purchased Products
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
@@ -963,7 +963,7 @@
                     <div class="mt-4">
                         <div class="row">
                             <div class="d-flex justify-content-center">
-                                <button id="copyOrdersToHubspotBtn" class="btn btn-outline-primary btn-sm mb-2"
+                                <button id="copyPurchasedProductsToHubspotBtn" class="btn btn-outline-primary btn-sm mb-2"
                                     style="width: 10rem;">
                                     <i class="fas fa-arrow-right"></i> Copy To HubSpot
                                 </button>
@@ -974,7 +974,7 @@
                             <div class="col-md-3 mb-4">
                                 <div class="card mb-3">
                                     <div class="card-header bg-info text-white">
-                                        <i class="fas fa-database"></i> ACGI Orders Data
+                                        <i class="fas fa-database"></i> ACGI Purchased Products Data
                                     </div>
                                     <div class="card-body">
                                         <div class="mb-3">
@@ -987,7 +987,7 @@
                                                 <div class="spinner-border text-primary" role="status">
                                                     <span class="visually-hidden">Loading...</span>
                                                 </div>
-                                                <div>Loading orders...</div>
+                                                <div>Loading purchased products...</div>
                                             </div>
                                         </div>
                                         <div class="mt-3">
@@ -1007,13 +1007,13 @@
                             <!-- COLUMN 2: Important Fields from First Product -->
                             <div class="col-md-3 mb-4">
                                 <h4><i class="fas fa-star"></i> Important Fields</h4>
-                                <div id="ordersACGIImportantFields" class="mb-4">
+                                <div id="purchased_productsACGIImportantFields" class="mb-4">
                                     <div class="text-center text-muted">
                                         <i class="fas fa-info-circle"></i> No important fields
                                     </div>
                                 </div>
                                 <h4><i class="fas fa-list"></i> All Available Fields</h4>
-                                <div id="ordersACGIAllFields">
+                                <div id="purchased_productsACGIAllFields">
                                     <div class="text-center text-muted">
                                         <i class="fas fa-info-circle"></i> No fields loaded
                                     </div>
@@ -1022,13 +1022,13 @@
                             <!-- COLUMN 3: Mapping UI -->
                             <div class="col-md-3">
                                 <h4><i class="fas fa-link"></i> Map to HubSpot Fields</h4>
-                                <div id="ordersImportantFields" class="mb-4"> 
+                                <div id="purchased_productsImportantFields" class="mb-4"> 
                                     <div class="text-center text-muted">
                                         <i class="fas fa-info-circle"></i> Load properties to see important fields
                                     </div>
                                 </div>
                                 <h4><i class="fas fa-list"></i> All Available Fields</h4>
-                                <div id="ordersAllFields">
+                                <div id="purchased_productsAllFields">
                                     <div class="text-center text-muted">
                                         <i class="fas fa-info-circle"></i> Load properties to see all available fields
                                     </div>
@@ -1038,27 +1038,27 @@
                             <div class="col-md-3">
                                 <div class="card">
                                     <div class="card-header bg-primary text-white">
-                                        <i class="fas fa-save"></i> Save to HubSpot (ACGI Orders)
+                                        <i class="fas fa-save"></i> Save to HubSpot (ACGI Purchased Products)
                                     </div>
                                     <div class="card-body">
-                                        <div id="ordersForm">
+                                        <div id="purchased_productsForm">
                                             <div class="text-center text-muted">
                                                 <i class="fas fa-info-circle"></i> Load properties to see the form
                                             </div>
                                         </div>
                                         <div class="mt-3">
                                             <button type="button" class="btn btn-success w-100 mb-2"
-                                                onclick="saveToHubSpot('orders')">
+                                                onclick="saveToHubSpot('purchased_products')">
                                                 <i class="fas fa-save"></i> Save to HubSpot
                                             </button>
                                             <button type="button" class="btn btn-warning w-100 mb-3"
-                                                onclick="resetForm('orders')">
+                                                onclick="resetForm('purchased_products')">
                                                 <i class="fas fa-undo"></i> Reset Form
                                             </button>
                                         </div>
-                                        <div id="ordersOutput" class="mt-3" style="display: none;">
+                                        <div id="purchased_productsOutput" class="mt-3" style="display: none;">
                                             <h6><i class="fas fa-terminal"></i> Output:</h6>
-                                            <div class="alert alert-info" id="ordersOutputContent">
+                                            <div class="alert alert-info" id="purchased_productsOutputContent">
                                                 <!-- Output will be displayed here -->
                                             </div>
                                         </div>
@@ -1267,7 +1267,7 @@
                 loadObjectProperties('contacts'),
                 //loadObjectProperties('deals'),
                 loadObjectProperties('memberships'),
-                loadObjectProperties('orders'),
+                loadObjectProperties('purchased_products'),
                 loadObjectProperties('events')
             ]).then(() => {
                 hideLoading();
@@ -1867,7 +1867,7 @@
                 productsTab.classList.add('active');
                 productsPane.classList.add('show', 'active');
                 
-                currentObjectType = 'orders';
+                currentObjectType = 'purchased_products';
             } else if (activeTab === 'events') {
                 const eventsTab = document.getElementById('events-tab');
                 const eventsPane = document.getElementById('events');
@@ -1901,7 +1901,7 @@
                         currentObjectType = 'memberships';
                         newTab = 'memberships';
                     } else if (target === '#purchased-products') {
-                        currentObjectType = 'orders';
+                        currentObjectType = 'purchased_products';
                         newTab = 'purchased-products';
                     } else if (target === '#events') {
                         currentObjectType = 'events';
@@ -2021,7 +2021,7 @@
             jsonViewer.textContent = JSON.stringify(data, null, 2);
         }
 
-        function showAcgiOrdersJson(data) {
+        function showAcgiPurchasedProductsJson(data) {
             const jsonViewer = document.getElementById('acgi-products-json-viewer');
             jsonViewer.textContent = JSON.stringify(data, null, 2);
         }
@@ -2129,10 +2129,10 @@
             acgiProducts = ensureAcgiFieldsObject(acgiProductsList[currentProductsIndex]);
             
             // Update JSON viewer
-            showAcgiOrdersJson(acgiProductsList);
+            showAcgiPurchasedProductsJson(acgiProductsList);
             
             // Re-render the fields with the new product data
-            renderAcgiProductsFields(acgiProducts, acgiProductsFieldConfig);
+            renderAcgiPurchasedProductsFields(acgiProducts, acgiProductsFieldConfig);
         }
 
         function updateMembershipDisplay() {
@@ -2433,22 +2433,22 @@
             // });
         }
         
-        function renderAcgiOrdersFields(fields, config) {
+        function renderAcgiPurchasedProductsFields(fields, config) {
             if (!config) {
-                console.warn('renderAcgiOrdersFields: config is not a valid object', config);
-                document.getElementById('ordersACGIImportantFields').innerHTML = '<div class="text-center text-muted">No important fields</div>';
-                document.getElementById('ordersACGIAllFields').innerHTML = '<div class="text-center text-muted">No fields loaded</div>';
+                console.warn('renderAcgiPurchasedProductsFields: config is not a valid object', config);
+                document.getElementById('purchased_productsACGIImportantFields').innerHTML = '<div class="text-center text-muted">No important fields</div>';
+                document.getElementById('purchased_productsACGIAllFields').innerHTML = '<div class="text-center text-muted">No fields loaded</div>';
                 return;
             }
             if (!fields || typeof fields !== 'object' || Array.isArray(fields)) {
-                console.warn('renderAcgiOrdersFields: fields is not a valid object', fields);
-                document.getElementById('ordersACGIImportantFields').innerHTML = '<div class="text-center text-muted">No important fields</div>';
-                document.getElementById('ordersACGIAllFields').innerHTML = '<div class="text-center text-muted">No fields loaded</div>';
+                console.warn('renderAcgiPurchasedProductsFields: fields is not a valid object', fields);
+                document.getElementById('purchased_productsACGIImportantFields').innerHTML = '<div class="text-center text-muted">No important fields</div>';
+                document.getElementById('purchased_productsACGIAllFields').innerHTML = '<div class="text-center text-muted">No fields loaded</div>';
                 return;
             }
-            console.log('Rendering ACGI orders fields:', fields, config);
-            const importantDiv = document.getElementById('ordersACGIImportantFields');
-            const allDiv = document.getElementById('ordersACGIAllFields');
+            console.log('Rendering ACGI purchased products fields:', fields, config);
+            const importantDiv = document.getElementById('purchased_productsACGIImportantFields');
+            const allDiv = document.getElementById('purchased_productsACGIAllFields');
             importantDiv.innerHTML = '';
             allDiv.innerHTML = '';
             let importantFields = [];
@@ -2468,8 +2468,8 @@
                         <div class="property-actions">
                             <span class="badge badge-important" style="background:#28a745;${isImportant ? '' : 'display:none'}">Important</span>
                             <span class="badge badge-enabled" style="background:#667eea;${isEnabled ? '' : 'display:none'}">Enabled</span>
-                            <button class="btn btn-outline-success btn-sm" onclick="toggleAcgiOrdersField('${key}','important')"><i class="fas fa-star"></i></button>
-                            <button class="btn btn-outline-primary btn-sm" onclick="toggleAcgiOrdersField('${key}','enabled')"><i class="fas fa-toggle-on"></i></button>
+                            <button class="btn btn-outline-success btn-sm" onclick="toggleAcgiPurchasedProductsField('${key}','important')"><i class="fas fa-star"></i></button>
+                            <button class="btn btn-outline-primary btn-sm" onclick="toggleAcgiPurchasedProductsField('${key}','enabled')"><i class="fas fa-toggle-on"></i></button>
                         </div>
                     </div>
                     <div class="property-label">${displayValue}</div>
@@ -2499,15 +2499,15 @@
                         const cards = importantDiv.querySelectorAll('.property-card');
                         cards.forEach((card, idx) => {
                             const fieldName = card.getAttribute('data-field-name');
-                            if (!acgiFieldConfig[fieldName]) acgiFieldConfig[fieldName] = { is_important: true, is_enabled: true };
-                            acgiFieldConfig[fieldName].order_index = idx;
+                            if (!acgiProductsFieldConfig[fieldName]) acgiProductsFieldConfig[fieldName] = { is_important: true, is_enabled: true };
+                            acgiProductsFieldConfig[fieldName].order_index = idx;
                         });
                         // Save config
-                        console.log("acgiFieldConfig ORDERS",acgiFieldConfig)
-                        saveAcgiFieldConfig('orders', acgiFieldConfig);
+                        console.log("acgiProductsFieldConfig PURCHASED PRODUCTS",acgiProductsFieldConfig)
+                        saveAcgiFieldConfig('purchased_products', acgiProductsFieldConfig);
                         // Save mapping after order change
-                        if (propertiesData['orders']) {
-                            saveMappingSilently('orders');
+                        if (propertiesData['purchased_products']) {
+                            saveMappingSilently('purchased_products');
                         }
                     }
                 });
@@ -2580,12 +2580,12 @@
                         const cards = importantDiv.querySelectorAll('.property-card');
                         cards.forEach((card, idx) => {
                             const fieldName = card.getAttribute('data-field-name');
-                            if (!acgiFieldConfig[fieldName]) acgiFieldConfig[fieldName] = { is_important: true, is_enabled: true };
-                            acgiFieldConfig[fieldName].order_index = idx;
+                            if (!acgiEventsFieldConfig[fieldName]) acgiEventsFieldConfig[fieldName] = { is_important: true, is_enabled: true };
+                            acgiEventsFieldConfig[fieldName].order_index = idx;
                         });
                         // Save config
-                        console.log("acgiFieldConfig EVENTS",acgiFieldConfig)
-                        saveAcgiFieldConfig('events', acgiFieldConfig);
+                        console.log("acgiEventsFieldConfig EVENTS",acgiEventsFieldConfig)
+                        saveAcgiFieldConfig('events', acgiEventsFieldConfig);
                         // Save mapping after order change
                         if (propertiesData['events']) {
                             saveMappingSilently('events');
@@ -2622,19 +2622,19 @@
             }
         }
 
-        function toggleAcgiOrdersField(field, type) {
-            if (!acgiOrdersFieldConfig[field]) acgiOrdersFieldConfig[field] = { is_important: false, is_enabled: true };
-            if (type === 'important') acgiOrdersFieldConfig[field].is_important = !acgiOrdersFieldConfig[field].is_important;
-            if (type === 'enabled') acgiOrdersFieldConfig[field].is_enabled = !acgiOrdersFieldConfig[field].is_enabled;
+        function toggleAcgiPurchasedProductsField(field, type) {
+            if (!acgiProductsFieldConfig[field]) acgiProductsFieldConfig[field] = { is_important: false, is_enabled: true };
+            if (type === 'important') acgiProductsFieldConfig[field].is_important = !acgiProductsFieldConfig[field].is_important;
+            if (type === 'enabled') acgiProductsFieldConfig[field].is_enabled = !acgiProductsFieldConfig[field].is_enabled;
             // if not important, remove the order_index
-            if (!acgiOrdersFieldConfig[field].is_important) {
-                delete acgiOrdersFieldConfig[field].order_index;
+            if (!acgiProductsFieldConfig[field].is_important) {
+                delete acgiProductsFieldConfig[field].order_index;
             }
-            renderAcgiOrdersFields(acgiOrders, acgiOrdersFieldConfig);
-            saveAcgiFieldConfig('orders', acgiOrdersFieldConfig);
+            renderAcgiPurchasedProductsFields(acgiProducts, acgiProductsFieldConfig);
+            saveAcgiFieldConfig('purchased_products', acgiProductsFieldConfig);
             // Save mapping after ACGI field configuration changes
-            if (propertiesData['orders']) {
-                saveMappingSilently('orders');
+            if (propertiesData['purchased_products']) {
+                saveMappingSilently('purchased_products');
             }
         }
 
@@ -2673,8 +2673,8 @@
                         acgiFieldConfig = data.config || {};
                     } else if (object_type === 'memberships') {
                         acgiMembershipsFieldConfig = data.config || {};
-                    } else if (object_type === 'orders') {
-                        acgiOrdersFieldConfig = data.config || {};
+                    } else if (object_type === 'purchased_products') {
+                        acgiProductsFieldConfig = data.config || {};
                     } else if (object_type === 'events') {
                         acgiEventsFieldConfig = data.config || {};
                     }
@@ -2717,14 +2717,14 @@
                     }
                 });
 
-            fetch('/api/acgi-fields?object_type=orders')
+            fetch('/api/acgi-fields?object_type=purchased_products')
                 .then(res => res.json())
                 .then(data => {
                     if (data.success && data.fields && Object.keys(data.fields).length > 0) {
-                        acgiOrders = ensureAcgiFieldsObject(data.fields);
-                        showAcgiOrdersJson(acgiOrders);
-                        loadAcgiFieldConfig('orders', () => {
-                            renderAcgiOrdersFields(acgiOrders, acgiOrdersFieldConfig);
+                        acgiProducts = ensureAcgiFieldsObject(data.fields);
+                        showAcgiPurchasedProductsJson(acgiProducts);
+                        loadAcgiFieldConfig('purchased_products', () => {
+                            renderAcgiPurchasedProductsFields(acgiProducts, acgiProductsFieldConfig);
                         });
                     }
                 });
@@ -2751,6 +2751,12 @@
             document.getElementById('events-item-selector').addEventListener('change', function() {
                 currentEventsIndex = parseInt(this.value);
                 updateEventsDisplay();
+                });
+
+            // Add event listener for products selector
+            document.getElementById('products-item-selector').addEventListener('change', function() {
+                currentProductsIndex = parseInt(this.value);
+                updateProductsDisplay();
                 });
         });
 
@@ -2883,19 +2889,19 @@
                     // Populate the products selector
                     populateProductsSelector(acgiProductsList);
                     
-                    showAcgiOrdersJson(products_data);
+                    showAcgiPurchasedProductsJson(products_data);
                     // Save the field list to backend
                     console.log("acgiProducts TTTT", acgiProducts)
                     fetch('/api/acgi-fields', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ object_type: 'orders', fields: acgiProducts })
+                        body: JSON.stringify({ object_type: 'purchased_products', fields: acgiProducts })
                     });
-                    loadAcgiFieldConfig('orders', () => {
-                        renderAcgiOrdersFields(acgiProducts, acgiProductsFieldConfig);
+                    loadAcgiFieldConfig('purchased_products', () => {
+                        renderAcgiPurchasedProductsFields(acgiProducts, acgiProductsFieldConfig);
                         // Generate and save mapping based on current order
-                        if (propertiesData['orders']) {
-                            saveMappingSilently('orders');
+                        if (propertiesData['purchased_products']) {
+                            saveMappingSilently('purchased_products');
                         }
                     });
                     console.log("acgiProducts", acgiProducts)
@@ -3109,8 +3115,8 @@
             let acgiCards = document.querySelectorAll('#acgiImportantFields .property-card');
             if (object_type === 'memberships') {
                 acgiCards = document.querySelectorAll('#membershipACGIImportantFields .property-card');
-            } else if (object_type === 'orders') {
-                acgiCards = document.querySelectorAll('#ordersACGIImportantFields .property-card');
+            } else if (object_type === 'purchased_products') {
+                acgiCards = document.querySelectorAll('#purchased_productsACGIImportantFields .property-card');
             } else if (object_type === 'events') {
                 acgiCards = document.querySelectorAll('#eventsACGIImportantFields .property-card');
             }
@@ -3118,8 +3124,8 @@
             let hubspotForm = document.getElementById('contactsForm');
             if (object_type === 'memberships') {
                 hubspotForm = document.getElementById('membershipsForm');   
-            } else if (object_type === 'orders') {
-                hubspotForm = document.getElementById('ordersForm');
+            } else if (object_type === 'purchased_products') {
+                hubspotForm = document.getElementById('purchased_productsForm');
             } else if (object_type === 'events') {
                 hubspotForm = document.getElementById('eventsForm');
             }
@@ -3245,7 +3251,7 @@
         }
         document.getElementById('copyToHubspotBtn').addEventListener('click', () => copyAcgiToHubspot('contacts'));
         document.getElementById('copyMembershipsToHubspotBtn').addEventListener('click', () => copyAcgiToHubspot('memberships'));
-        document.getElementById('copyOrdersToHubspotBtn').addEventListener('click', () => copyAcgiToHubspot('orders'));
+        document.getElementById('copyPurchasedProductsToHubspotBtn').addEventListener('click', () => copyAcgiToHubspot('purchased_products'));
         document.getElementById('copyEventsToHubspotBtn').addEventListener('click', () => copyAcgiToHubspot('events'));
         // --- Email and Phone Preferences Logic ---
 
@@ -3512,8 +3518,8 @@
             const EndpointForObject = {
                 "contacts": "/api/mapping/contact",
                 "memberships": "/api/mapping/membership",
-                "events": "/api/mapping/event",
-                "orders": "/api/mapping/order"
+                "purchased_products": "/api/mapping/purchased_products",
+                "events": "/api/mapping/event"
             }
             
             const endpoint = EndpointForObject[objectType];

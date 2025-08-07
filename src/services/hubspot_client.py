@@ -1055,3 +1055,100 @@ class HubSpotClient:
                 'success': False,
                 'error': f'Unexpected error: {str(e)}'
             } 
+
+    def search_custom_object(self, object_type: str, search_property: str, search_value: str) -> Optional[Dict[str, any]]:
+        """Search for a custom object by a specific property value"""
+        try:
+            if not self.api_key:
+                return None
+            
+            url = f"{self.base_url}/crm/v3/objects/{object_type}/search"
+            
+            payload = {
+                'filterGroups': [{
+                    'filters': [{
+                        'propertyName': search_property,
+                        'operator': 'EQ',
+                        'value': search_value
+                    }]
+                }],
+                'limit': 1
+            }
+            
+            response = self.session.post(url, json=payload, timeout=30)
+            
+            if response.status_code == 200:
+                result = response.json()
+                results = result.get('results', [])
+                if results:
+                    return results[0]
+                return None
+            else:
+                logger.error(f"Failed to search custom object: {response.status_code} - {response.text}")
+                return None
+                
+        except Exception as e:
+            logger.error(f"Error searching custom object: {str(e)}")
+            return None
+
+    def update_custom_object(self, object_type: str, object_id: str, object_data: Dict[str, any]) -> Dict[str, any]:
+        """Update a custom object in HubSpot"""
+        try:
+            if not self.api_key:
+                return {'success': False, 'error': 'API key not set'}
+            
+            url = f"{self.base_url}/crm/v3/objects/{object_type}/{object_id}"
+            
+            # Prepare the data for HubSpot
+            properties = {}
+            for key, value in object_data.items():
+                if value is not None and value != '':
+                    properties[key] = value
+            
+            payload = {
+                'properties': properties
+            }
+            
+            response = self.session.patch(url, json=payload, timeout=30)
+            
+            if response.status_code == 200:
+                result = response.json()
+                return {
+                    'success': True,
+                    'id': result.get('id'),
+                    'message': 'Custom object updated successfully'
+                }
+            else:
+                logger.error(f"Failed to update custom object: {response.status_code} - {response.text}")
+                return {
+                    'success': False,
+                    'error': f"HTTP {response.status_code}: {response.text}"
+                }
+                
+        except Exception as e:
+            logger.error(f"Error updating custom object: {str(e)}")
+            return {'success': False, 'error': str(e)}
+
+    def create_or_update_custom_object(self, object_type: str, object_data: Dict[str, any], search_property: str, search_value: str) -> Dict[str, any]:
+        """Create or update a custom object based on search criteria"""
+        try:
+            # First, try to find existing object
+            existing_object = self.search_custom_object(object_type, search_property, search_value)
+            
+            if existing_object:
+                # Update existing object
+                object_id = existing_object.get('id')
+                result = self.update_custom_object(object_type, object_id, object_data)
+                if result.get('success'):
+                    result['action'] = 'updated'
+                return result
+            else:
+                # Create new object
+                result = self.create_custom_object(object_type, object_data)
+                if result.get('success'):
+                    result['action'] = 'created'
+                return result
+                
+        except Exception as e:
+            logger.error(f"Error in create_or_update_custom_object: {str(e)}")
+            return {'success': False, 'error': str(e)} 

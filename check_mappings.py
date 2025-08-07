@@ -1,169 +1,196 @@
 #!/usr/bin/env python3
 """
-Script to check ContactFieldMapping and MembershipFieldMapping data
+Script to check and debug the current mappings in the database.
+This will show what mappings are currently stored for each object type.
 """
 
+import sqlite3
+import json
 import sys
 import os
-import json
-from datetime import datetime
 
-# Add the src directory to the Python path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'src'))
-
-from models import get_session, ContactFieldMapping, MembershipFieldMapping, FormField, AppState
-
-def print_separator(title):
-    """Print a formatted separator with title"""
-    print("\n" + "="*60)
-    print(f" {title}")
-    print("="*60)
-
-def print_json_data(data, title):
-    """Print JSON data in a formatted way"""
-    print(f"\n{title}:")
-    if data:
-        try:
-            # Try to parse as JSON if it's a string
-            if isinstance(data, str):
-                parsed_data = json.loads(data)
-                print(json.dumps(parsed_data, indent=2))
-            else:
-                print(json.dumps(data, indent=2))
-        except json.JSONDecodeError:
-            print(f"Raw data (not valid JSON): {data}")
-    else:
-        print("No data found")
-
-def check_contact_mapping():
-    """Check ContactFieldMapping data"""
-    print_separator("CONTACT FIELD MAPPING")
+def check_mappings():
+    """Check all mappings in the database"""
     
-    session = get_session()
+    # Database path
+    db_path = 'local_app.db'
+    
+    if not os.path.exists(db_path):
+        print(f"❌ Database file not found: {db_path}")
+        return False
+    
     try:
-        # Get contact field mapping
-        contact_mapping_obj = session.query(ContactFieldMapping).first()
+        # Connect to database
+        conn = sqlite3.connect(db_path)
+        cursor = conn.cursor()
         
-        if contact_mapping_obj:
-            print(f"Contact Mapping ID: {contact_mapping_obj.id}")
-            print(f"Mapping data:")
-            print_json_data(contact_mapping_obj.mapping, "Contact Field Mappings")
+        print("🔍 Checking all mappings in the database")
+        print("=" * 60)
+        
+        # Check ContactFieldMapping
+        print("📋 CONTACT FIELD MAPPING:")
+        cursor.execute("SELECT mapping FROM contact_field_mapping LIMIT 1")
+        result = cursor.fetchone()
+        if result:
+            try:
+                mapping = json.loads(result[0])
+                print(f"   Records: 1")
+                print(f"   Mapping: {mapping}")
+            except json.JSONDecodeError:
+                print(f"   Records: 1")
+                print(f"   Error: Invalid JSON in mapping")
         else:
-            print("No contact field mapping found in database")
-            
-    except Exception as e:
-        print(f"Error reading contact mapping: {e}")
-    finally:
-        session.close()
-
-def check_membership_mapping():
-    """Check MembershipFieldMapping data"""
-    print_separator("MEMBERSHIP FIELD MAPPING")
-    
-    session = get_session()
-    try:
-        # Get membership field mapping
-        membership_mapping_obj = session.query(MembershipFieldMapping).first()
+            print("   Records: 0 (No mapping found)")
+        print()
         
-        if membership_mapping_obj:
-            print(f"Membership Mapping ID: {membership_mapping_obj.id}")
-            print(f"Mapping data:")
-            print_json_data(membership_mapping_obj.mapping, "Membership Field Mappings")
+        # Check MembershipFieldMapping
+        print("📋 MEMBERSHIP FIELD MAPPING:")
+        cursor.execute("SELECT mapping FROM membership_field_mapping LIMIT 1")
+        result = cursor.fetchone()
+        if result:
+            try:
+                mapping = json.loads(result[0])
+                print(f"   Records: 1")
+                print(f"   Mapping: {mapping}")
+            except json.JSONDecodeError:
+                print(f"   Records: 1")
+                print(f"   Error: Invalid JSON in mapping")
         else:
-            print("No membership field mapping found in database")
-            
-    except Exception as e:
-        print(f"Error reading membership mapping: {e}")
-    finally:
-        session.close()
-
-def check_form_fields():
-    """Check FormField data for field order and configuration"""
-    print_separator("FORM FIELD CONFIGURATION")
-    
-    session = get_session()
-    try:
-        # Get all form fields
-        form_fields = session.query(FormField).all()
+            print("   Records: 0 (No mapping found)")
+        print()
         
-        if form_fields:
-            print(f"Found {len(form_fields)} form field configurations:")
-            
-            # Group by object type
-            by_object_type = {}
-            for field in form_fields:
-                obj_type = field.object_type
-                if obj_type not in by_object_type:
-                    by_object_type[obj_type] = []
-                by_object_type[obj_type].append(field)
-            
-            # Display by object type
-            for obj_type, fields in by_object_type.items():
-                print(f"\n--- {obj_type.upper()} FIELDS ---")
-                # Sort by order_index
-                sorted_fields = sorted(fields, key=lambda x: x.order_index or 0)
+        # Check PurchasedProductsFieldMapping
+        print("📋 PURCHASED PRODUCTS FIELD MAPPING:")
+        cursor.execute("SELECT mapping FROM purchased_products_field_mapping LIMIT 1")
+        result = cursor.fetchone()
+        if result:
+            try:
+                mapping = json.loads(result[0])
+                print(f"   Records: 1")
+                print(f"   Mapping: {mapping}")
                 
-                for field in sorted_fields:
-                    importance = "⭐" if field.is_important == 'true' else "  "
-                    enabled = "✅" if field.is_enabled == 'true' else "❌"
-                    print(f"  {importance} {enabled} [{field.order_index:2d}] {field.field_name}")
-                    print(f"      Label: {field.field_label}")
-                    print(f"      Type: {field.field_type}")
+                # Check if this looks like contact mapping
+                contact_fields = ['emails', 'firstName', 'lastName', 'phones', 'custId']
+                found_contact_fields = [field for field in contact_fields if field in mapping.values()]
+                if found_contact_fields:
+                    print(f"   ⚠️  WARNING: Found contact fields in purchased products mapping!")
+                    print(f"   Contact fields found: {found_contact_fields}")
+                    print(f"   This mapping appears to be corrupted!")
+            except json.JSONDecodeError:
+                print(f"   Records: 1")
+                print(f"   Error: Invalid JSON in mapping")
         else:
-            print("No form field configurations found in database")
-            
-    except Exception as e:
-        print(f"Error reading form fields: {e}")
-    finally:
-        session.close()
-
-def check_app_state_mappings():
-    """Check AppState for additional mapping configurations"""
-    print_separator("APP STATE MAPPING CONFIGURATIONS")
-    
-    session = get_session()
-    try:
-        # Get all app state entries related to mappings
-        mapping_keys = [
-            'acgi_field_config_contact',
-            'acgi_field_config_membership',
-            'acgi_fields_contact',
-            'acgi_fields_membership'
-        ]
+            print("   Records: 0 (No mapping found)")
+        print()
         
-        for key in mapping_keys:
-            app_state_obj = session.query(AppState).filter_by(key=key).first()
-            if app_state_obj:
-                print(f"\n{key}:")
-                print_json_data(app_state_obj.value, f"Configuration for {key}")
-            else:
-                print(f"\n{key}: No data found")
-                
+        # Check EventFieldMapping
+        print("📋 EVENT FIELD MAPPING:")
+        cursor.execute("SELECT mapping FROM event_field_mapping LIMIT 1")
+        result = cursor.fetchone()
+        if result:
+            try:
+                mapping = json.loads(result[0])
+                print(f"   Records: 1")
+                print(f"   Mapping: {mapping}")
+            except json.JSONDecodeError:
+                print(f"   Records: 1")
+                print(f"   Error: Invalid JSON in mapping")
+        else:
+            print("   Records: 0 (No mapping found)")
+        print()
+        
+        # Check AppState for ACGI field configs
+        print("📋 APP STATE - ACGI FIELD CONFIGS:")
+        cursor.execute("SELECT key, value FROM app_state WHERE key LIKE 'acgi_field_config_%'")
+        results = cursor.fetchall()
+        for key, value in results:
+            print(f"   {key}: {value[:100]}..." if len(value) > 100 else f"   {key}: {value}")
+        print()
+        
+        # Check AppState for ACGI fields
+        print("📋 APP STATE - ACGI FIELDS:")
+        cursor.execute("SELECT key, value FROM app_state WHERE key LIKE 'acgi_fields_%'")
+        results = cursor.fetchall()
+        for key, value in results:
+            print(f"   {key}: {value[:100]}..." if len(value) > 100 else f"   {key}: {value}")
+        print()
+        
+        return True
+        
+    except sqlite3.Error as e:
+        print(f"❌ Database error: {e}")
+        return False
     except Exception as e:
-        print(f"Error reading app state mappings: {e}")
+        print(f"❌ Unexpected error: {e}")
+        return False
     finally:
-        session.close()
+        if conn:
+            conn.close()
 
-def check_all_mappings():
-    """Check all mapping-related data"""
-    print_separator("MAPPING DATA CHECK")
-    print(f"Timestamp: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+def fix_purchased_products_mapping():
+    """Fix the purchased products mapping by clearing it"""
     
-    check_contact_mapping()
-    check_membership_mapping()
-    check_form_fields()
-    check_app_state_mappings()
+    # Database path
+    db_path = 'local_app.db'
     
-    print_separator("CHECK COMPLETE")
+    if not os.path.exists(db_path):
+        print(f"❌ Database file not found: {db_path}")
+        return False
+    
+    try:
+        # Connect to database
+        conn = sqlite3.connect(db_path)
+        cursor = conn.cursor()
+        
+        print("🔧 Fixing purchased products mapping...")
+        
+        # Clear the corrupted mapping
+        cursor.execute("DELETE FROM purchased_products_field_mapping")
+        deleted_count = cursor.rowcount
+        print(f"   ✅ Deleted {deleted_count} corrupted mapping records")
+        
+        # Commit changes
+        conn.commit()
+        
+        print("✅ Purchased products mapping has been cleared!")
+        print("🔄 Next steps:")
+        print("1. Go to the ACGI to HubSpot tab")
+        print("2. Load properties for Purchased Products")
+        print("3. Configure the field mappings correctly")
+        
+        return True
+        
+    except sqlite3.Error as e:
+        print(f"❌ Database error: {e}")
+        return False
+    except Exception as e:
+        print(f"❌ Unexpected error: {e}")
+        return False
+    finally:
+        if conn:
+            conn.close()
 
 def main():
-    """Main function"""
-    try:
-        check_all_mappings()
-    except Exception as e:
-        print(f"Error running mapping check: {e}")
-        import traceback
-        traceback.print_exc()
+    """Main function to handle command line arguments"""
+    
+    if len(sys.argv) == 1:
+        # Just check mappings
+        check_mappings()
+    elif len(sys.argv) == 2 and sys.argv[1] == 'fix':
+        # Check mappings first, then fix if needed
+        print("🔍 Checking mappings first...")
+        check_mappings()
+        print("\n" + "=" * 60)
+        
+        confirm = input("Do you want to clear the corrupted purchased products mapping? (yes/no): ").lower().strip()
+        if confirm in ['yes', 'y']:
+            fix_purchased_products_mapping()
+        else:
+            print("❌ Fix cancelled.")
+    else:
+        print("Usage:")
+        print("  python check_mappings.py          # Check all mappings")
+        print("  python check_mappings.py fix      # Check and fix corrupted mappings")
 
 if __name__ == "__main__":
     main() 

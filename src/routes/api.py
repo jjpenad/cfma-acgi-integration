@@ -4,7 +4,7 @@ from models import get_session, FormField, SearchPreference
 from services.hubspot_client import HubSpotClient
 from routes.auth import login_required
 from src.services.acgi_client import ACGIClient
-from src.models import  ContactFieldMapping, AppState, MembershipFieldMapping, OrderFieldMapping, EventFieldMapping
+from src.models import  ContactFieldMapping, AppState, MembershipFieldMapping, EventFieldMapping, PurchasedProductsFieldMapping
 
 logger = setup_logging()
 hubspot_client = HubSpotClient()
@@ -55,9 +55,9 @@ def init_api_routes(app):
             elif object_type == 'memberships':
                 properties = hubspot_client.get_membership_properties()
                 print("properties",properties)
-            elif object_type == 'orders':
-                properties = hubspot_client.get_order_properties()
-                print("order properties",properties)
+            elif object_type == 'purchased_products':
+                properties = hubspot_client.get_custom_object_properties('2-48354706')
+                print("ACGI Purchased Products properties",properties)
             elif object_type == 'events':
                 properties = hubspot_client.get_event_properties()
                 print("events properties",properties)
@@ -200,8 +200,8 @@ def init_api_routes(app):
                 result = hubspot_client.create_membership(object_data)
             elif object_type == 'events':
                 result = hubspot_client.create_custom_object('2-48134484', object_data)
-            elif object_type == 'orders':
-                result = hubspot_client.create_order(object_data)
+            elif object_type == 'purchased_products':
+                result = hubspot_client.create_custom_object('2-48354706', object_data)
             else:
                 return jsonify({'error': f'Unsupported object type: {object_type}'}), 400
             
@@ -449,7 +449,7 @@ def init_api_routes(app):
         # Return the purchased products data
         purchased_products_data = result['purchased_products']
         print("purchased_products_data",purchased_products_data)
-        purchased_products_list = purchased_products_data.get("orders", [])
+        purchased_products_list = purchased_products_data.get("purchased_products", [])
         print("purchased_products_list",purchased_products_list)
         return jsonify({'fields': purchased_products_list})
 
@@ -599,15 +599,15 @@ def init_api_routes(app):
             mapping = EventFieldMapping.get_mapping()
             return jsonify({'mapping': mapping or {}})
         
-    @app.route('/api/mapping/order', methods=['GET', 'POST'])
-    def order_mapping():
+    @app.route('/api/mapping/purchased_products', methods=['GET', 'POST'])
+    def purchased_products_mapping():
         if request.method == 'POST':
             # Generate mapping automatically from current field configurations
-            mapping = generate_mapping_from_fields('orders')
-            OrderFieldMapping.set_mapping(mapping)
+            mapping = generate_mapping_from_fields('purchased_products')
+            PurchasedProductsFieldMapping.set_mapping(mapping)
             return jsonify({'status': 'success', 'mapping': mapping})
         else:
-            mapping = OrderFieldMapping.get_mapping()
+            mapping = PurchasedProductsFieldMapping.get_mapping()
             return jsonify({'mapping': mapping or {}})
 
     @app.route('/api/acgi-field-config', methods=['POST'])

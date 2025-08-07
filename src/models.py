@@ -181,8 +181,10 @@ class EventFieldMapping(Base):
         finally:
             session.close()
 
-class OrderFieldMapping(Base):
-    __tablename__ = 'order_field_mapping'
+
+
+class PurchasedProductsFieldMapping(Base):
+    __tablename__ = 'purchased_products_field_mapping'
     id = Column(Integer, primary_key=True)
     mapping = Column(Text)  # Store JSON as text instead of PickleType
 
@@ -190,9 +192,9 @@ class OrderFieldMapping(Base):
     def set_mapping(mapping):
         session = Session()
         try:
-            obj = session.query(OrderFieldMapping).first()
+            obj = session.query(PurchasedProductsFieldMapping).first()
             if not obj:
-                obj = OrderFieldMapping()
+                obj = PurchasedProductsFieldMapping()
             obj.mapping = json.dumps(mapping) if mapping else '{}'
             session.add(obj)
             session.commit()
@@ -207,7 +209,7 @@ class OrderFieldMapping(Base):
     def get_mapping():
         session = Session()
         try:
-            obj = session.query(OrderFieldMapping).first()
+            obj = session.query(PurchasedProductsFieldMapping).first()
             if obj and obj.mapping:
                 # Parse JSON string back to dict
                 return json.loads(obj.mapping)
@@ -227,6 +229,8 @@ class SchedulingConfig(Base):
     customer_ids = Column(Text, nullable=False)  # Comma or newline separated customer IDs
     sync_contacts = Column(String(10), default='true')  # true/false as string
     sync_memberships = Column(String(10), default='true')  # true/false as string
+    sync_orders = Column(String(10), default='true')  # true/false as string
+    sync_events = Column(String(10), default='true')  # true/false as string
     last_sync = Column(DateTime)  # Last successful sync timestamp
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
     updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
@@ -243,6 +247,8 @@ class SchedulingConfig(Base):
                     'customer_ids': config.customer_ids,
                     'sync_contacts': config.sync_contacts == 'true',
                     'sync_memberships': config.sync_memberships == 'true',
+                    'sync_orders': config.sync_orders == 'true',
+                    'sync_events': config.sync_events == 'true',
                     'last_sync': config.last_sync.isoformat() if config.last_sync else None
                 }
             return None
@@ -265,6 +271,8 @@ class SchedulingConfig(Base):
             config.customer_ids = config_data.get('customer_ids', '')
             config.sync_contacts = str(config_data.get('sync_contacts', True)).lower()
             config.sync_memberships = str(config_data.get('sync_memberships', True)).lower()
+            config.sync_orders = str(config_data.get('sync_orders', True)).lower()
+            config.sync_events = str(config_data.get('sync_events', True)).lower()
             
             session.add(config)
             session.commit()

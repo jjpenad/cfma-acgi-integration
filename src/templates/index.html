@@ -302,6 +302,18 @@
                                 Sync Memberships
                             </label>
                         </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="sync_orders" name="sync_orders" checked>
+                            <label class="form-check-label" for="sync_orders">
+                                Sync Purchased Products
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="sync_events" name="sync_events" checked>
+                            <label class="form-check-label" for="sync_events">
+                                Sync Events
+                            </label>
+                        </div>
                     </div>
 
                     <div class="d-flex gap-2">
@@ -568,8 +580,10 @@
                         document.getElementById('sync_frequency').value = config.frequency || '';
                         document.getElementById('sync_enabled').checked = config.enabled || false;
                         document.getElementById('customer_ids').value = config.customer_ids || '';
-                        document.getElementById('sync_contacts').checked = config.sync_contacts !== false;
-                        document.getElementById('sync_memberships').checked = config.sync_memberships !== false;
+                        document.getElementById('sync_contacts').checked = config.sync_contacts === true;
+                        document.getElementById('sync_memberships').checked = config.sync_memberships === true;
+                        document.getElementById('sync_orders').checked = config.sync_orders === true;
+                        document.getElementById('sync_events').checked = config.sync_events === true;
                         
                         // Load status separately for display
                         loadSyncStatus();
@@ -599,7 +613,9 @@
                 enabled: document.getElementById('sync_enabled').checked,
                 customer_ids: document.getElementById('customer_ids').value,
                 sync_contacts: document.getElementById('sync_contacts').checked,
-                sync_memberships: document.getElementById('sync_memberships').checked
+                sync_memberships: document.getElementById('sync_memberships').checked,
+                sync_orders: document.getElementById('sync_orders').checked,
+                sync_events: document.getElementById('sync_events').checked
             };
 
             // Validate required fields

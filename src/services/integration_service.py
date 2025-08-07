@@ -62,12 +62,19 @@ class IntegrationService:
             # Get field mappings
             contact_mapping = ContactFieldMapping.get_mapping()
             membership_mapping = MembershipFieldMapping.get_mapping()
+            from src.models import PurchasedProductsFieldMapping, EventFieldMapping
+            orders_mapping = PurchasedProductsFieldMapping.get_mapping()
+            events_mapping = EventFieldMapping.get_mapping()
             print("MEMBERSHIP MAPPING 2",membership_mapping)
+            print("ORDERS MAPPING 2",orders_mapping)
+            print("EVENTS MAPPING 2",events_mapping)
             results = {
-                    'success': True,
+                'success': True,
                 'total_customers': len(customer_ids),
                 'contacts_synced': 0,
                 'memberships_synced': 0,
+                'orders_synced': 0,
+                'events_synced': 0,
                     'errors': []
                 }
             
@@ -114,6 +121,34 @@ class IntegrationService:
                             logger.error(f"Failed to sync memberships for customer {customer_id}: {membership_result.get('error')}")
                     else:
                         logger.info(f"Skipping membership sync for customer {customer_id} (disabled)")
+                    
+                    # Sync orders if enabled
+                    sync_orders = config.get('sync_orders', True)
+                    logger.info(f"Sync orders for customer {customer_id}: {sync_orders}")
+                    if sync_orders:
+                        orders_result = self._sync_orders(customer_id, acgi_credentials, orders_mapping)
+                        if orders_result.get('success'):
+                            results['orders_synced'] += orders_result.get('total_processed', 0)
+                            logger.info(f"Successfully synced orders for customer {customer_id}: {orders_result.get('total_processed', 0)} processed")
+                        else:
+                            results['errors'].append(f"Customer {customer_id} - Orders: {orders_result.get('error')}")
+                            logger.error(f"Failed to sync orders for customer {customer_id}: {orders_result.get('error')}")
+                    else:
+                        logger.info(f"Skipping orders sync for customer {customer_id} (disabled)")
+                    
+                    # Sync events if enabled
+                    sync_events = config.get('sync_events', True)
+                    logger.info(f"Sync events for customer {customer_id}: {sync_events}")
+                    if sync_events:
+                        events_result = self._sync_events(customer_id, acgi_credentials, events_mapping)
+                        if events_result.get('success'):
+                            results['events_synced'] += events_result.get('total_processed', 0)
+                            logger.info(f"Successfully synced events for customer {customer_id}: {events_result.get('total_processed', 0)} processed")
+                        else:
+                            results['errors'].append(f"Customer {customer_id} - Events: {events_result.get('error')}")
+                            logger.error(f"Failed to sync events for customer {customer_id}: {events_result.get('error')}")
+                    else:
+                        logger.info(f"Skipping events sync for customer {customer_id} (disabled)")
                             
                 except Exception as e:
                     error_msg = f"Customer {customer_id} - Unexpected error: {str(e)}"
@@ -411,4 +446,219 @@ class IntegrationService:
             return self._select_best_address(addresses, 'first_non_bad')
         else:
             # Default to first non-bad
-            return self._select_best_address(addresses, 'first_non_bad') 
+            return self._select_best_address(addresses, 'first_non_bad')
+    
+    def _sync_orders(self, customer_id: str, acgi_credentials: Dict, orders_mapping: Dict) -> Dict[str, Any]:
+        """Sync orders for a single customer from ACGI to HubSpot"""
+        try:
+            # Get orders data from ACGI
+            acgi_result = self.acgi_client.get_purchased_products(acgi_credentials, customer_id)
+            print("ACGI RESULT TEST",acgi_result)
+            if not acgi_result.get('success'):
+                return {'success': False, 'error': 'Failed to fetch orders data from ACGI'}
+            
+            orders_data = acgi_result.get('purchased_products', {})
+            orders_list = orders_data.get('purchased_products', [])
+            print("ORDERS LIST",orders_list)
+            if not orders_list:
+                return {'success': False, 'error': 'No orders found for customer'}
+            
+            # Process each order
+            synced_count = 0
+            updated_count = 0
+            for order in orders_list:
+                try:
+                    # Map order data to HubSpot format using saved mapping
+                    hubspot_order = self._map_order_data(order, orders_mapping)
+                    
+                    # Use orderSerno as the unique identifier for deduplication
+                    order_serial = order.get('orderSerno')
+                    if not order_serial:
+                        logger.warning(f"Order missing orderSerno, skipping: {order}")
+                        continue
+                    
+                    # Create or update order in HubSpot custom object using orderSerno for deduplication
+                    hubspot_result = self.hubspot_client.create_or_update_custom_object(
+                        '2-48354706', 
+                        hubspot_order, 
+                        'order_id', 
+                        order_serial
+                    )
+                    
+                    if hubspot_result.get('success'):
+                        action = hubspot_result.get('action', 'unknown')
+                        if action == 'created':
+                            logger.info(f"Order created successfully: {hubspot_result.get('id')}")
+                            synced_count += 1
+                        elif action == 'updated':
+                            logger.info(f"Order updated successfully: {hubspot_result.get('id')}")
+                            updated_count += 1
+                    else:
+                        logger.error(f"Failed to sync order: {hubspot_result.get('error')}")
+                        
+                except Exception as e:
+                    logger.error(f"Error processing order: {str(e)}")
+            
+            total_processed = synced_count + updated_count
+            if total_processed > 0:
+                return {
+                    'success': True, 
+                    'synced_count': synced_count,
+                    'updated_count': updated_count,
+                    'total_processed': total_processed
+                }
+            else:
+                return {'success': False, 'error': 'No orders were successfully synced'}
+                
+        except Exception as e:
+            logger.error(f"Error syncing orders for customer {customer_id}: {str(e)}")
+            return {'success': False, 'error': str(e)}
+    
+    def _sync_events(self, customer_id: str, acgi_credentials: Dict, events_mapping: Dict) -> Dict[str, Any]:
+        """Sync events for a single customer from ACGI to HubSpot"""
+        try:
+            # Get events data from ACGI
+            acgi_result = self.acgi_client.get_customer_events(acgi_credentials, customer_id)
+            if not acgi_result.get('success'):
+                return {'success': False, 'error': 'Failed to fetch events data from ACGI'}
+            
+            events_data = acgi_result.get('events', {})
+            events_list = events_data.get('events', [])
+            
+            if not events_list:
+                return {'success': False, 'error': 'No events found for customer'}
+            
+            # Process each event
+            synced_count = 0
+            updated_count = 0
+            for event in events_list:
+                try:
+                    # Map event data to HubSpot format using saved mapping
+                    hubspot_event = self._map_event_data(event, events_mapping)
+                    
+                    # Use event id as the unique identifier for deduplication
+                    event_id = event.get('id')
+                    if not event_id:
+                        logger.warning(f"Event missing id, skipping: {event}")
+                        continue
+                    
+                    # Create or update event in HubSpot custom object using event id for deduplication
+                    hubspot_result = self.hubspot_client.create_or_update_custom_object(
+                        '2-48134484', 
+                        hubspot_event, 
+                        'event_id', 
+                        event_id
+                    )
+                    
+                    if hubspot_result.get('success'):
+                        action = hubspot_result.get('action', 'unknown')
+                        if action == 'created':
+                            logger.info(f"Event created successfully: {hubspot_result.get('id')}")
+                            synced_count += 1
+                        elif action == 'updated':
+                            logger.info(f"Event updated successfully: {hubspot_result.get('id')}")
+                            updated_count += 1
+                    else:
+                        logger.error(f"Failed to sync event: {hubspot_result.get('error')}")
+                        
+                except Exception as e:
+                    logger.error(f"Error processing event: {str(e)}")
+            
+            total_processed = synced_count + updated_count
+            if total_processed > 0:
+                return {
+                    'success': True, 
+                    'synced_count': synced_count,
+                    'updated_count': updated_count,
+                    'total_processed': total_processed
+                }
+            else:
+                return {'success': False, 'error': 'No events were successfully synced'}
+            
+        except Exception as e:
+            logger.error(f"Error syncing events for customer {customer_id}: {str(e)}")
+            return {'success': False, 'error': str(e)}
+    
+    def _map_order_data(self, order: Dict, orders_mapping: Dict) -> Dict[str, Any]:
+        """Map ACGI order data to HubSpot format using saved mapping"""
+        hubspot_order = {}
+        
+        # Apply the saved mapping
+        for hubspot_field, acgi_field in orders_mapping.items():
+            if acgi_field in order:
+                value = order[acgi_field]
+                
+                # Handle date fields
+                if 'date' in acgi_field.lower() and value:
+                    try:
+                        # Convert ACGI date format to HubSpot timestamp (matching HubSpot form logic)
+                        if isinstance(value, str):
+                            # Handle common ACGI date formats
+                            if '/' in value:
+                                # mm/dd/yyyy format
+                                parts = value.split('/')
+                                if len(parts) == 3:
+                                    month, day, year = int(parts[0]), int(parts[1]), int(parts[2])
+                                    # Use UTC to ensure midnight UTC (matching HubSpot form logic)
+                                    from datetime import datetime, timezone
+                                    # Create date at midnight UTC (month is 0-indexed in Python)
+                                    date_obj = datetime.now(timezone.utc).replace(year=year, month=month, day=day, hour=0, minute=0, second=0, microsecond=0)
+                                    value = int(date_obj.timestamp() * 1000)  # HubSpot expects milliseconds
+                            elif '-' in value:
+                                # yyyy-mm-dd format
+                                date_parts = value.split('-')
+                                if len(date_parts) == 3:
+                                    year, month, day = int(date_parts[0]), int(date_parts[1]), int(date_parts[2])
+                                    # Use UTC to ensure midnight UTC (matching HubSpot form logic)
+                                    from datetime import datetime, timezone
+                                    # Create date at midnight UTC (month is 0-indexed in Python)
+                                    date_obj = datetime.now(timezone.utc).replace(year=year, month=month, day=day, hour=0, minute=0, second=0, microsecond=0)
+                                    value = int(date_obj.timestamp() * 1000)  # HubSpot expects milliseconds
+                    except Exception as e:
+                        logger.warning(f"Could not parse date {value}: {str(e)}")
+                
+                hubspot_order[hubspot_field] = value
+        
+        return hubspot_order
+    
+    def _map_event_data(self, event: Dict, events_mapping: Dict) -> Dict[str, Any]:
+        """Map ACGI event data to HubSpot format using saved mapping"""
+        hubspot_event = {}
+        
+        # Apply the saved mapping
+        for hubspot_field, acgi_field in events_mapping.items():
+            if acgi_field in event:
+                value = event[acgi_field]
+                
+                # Handle date fields
+                if 'date' in acgi_field.lower() or 'dt' in acgi_field.lower() and value:
+                    try:
+                        # Convert ACGI date format to HubSpot timestamp (matching HubSpot form logic)
+                        if isinstance(value, str):
+                            # Handle common ACGI date formats
+                            if '/' in value:
+                                # mm/dd/yyyy format
+                                parts = value.split('/')
+                                if len(parts) == 3:
+                                    month, day, year = int(parts[0]), int(parts[1]), int(parts[2])
+                                    # Use UTC to ensure midnight UTC (matching HubSpot form logic)
+                                    from datetime import datetime, timezone
+                                    # Create date at midnight UTC (month is 0-indexed in Python)
+                                    date_obj = datetime.now(timezone.utc).replace(year=year, month=month, day=day, hour=0, minute=0, second=0, microsecond=0)
+                                    value = int(date_obj.timestamp() * 1000)  # HubSpot expects milliseconds
+                            elif '-' in value:
+                                # yyyy-mm-dd format
+                                date_parts = value.split('-')
+                                if len(date_parts) == 3:
+                                    year, month, day = int(date_parts[0]), int(date_parts[1]), int(date_parts[2])
+                                    # Use UTC to ensure midnight UTC (matching HubSpot form logic)
+                                    from datetime import datetime, timezone
+                                    # Create date at midnight UTC (month is 0-indexed in Python)
+                                    date_obj = datetime.now(timezone.utc).replace(year=year, month=month, day=day, hour=0, minute=0, second=0, microsecond=0)
+                                    value = int(date_obj.timestamp() * 1000)  # HubSpot expects milliseconds
+                    except Exception as e:
+                        logger.warning(f"Could not parse date {value}: {str(e)}")
+                
+                hubspot_event[hubspot_field] = value
+        
+        return hubspot_event 
