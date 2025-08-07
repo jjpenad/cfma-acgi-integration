@@ -2670,7 +2670,7 @@
                 .then(data => {
                     console.log("loadAcgiFieldConfig RESPONSE", data)
                     if (object_type === 'contacts') {
-                        acgiFieldConfig = data.config || {};
+                    acgiFieldConfig = data.config || {};
                     } else if (object_type === 'memberships') {
                         acgiMembershipsFieldConfig = data.config || {};
                     } else if (object_type === 'purchased_products') {

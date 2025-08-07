@@ -28,22 +28,147 @@ def get_required_tables():
         'purchased_products_field_mapping'
     ]
 
+def get_required_columns():
+    """Get dictionary of required columns for each table"""
+    return {
+        'users': ['id', 'username', 'password_hash', 'created_at', 'last_login'],
+        'app_state': ['id', 'key', 'value', 'created_at', 'updated_at'],
+        'form_fields': ['id', 'object_type', 'field_name', 'field_label', 'field_type', 'is_enabled', 'is_important', 'order_index', 'created_at', 'field_source'],
+        'search_preferences': ['id', 'object_type', 'search_strategy', 'created_at', 'updated_at'],
+        'contact_field_mapping': ['id', 'mapping'],
+        'scheduling_config': ['id', 'frequency', 'enabled', 'customer_ids', 'sync_contacts', 'sync_memberships', 'sync_orders', 'sync_events', 'last_sync', 'created_at', 'updated_at'],
+        'membership_field_mapping': ['id', 'mapping'],
+        'event_field_mapping': ['id', 'mapping'],
+        'purchased_products_field_mapping': ['id', 'mapping']
+    }
+
+def check_table_columns(inspector, table_name, required_columns):
+    """Check if a table has all required columns"""
+    try:
+        columns = inspector.get_columns(table_name)
+        existing_columns = [col['name'] for col in columns]
+        missing_columns = [col for col in required_columns if col not in existing_columns]
+        
+        if missing_columns:
+            print(f"   ❌ {table_name} - Missing columns: {missing_columns}")
+            return False, missing_columns
+        else:
+            print(f"   ✅ {table_name} - All columns present")
+            return True, []
+    except Exception as e:
+        print(f"   ❌ {table_name} - Error checking columns: {str(e)}")
+        return False, []
+
+def fix_missing_columns(table_name, missing_columns):
+    """Add missing columns to a table"""
+    try:
+        from sqlalchemy import text
+        
+        # Get the engine
+        from models import engine
+        
+        with engine.connect() as conn:
+            for column in missing_columns:
+                # Determine column type based on column name and table
+                column_type = get_column_type(table_name, column)
+                sql = f"ALTER TABLE {table_name} ADD COLUMN {column} {column_type}"
+                print(f"      Adding column: {column} ({column_type})")
+                conn.execute(text(sql))
+            conn.commit()
+        return True
+    except Exception as e:
+        print(f"      ❌ Error adding column {column}: {str(e)}")
+        return False
+
+def get_column_type(table_name, column_name):
+    """Determine the appropriate column type based on table and column name"""
+    # Default to TEXT for most cases
+    column_types = {
+        'users': {
+            'id': 'INTEGER PRIMARY KEY',
+            'username': 'VARCHAR(50)',
+            'password_hash': 'VARCHAR(255)',
+            'created_at': 'DATETIME',
+            'last_login': 'DATETIME'
+        },
+        'app_state': {
+            'id': 'INTEGER PRIMARY KEY',
+            'key': 'VARCHAR(100)',
+            'value': 'TEXT',
+            'created_at': 'DATETIME',
+            'updated_at': 'DATETIME'
+        },
+        'form_fields': {
+            'id': 'INTEGER PRIMARY KEY',
+            'object_type': 'VARCHAR(50)',
+            'field_name': 'VARCHAR(100)',
+            'field_label': 'VARCHAR(200)',
+            'field_type': 'VARCHAR(50)',
+            'is_enabled': 'VARCHAR(10)',
+            'is_important': 'VARCHAR(10)',
+            'order_index': 'INTEGER',
+            'created_at': 'DATETIME',
+            'field_source': 'VARCHAR(20)'
+        },
+        'search_preferences': {
+            'id': 'INTEGER PRIMARY KEY',
+            'object_type': 'VARCHAR(50)',
+            'search_strategy': 'VARCHAR(50)',
+            'created_at': 'DATETIME',
+            'updated_at': 'DATETIME'
+        },
+        'contact_field_mapping': {
+            'id': 'INTEGER PRIMARY KEY',
+            'mapping': 'TEXT'
+        },
+        'scheduling_config': {
+            'id': 'INTEGER PRIMARY KEY',
+            'frequency': 'INTEGER',
+            'enabled': 'VARCHAR(10)',
+            'customer_ids': 'TEXT',
+            'sync_contacts': 'VARCHAR(10)',
+            'sync_memberships': 'VARCHAR(10)',
+            'sync_orders': 'VARCHAR(10)',
+            'sync_events': 'VARCHAR(10)',
+            'last_sync': 'DATETIME',
+            'created_at': 'DATETIME',
+            'updated_at': 'DATETIME'
+        },
+        'membership_field_mapping': {
+            'id': 'INTEGER PRIMARY KEY',
+            'mapping': 'TEXT'
+        },
+        'event_field_mapping': {
+            'id': 'INTEGER PRIMARY KEY',
+            'mapping': 'TEXT'
+        },
+        'purchased_products_field_mapping': {
+            'id': 'INTEGER PRIMARY KEY',
+            'mapping': 'TEXT'
+        }
+    }
+    
+    return column_types.get(table_name, {}).get(column_name, 'TEXT')
+
 def check_and_create_tables():
-    """Check existence of all tables and create missing ones"""
+    """Check existence of all tables and columns, create/fix missing ones"""
     try:
         from models import engine
         
         inspector = inspect(engine)
         existing_tables = inspector.get_table_names()
         required_tables = get_required_tables()
+        required_columns = get_required_columns()
         
-        print("🔍 Checking database tables...")
+        print("🔍 Checking database tables and columns...")
         print(f"   Required tables: {len(required_tables)}")
         print(f"   Existing tables: {len(existing_tables)}")
         
         missing_tables = []
         existing_required_tables = []
+        tables_with_missing_columns = []
         
+        # Check tables first
         for table in required_tables:
             if table in existing_tables:
                 existing_required_tables.append(table)
@@ -52,11 +177,10 @@ def check_and_create_tables():
                 missing_tables.append(table)
                 print(f"   ❌ {table} (missing)")
         
+        # Create missing tables
         if missing_tables:
             print(f"\n📝 Creating {len(missing_tables)} missing tables...")
             try:
-                # Create all missing tables at once using Base.metadata.create_all()
-                # This is more reliable than creating tables individually
                 Base.metadata.create_all(engine, checkfirst=True)
                 print("✅ All missing tables created successfully!")
                 
@@ -68,6 +192,26 @@ def check_and_create_tables():
                 return False
         else:
             print("\n✅ All required tables exist!")
+        
+        # Check columns in existing tables
+        print("\n🔍 Checking table columns...")
+        for table in existing_required_tables:
+            if table in required_columns:
+                is_valid, missing_cols = check_table_columns(inspector, table, required_columns[table])
+                if not is_valid:
+                    tables_with_missing_columns.append((table, missing_cols))
+        
+        # Fix missing columns
+        if tables_with_missing_columns:
+            print(f"\n🔧 Fixing {len(tables_with_missing_columns)} tables with missing columns...")
+            for table_name, missing_columns in tables_with_missing_columns:
+                print(f"   📝 Fixing {table_name}...")
+                if fix_missing_columns(table_name, missing_columns):
+                    print(f"   ✅ {table_name} columns fixed successfully!")
+                else:
+                    print(f"   ❌ Failed to fix {table_name} columns!")
+        else:
+            print("\n✅ All table columns are correct!")
         
         # Check for admin user
         session = get_session()
@@ -183,7 +327,7 @@ def init_database():
 def main():
     parser = argparse.ArgumentParser(description='Database management for ACGI to HubSpot Integration')
     parser.add_argument('action', choices=['status', 'init', 'reset', 'check'], 
-                       help='Action to perform')
+                       help='Action to perform: status (show db status), init (initialize), reset (reset all data), check (check and fix tables/columns)')
     
     args = parser.parse_args()
     

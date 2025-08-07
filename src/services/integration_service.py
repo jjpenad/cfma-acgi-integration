@@ -69,7 +69,7 @@ class IntegrationService:
             print("ORDERS MAPPING 2",orders_mapping)
             print("EVENTS MAPPING 2",events_mapping)
             results = {
-                'success': True,
+                    'success': True,
                 'total_customers': len(customer_ids),
                 'contacts_synced': 0,
                 'memberships_synced': 0,
