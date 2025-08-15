@@ -364,7 +364,6 @@ class ACGIClient:
     <cust-id>{customer_id}</cust-id>      
 </event-request>"""
             
-            print("events_xml:", events_xml)
             
             url = f"{self.base_url}/{credentials['environment']}/EVTSSAWEBSVCLIB.GET_EVENT_INFO_XML"
             
@@ -373,9 +372,6 @@ class ACGIClient:
                 data=events_xml,
                 timeout=30
             )
-            print("URL:", url)
-            print("Response status:", response.status_code)
-            print("Response text:", response.text)
             
             if response.status_code == 200:
                 try:

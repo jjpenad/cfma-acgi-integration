@@ -247,7 +247,7 @@ class SchedulingConfig(Base):
                     'customer_ids': config.customer_ids,
                     'sync_contacts': config.sync_contacts == 'true',
                     'sync_memberships': config.sync_memberships == 'true',
-                    'sync_orders': config.sync_orders == 'true',
+                    'sync_purchased_products': config.sync_orders == 'true',
                     'sync_events': config.sync_events == 'true',
                     'last_sync': config.last_sync.isoformat() if config.last_sync else None
                 }
@@ -271,7 +271,7 @@ class SchedulingConfig(Base):
             config.customer_ids = config_data.get('customer_ids', '')
             config.sync_contacts = str(config_data.get('sync_contacts', True)).lower()
             config.sync_memberships = str(config_data.get('sync_memberships', True)).lower()
-            config.sync_orders = str(config_data.get('sync_orders', True)).lower()
+            config.sync_orders = str(config_data.get('sync_purchased_products', True)).lower()
             config.sync_events = str(config_data.get('sync_events', True)).lower()
             
             session.add(config)

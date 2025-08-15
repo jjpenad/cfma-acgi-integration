@@ -522,15 +522,17 @@ class IntegrationService:
             if not acgi_result.get('success') or not acgi_result.get('events'):
                 return {'success': False, 'error': 'Failed to fetch events data from ACGI'}
             
-            acgi_events = acgi_result['events']
+            acgi_events = acgi_result['events']['events']
             logger.info(f"Found {len(acgi_events)} events for customer {customer_id}")
-            
+            print( "acgi_events", acgi_events)
             # Map ACGI data to HubSpot format using saved mapping
             hubspot_events = []
             for acgi_event in acgi_events:
                 hubspot_event = self._map_event_data(acgi_event, events_mapping)
                 if hubspot_event:
                     hubspot_events.append(hubspot_event)
+            
+            print( "hubspot_events", hubspot_events)
             
             if not hubspot_events:
                 return {'success': False, 'error': 'No valid events data to sync'}
@@ -542,13 +544,12 @@ class IntegrationService:
             for hubspot_event in hubspot_events:
                 try:
                     # Search for existing event to avoid duplicates
-                    search_criteria = {'event_id': hubspot_event.get('event_id')}
-                    existing_event = self.hubspot_client.search_custom_object('acgi_events', search_criteria)
+                    existing_event = self.hubspot_client.search_custom_object('2-48134484', 'event_id', hubspot_event.get('event_id'))
                     
                     if existing_event:
                         # Update existing event
                         event_id = existing_event['id']
-                        update_result = self.hubspot_client.update_custom_object('acgi_events', event_id, hubspot_event)
+                        update_result = self.hubspot_client.update_custom_object('2-48134484', event_id, hubspot_event)
                         if update_result.get('success'):
                             synced_count += 1
                             logger.info(f"Updated event {event_id} for customer {customer_id}")
@@ -556,7 +557,7 @@ class IntegrationService:
                             errors.append(f"Failed to update event: {update_result.get('error')}")
                     else:
                         # Create new event
-                        create_result = self.hubspot_client.create_custom_object('acgi_events', hubspot_event)
+                        create_result = self.hubspot_client.create_custom_object('2-48134484', hubspot_event)
                         if create_result.get('success'):
                             synced_count += 1
                             logger.info(f"Created new event for customer {customer_id}")
@@ -800,6 +801,8 @@ class IntegrationService:
             # Get field mappings
             from src.models import EventFieldMapping
             events_mapping = EventFieldMapping.get_mapping()
+
+            print( "events_mapping", events_mapping)
             
             # Prepare ACGI credentials
             acgi_credentials = {

@@ -151,9 +151,9 @@ class SchedulerService:
             if config.get('sync_memberships', True):
                 sync_tasks.append(('memberships', self._sync_memberships_thread, customer_ids, config))
             
-            # Orders sync task
-            if config.get('sync_orders', True):
-                sync_tasks.append(('orders', self._sync_orders_thread, customer_ids, config))
+            # Purchased products sync task
+            if config.get('sync_purchased_products', True):
+                sync_tasks.append(('purchased_products', self._sync_purchased_products_thread, customer_ids, config))
             
             # Events sync task
             if config.get('sync_events', True):
@@ -243,10 +243,10 @@ class SchedulerService:
             logger.error(f"Error in memberships sync thread: {str(e)}")
             return {'success': False, 'error': str(e)}
     
-    def _sync_orders_thread(self, customer_ids: List[str], config: Dict[str, Any]) -> Dict[str, Any]:
-        """Sync orders in a separate thread with dedicated HubSpot client"""
+    def _sync_purchased_products_thread(self, customer_ids: List[str], config: Dict[str, Any]) -> Dict[str, Any]:
+        """Sync purchased products in a separate thread with dedicated HubSpot client"""
         try:
-            logger.info(f"Starting orders sync thread for {len(customer_ids)} customers")
+            logger.info(f"Starting purchased products sync thread for {len(customer_ids)} customers")
             
             # Create dedicated integration service instance for this thread
             thread_integration_service = IntegrationService()
