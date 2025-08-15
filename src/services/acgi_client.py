@@ -590,7 +590,7 @@ class ACGIClient:
         
         # Orders/Products
         orders = []
-        limit = 200
+        limit = 1000
         for order_elem in root.findall('.//order'):
             order_data = {
                 'productSerno': self._get_element_text(order_elem, 'productSerno'),
@@ -645,7 +645,7 @@ class ACGIClient:
         
         # Events
         events = []
-        limit = 200
+        limit = 1000
         for event_elem in root.findall('.//event'):
             event_data = {
                 'id': self._get_element_text(event_elem, 'id'),
