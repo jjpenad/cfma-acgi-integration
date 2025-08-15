@@ -25,7 +25,11 @@ def init_api_routes(app):
                     'acgi_username': creds.get('acgi_username', ''),
                     'acgi_password': creds.get('acgi_password', ''),
                     'acgi_environment': creds.get('acgi_environment', 'test'),
-                    'hubspot_api_key': creds.get('hubspot_api_key', '')
+                    'hubspot_api_key': creds.get('hubspot_api_key', ''),
+                    'hubspot_api_key_contacts': creds.get('hubspot_api_key_contacts', ''),
+                    'hubspot_api_key_memberships': creds.get('hubspot_api_key_memberships', ''),
+                    'hubspot_api_key_orders': creds.get('hubspot_api_key_orders', ''),
+                    'hubspot_api_key_events': creds.get('hubspot_api_key_events', '')
                 }
             })
         except Exception as e:

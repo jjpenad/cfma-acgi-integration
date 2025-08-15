@@ -54,7 +54,11 @@ def init_routes(app):
                 'acgi_username': data.get('acgi_username', ''),
                 'acgi_password': data.get('acgi_password', ''),
                 'acgi_environment': data.get('acgi_environment', 'test'),
-                'hubspot_api_key': data.get('hubspot_api_key', '')
+                'hubspot_api_key': data.get('hubspot_api_key', ''),
+                'hubspot_api_key_contacts': data.get('hubspot_api_key_contacts', ''),
+                'hubspot_api_key_memberships': data.get('hubspot_api_key_memberships', ''),
+                'hubspot_api_key_orders': data.get('hubspot_api_key_orders', ''),
+                'hubspot_api_key_events': data.get('hubspot_api_key_events', '')
             }
             
             # Save credentials

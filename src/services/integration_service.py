@@ -519,64 +519,329 @@ class IntegrationService:
         try:
             # Get events data from ACGI
             acgi_result = self.acgi_client.get_customer_events(acgi_credentials, customer_id)
-            if not acgi_result.get('success'):
+            if not acgi_result.get('success') or not acgi_result.get('events'):
                 return {'success': False, 'error': 'Failed to fetch events data from ACGI'}
             
-            events_data = acgi_result.get('events', {})
-            events_list = events_data.get('events', [])
+            acgi_events = acgi_result['events']
+            logger.info(f"Found {len(acgi_events)} events for customer {customer_id}")
             
-            if not events_list:
-                return {'success': False, 'error': 'No events found for customer'}
+            # Map ACGI data to HubSpot format using saved mapping
+            hubspot_events = []
+            for acgi_event in acgi_events:
+                hubspot_event = self._map_event_data(acgi_event, events_mapping)
+                if hubspot_event:
+                    hubspot_events.append(hubspot_event)
             
-            # Process each event
+            if not hubspot_events:
+                return {'success': False, 'error': 'No valid events data to sync'}
+            
+            # Sync each event to HubSpot
             synced_count = 0
-            updated_count = 0
-            for event in events_list:
-                try:
-                    # Map event data to HubSpot format using saved mapping
-                    hubspot_event = self._map_event_data(event, events_mapping)
-                    
-                    # Use event id as the unique identifier for deduplication
-                    event_id = event.get('id')
-                    if not event_id:
-                        logger.warning(f"Event missing id, skipping: {event}")
-                        continue
-                    
-                    # Create or update event in HubSpot custom object using event id for deduplication
-                    hubspot_result = self.hubspot_client.create_or_update_custom_object(
-                        '2-48134484', 
-                        hubspot_event, 
-                        'event_id', 
-                        event_id
-                    )
-                    
-                    if hubspot_result.get('success'):
-                        action = hubspot_result.get('action', 'unknown')
-                        if action == 'created':
-                            logger.info(f"Event created successfully: {hubspot_result.get('id')}")
-                            synced_count += 1
-                        elif action == 'updated':
-                            logger.info(f"Event updated successfully: {hubspot_result.get('id')}")
-                            updated_count += 1
-                    else:
-                        logger.error(f"Failed to sync event: {hubspot_result.get('error')}")
-                        
-                except Exception as e:
-                    logger.error(f"Error processing event: {str(e)}")
+            errors = []
             
-            total_processed = synced_count + updated_count
-            if total_processed > 0:
-                return {
-                    'success': True, 
-                    'synced_count': synced_count,
-                    'updated_count': updated_count,
-                    'total_processed': total_processed
-                }
-            else:
-                return {'success': False, 'error': 'No events were successfully synced'}
+            for hubspot_event in hubspot_events:
+                try:
+                    # Search for existing event to avoid duplicates
+                    search_criteria = {'event_id': hubspot_event.get('event_id')}
+                    existing_event = self.hubspot_client.search_custom_object('acgi_events', search_criteria)
+                    
+                    if existing_event:
+                        # Update existing event
+                        event_id = existing_event['id']
+                        update_result = self.hubspot_client.update_custom_object('acgi_events', event_id, hubspot_event)
+                        if update_result.get('success'):
+                            synced_count += 1
+                            logger.info(f"Updated event {event_id} for customer {customer_id}")
+                        else:
+                            errors.append(f"Failed to update event: {update_result.get('error')}")
+                    else:
+                        # Create new event
+                        create_result = self.hubspot_client.create_custom_object('acgi_events', hubspot_event)
+                        if create_result.get('success'):
+                            synced_count += 1
+                            logger.info(f"Created new event for customer {customer_id}")
+                        else:
+                            errors.append(f"Failed to create event: {create_result.get('error')}")
+                            
+                except Exception as e:
+                    error_msg = f"Error syncing event: {str(e)}"
+                    logger.error(error_msg)
+                    errors.append(error_msg)
+            
+            if errors:
+                logger.warning(f"Completed events sync with {len(errors)} errors: {errors}")
+            
+            return {
+                'success': True,
+                'total_processed': len(hubspot_events),
+                'synced_count': synced_count,
+                'errors': errors
+            }
             
         except Exception as e:
             logger.error(f"Error syncing events for customer {customer_id}: {str(e)}")
+            return {'success': False, 'error': str(e)}
+    
+    def _sync_contacts_batch(self, customer_ids: List[str], config: Dict[str, Any]) -> Dict[str, Any]:
+        """Sync contacts for multiple customers in batch with dedicated HubSpot client"""
+        try:
+            logger.info(f"Starting batch contacts sync for {len(customer_ids)} customers")
+            
+            # Get credentials with contacts-specific API key
+            creds = get_app_credentials()
+            if not creds:
+                return {'success': False, 'error': 'ACGI credentials not set'}
+            
+            # Use contacts-specific HubSpot API key if available
+            hubspot_api_key = creds.get('hubspot_api_key_contacts') or creds.get('hubspot_api_key')
+            if not hubspot_api_key:
+                return {'success': False, 'error': 'HubSpot API key not set for contacts'}
+            
+            # Initialize dedicated HubSpot client for this thread
+            if not self.hubspot_client.initialize_client(hubspot_api_key):
+                return {'success': False, 'error': 'Failed to initialize HubSpot client for contacts'}
+            
+            # Get field mappings
+            contact_mapping = ContactFieldMapping.get_mapping()
+            
+            # Prepare ACGI credentials
+            acgi_credentials = {
+                'userid': creds['acgi_username'],
+                'password': creds['acgi_password'],
+                'environment': "cetdigitdev" if creds['acgi_environment'] == "test" else "cetdigit"
+            }
+            
+            results = {
+                'success': True,
+                'total_customers': len(customer_ids),
+                'total_processed': 0,
+                'errors': []
+            }
+            
+            # Process each customer
+            for customer_id in customer_ids:
+                customer_id = customer_id.strip()
+                if not customer_id:
+                    continue
+                    
+                logger.info(f"Processing contact for customer ID: {customer_id}")
+                
+                try:
+                    contact_result = self._sync_contact(customer_id, acgi_credentials, contact_mapping)
+                    if contact_result.get('success'):
+                        results['total_processed'] += 1
+                        logger.info(f"Successfully synced contact for customer {customer_id}")
+                    else:
+                        results['errors'].append(f"Customer {customer_id} - Contact: {contact_result.get('error')}")
+                        logger.error(f"Failed to sync contact for customer {customer_id}: {contact_result.get('error')}")
+                            
+                except Exception as e:
+                    error_msg = f"Customer {customer_id} - Unexpected error: {str(e)}"
+                    logger.error(error_msg)
+                    results['errors'].append(error_msg)
+            
+            logger.info(f"Batch contacts sync completed. Results: {results}")
+            return results
+            
+        except Exception as e:
+            logger.error(f"Error in batch contacts sync: {str(e)}")
+            return {'success': False, 'error': str(e)}
+    
+    def _sync_memberships_batch(self, customer_ids: List[str], config: Dict[str, Any]) -> Dict[str, Any]:
+        """Sync memberships for multiple customers in batch with dedicated HubSpot client"""
+        try:
+            logger.info(f"Starting batch memberships sync for {len(customer_ids)} customers")
+            
+            # Get credentials with memberships-specific API key
+            creds = get_app_credentials()
+            if not creds:
+                return {'success': False, 'error': 'ACGI credentials not set'}
+            
+            # Use memberships-specific HubSpot API key if available
+            hubspot_api_key = creds.get('hubspot_api_key_memberships') or creds.get('hubspot_api_key')
+            if not hubspot_api_key:
+                return {'success': False, 'error': 'HubSpot API key not set for memberships'}
+            
+            # Initialize dedicated HubSpot client for this thread
+            if not self.hubspot_client.initialize_client(hubspot_api_key):
+                return {'success': False, 'error': 'Failed to initialize HubSpot client for memberships'}
+            
+            # Get field mappings
+            membership_mapping = MembershipFieldMapping.get_mapping()
+            
+            # Prepare ACGI credentials
+            acgi_credentials = {
+                'userid': creds['acgi_username'],
+                'password': creds['acgi_password'],
+                'environment': "cetdigitdev" if creds['acgi_environment'] == "test" else "cetdigit"
+            }
+            
+            results = {
+                'success': True,
+                'total_customers': len(customer_ids),
+                'total_processed': 0,
+                'errors': []
+            }
+            
+            # Process each customer
+            for customer_id in customer_ids:
+                customer_id = customer_id.strip()
+                if not customer_id:
+                    continue
+                    
+                logger.info(f"Processing memberships for customer ID: {customer_id}")
+                
+                try:
+                    membership_result = self._sync_membership(customer_id, acgi_credentials, membership_mapping)
+                    if membership_result.get('success'):
+                        results['total_processed'] += 1
+                        logger.info(f"Successfully synced memberships for customer {customer_id}")
+                    else:
+                        results['errors'].append(f"Customer {customer_id} - Membership: {membership_result.get('error')}")
+                        logger.error(f"Failed to sync memberships for customer {customer_id}: {membership_result.get('error')}")
+                            
+                except Exception as e:
+                    error_msg = f"Customer {customer_id} - Unexpected error: {str(e)}"
+                    logger.error(error_msg)
+                    results['errors'].append(error_msg)
+            
+            logger.info(f"Batch memberships sync completed. Results: {results}")
+            return results
+            
+        except Exception as e:
+            logger.error(f"Error in batch memberships sync: {str(e)}")
+            return {'success': False, 'error': str(e)}
+    
+    def _sync_orders_batch(self, customer_ids: List[str], config: Dict[str, Any]) -> Dict[str, Any]:
+        """Sync orders for multiple customers in batch with dedicated HubSpot client"""
+        try:
+            logger.info(f"Starting batch orders sync for {len(customer_ids)} customers")
+            
+            # Get credentials with orders-specific API key
+            creds = get_app_credentials()
+            if not creds:
+                return {'success': False, 'error': 'ACGI credentials not set'}
+            
+            # Use orders-specific HubSpot API key if available
+            hubspot_api_key = creds.get('hubspot_api_key_orders') or creds.get('hubspot_api_key')
+            if not hubspot_api_key:
+                return {'success': False, 'error': 'HubSpot API key not set for orders'}
+            
+            # Initialize dedicated HubSpot client for this thread
+            if not self.hubspot_client.initialize_client(hubspot_api_key):
+                return {'success': False, 'error': 'Failed to initialize HubSpot client for orders'}
+            
+            # Get field mappings
+            from src.models import PurchasedProductsFieldMapping
+            orders_mapping = PurchasedProductsFieldMapping.get_mapping()
+            
+            # Prepare ACGI credentials
+            acgi_credentials = {
+                'userid': creds['acgi_username'],
+                'password': creds['acgi_password'],
+                'environment': "cetdigitdev" if creds['acgi_environment'] == "test" else "cetdigit"
+            }
+            
+            results = {
+                'success': True,
+                'total_customers': len(customer_ids),
+                'total_processed': 0,
+                'errors': []
+            }
+            
+            # Process each customer
+            for customer_id in customer_ids:
+                customer_id = customer_id.strip()
+                if not customer_id:
+                    continue
+                    
+                logger.info(f"Processing orders for customer ID: {customer_id}")
+                
+                try:
+                    orders_result = self._sync_orders(customer_id, acgi_credentials, orders_mapping)
+                    if orders_result.get('success'):
+                        results['total_processed'] += orders_result.get('total_processed', 0)
+                        logger.info(f"Successfully synced orders for customer {customer_id}: {orders_result.get('total_processed', 0)} processed")
+                    else:
+                        results['errors'].append(f"Customer {customer_id} - Orders: {orders_result.get('error')}")
+                        logger.error(f"Failed to sync orders for customer {customer_id}: {orders_result.get('error')}")
+                            
+                except Exception as e:
+                    error_msg = f"Customer {customer_id} - Unexpected error: {str(e)}"
+                    logger.error(error_msg)
+                    results['errors'].append(error_msg)
+            
+            logger.info(f"Batch orders sync completed. Results: {results}")
+            return results
+            
+        except Exception as e:
+            logger.error(f"Error in batch orders sync: {str(e)}")
+            return {'success': False, 'error': str(e)}
+    
+    def _sync_events_batch(self, customer_ids: List[str], config: Dict[str, Any]) -> Dict[str, Any]:
+        """Sync events for multiple customers in batch with dedicated HubSpot client"""
+        try:
+            logger.info(f"Starting batch events sync for {len(customer_ids)} customers")
+            
+            # Get credentials with events-specific API key
+            creds = get_app_credentials()
+            if not creds:
+                return {'success': False, 'error': 'ACGI credentials not set'}
+            
+            # Use events-specific HubSpot API key if available
+            hubspot_api_key = creds.get('hubspot_api_key_events') or creds.get('hubspot_api_key')
+            if not hubspot_api_key:
+                return {'success': False, 'error': 'HubSpot API key not set for events'}
+            
+            # Initialize dedicated HubSpot client for this thread
+            if not self.hubspot_client.initialize_client(hubspot_api_key):
+                return {'success': False, 'error': 'Failed to initialize HubSpot client for events'}
+            
+            # Get field mappings
+            from src.models import EventFieldMapping
+            events_mapping = EventFieldMapping.get_mapping()
+            
+            # Prepare ACGI credentials
+            acgi_credentials = {
+                'userid': creds['acgi_username'],
+                'password': creds['acgi_password'],
+                'environment': "cetdigitdev" if creds['acgi_environment'] == "test" else "cetdigit"
+            }
+            
+            results = {
+                'success': True,
+                'total_customers': len(customer_ids),
+                'total_processed': 0,
+                'errors': []
+            }
+            
+            # Process each customer
+            for customer_id in customer_ids:
+                customer_id = customer_id.strip()
+                if not customer_id:
+                    continue
+                    
+                logger.info(f"Processing events for customer ID: {customer_id}")
+                
+                try:
+                    events_result = self._sync_events(customer_id, acgi_credentials, events_mapping)
+                    if events_result.get('success'):
+                        results['total_processed'] += events_result.get('total_processed', 0)
+                        logger.info(f"Successfully synced events for customer {customer_id}: {events_result.get('total_processed', 0)} processed")
+                    else:
+                        results['errors'].append(f"Customer {customer_id} - Events: {events_result.get('error')}")
+                        logger.error(f"Failed to sync events for customer {customer_id}: {events_result.get('error')}")
+                            
+                except Exception as e:
+                    error_msg = f"Customer {customer_id} - Unexpected error: {str(e)}"
+                    logger.error(error_msg)
+                    results['errors'].append(error_msg)
+            
+            logger.info(f"Batch events sync completed. Results: {results}")
+            return results
+            
+        except Exception as e:
+            logger.error(f"Error in batch events sync: {str(e)}")
             return {'success': False, 'error': str(e)}
     
     def _map_order_data(self, order: Dict, orders_mapping: Dict) -> Dict[str, Any]:

@@ -387,17 +387,36 @@ def get_app_credentials():
         acgi_username = session.query(AppState).filter_by(key='acgi_username').first()
         acgi_password = session.query(AppState).filter_by(key='acgi_password').first()
         acgi_environment = session.query(AppState).filter_by(key='acgi_environment').first()
-        hubspot_api_key = session.query(AppState).filter_by(key='hubspot_api_key').first()
         
-        if not all([acgi_username, acgi_password, hubspot_api_key]):
+        # Get HubSpot API keys for different object types
+        hubspot_api_key = session.query(AppState).filter_by(key='hubspot_api_key').first()
+        hubspot_api_key_contacts = session.query(AppState).filter_by(key='hubspot_api_key_contacts').first()
+        hubspot_api_key_memberships = session.query(AppState).filter_by(key='hubspot_api_key_memberships').first()
+        hubspot_api_key_orders = session.query(AppState).filter_by(key='hubspot_api_key_orders').first()
+        hubspot_api_key_events = session.query(AppState).filter_by(key='hubspot_api_key_events').first()
+        
+        if not all([acgi_username, acgi_password]):
             return None
         
-        return {
+        # Use specific API keys if available, fallback to general one
+        credentials = {
             'acgi_username': acgi_username.value,
             'acgi_password': acgi_password.value,
             'acgi_environment': acgi_environment.value if acgi_environment else 'test',
-            'hubspot_api_key': hubspot_api_key.value
+            'hubspot_api_key': hubspot_api_key.value if hubspot_api_key else None,
+            'hubspot_api_key_contacts': hubspot_api_key_contacts.value if hubspot_api_key_contacts else hubspot_api_key.value if hubspot_api_key else None,
+            'hubspot_api_key_memberships': hubspot_api_key_memberships.value if hubspot_api_key_memberships else hubspot_api_key.value if hubspot_api_key else None,
+            'hubspot_api_key_orders': hubspot_api_key_orders.value if hubspot_api_key_orders else hubspot_api_key.value if hubspot_api_key else None,
+            'hubspot_api_key_events': hubspot_api_key_events.value if hubspot_api_key_events else hubspot_api_key.value if hubspot_api_key else None
         }
+        
+        # Ensure at least one HubSpot API key is available
+        if not any([credentials['hubspot_api_key'], credentials['hubspot_api_key_contacts'], 
+                   credentials['hubspot_api_key_memberships'], credentials['hubspot_api_key_orders'], 
+                   credentials['hubspot_api_key_events']]):
+            return None
+            
+        return credentials
     except Exception as e:
         logger.error(f"Error getting app credentials: {str(e)}")
         return None

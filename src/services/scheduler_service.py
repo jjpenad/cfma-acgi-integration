@@ -5,6 +5,8 @@ from src.models import SchedulingConfig
 from src.services.integration_service import IntegrationService
 import threading
 import time
+import concurrent.futures
+from typing import Dict, List, Any
 
 logger = logging.getLogger(__name__)
 
@@ -14,7 +16,9 @@ class SchedulerService:
             self.scheduler = BackgroundScheduler()
             self.integration_service = IntegrationService()
             self.is_running = False
-            logger.info("SchedulerService initialized successfully")
+            # Thread pool for concurrent object syncing
+            self.thread_pool = concurrent.futures.ThreadPoolExecutor(max_workers=4)
+            logger.info("SchedulerService initialized successfully with thread pool")
         except Exception as e:
             logger.error(f"Error initializing SchedulerService: {str(e)}")
             raise
@@ -42,6 +46,8 @@ class SchedulerService:
                 if self.is_running:
                     self.scheduler.shutdown()
                     self.is_running = False
+                    # Shutdown thread pool
+                    self.thread_pool.shutdown(wait=True)
                     logger.info("Scheduler service stopped")
         except Exception as e:
             logger.error(f"Error stopping scheduler service: {str(e)}")
@@ -92,22 +98,24 @@ class SchedulerService:
             logger.error(f"Error applying scheduling configuration: {str(e)}")
     
     def _run_sync_job(self, config):
-        """Run the synchronization job"""
+        """Run the synchronization job with multi-threaded object syncing"""
         try:
             from datetime import datetime
             current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             logger.info(f"=== SCHEDULED SYNC JOB STARTED at {current_time} ===")
             logger.info(f"Sync job configuration: {config}")
             
-            # Run the sync
-            result = self.integration_service.run_sync(config)
+            # Run the sync with multi-threading
+            result = self._run_multi_threaded_sync(config)
             
             if result.get('success'):
                 # Update last sync timestamp
                 SchedulingConfig.update_last_sync()
                 logger.info(f"=== SCHEDULED SYNC JOB COMPLETED SUCCESSFULLY at {current_time} ===")
                 logger.info(f"Results: Contacts: {result.get('contacts_synced', 0)}, "
-                          f"Memberships: {result.get('memberships_synced', 0)}")
+                          f"Memberships: {result.get('memberships_synced', 0)}, "
+                          f"Orders: {result.get('orders_synced', 0)}, "
+                          f"Events: {result.get('events_synced', 0)}")
                 logger.info(f"Full result: {result}")
             else:
                 logger.error(f"=== SCHEDULED SYNC JOB FAILED at {current_time} ===")
@@ -116,14 +124,158 @@ class SchedulerService:
                 
         except Exception as e:
             from datetime import datetime
-            current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            current_time = datetime.now().strftime("%Y-%M-%d %H:%M:%S")
             logger.error(f"=== SCHEDULED SYNC JOB EXCEPTION at {current_time} ===")
             logger.error(f"Exception: {str(e)}")
             import traceback
             logger.error(f"Traceback: {traceback.format_exc()}")
-                
+    
+    def _run_multi_threaded_sync(self, config: Dict[str, Any]) -> Dict[str, Any]:
+        """Run synchronization using multiple threads for each object type"""
+        try:
+            logger.info("Starting multi-threaded synchronization")
+            
+            # Get customer IDs
+            customer_ids = self.integration_service._parse_customer_ids(config.get('customer_ids', ''))
+            if not customer_ids:
+                return {'success': False, 'error': 'No valid customer IDs provided'}
+            
+            # Prepare sync tasks for each object type
+            sync_tasks = []
+            
+            # Contacts sync task
+            if config.get('sync_contacts', True):
+                sync_tasks.append(('contacts', self._sync_contacts_thread, customer_ids, config))
+            
+            # Memberships sync task
+            if config.get('sync_memberships', True):
+                sync_tasks.append(('memberships', self._sync_memberships_thread, customer_ids, config))
+            
+            # Orders sync task
+            if config.get('sync_orders', True):
+                sync_tasks.append(('orders', self._sync_orders_thread, customer_ids, config))
+            
+            # Events sync task
+            if config.get('sync_events', True):
+                sync_tasks.append(('events', self._sync_events_thread, customer_ids, config))
+            
+            if not sync_tasks:
+                return {'success': False, 'error': 'No sync tasks enabled'}
+            
+            logger.info(f"Starting {len(sync_tasks)} sync threads")
+            
+            # Submit all tasks to thread pool
+            future_to_task = {}
+            for task_name, task_func, task_customer_ids, task_config in sync_tasks:
+                future = self.thread_pool.submit(task_func, task_customer_ids, task_config)
+                future_to_task[future] = task_name
+            
+            # Collect results
+            results = {
+                'success': True,
+                'total_customers': len(customer_ids),
+                'contacts_synced': 0,
+                'memberships_synced': 0,
+                'orders_synced': 0,
+                'events_synced': 0,
+                'errors': [],
+                'thread_results': {}
+            }
+            
+            # Wait for all tasks to complete
+            for future in concurrent.futures.as_completed(future_to_task):
+                task_name = future_to_task[future]
+                try:
+                    task_result = future.result()
+                    logger.info(f"Thread {task_name} completed: {task_result}")
+                    
+                    if task_result.get('success'):
+                        results[f'{task_name}_synced'] = task_result.get('total_processed', 0)
+                        results['thread_results'][task_name] = task_result
+                    else:
+                        results['errors'].append(f"{task_name}: {task_result.get('error', 'Unknown error')}")
+                        results['thread_results'][task_name] = task_result
+                        
+                except Exception as e:
+                    error_msg = f"Thread {task_name} failed with exception: {str(e)}"
+                    logger.error(error_msg)
+                    results['errors'].append(error_msg)
+                    results['thread_results'][task_name] = {'success': False, 'error': str(e)}
+            
+            logger.info(f"Multi-threaded sync completed. Results: {results}")
+            return results
+            
         except Exception as e:
-            logger.error(f"Error in scheduled sync job: {str(e)}")
+            logger.error(f"Error in multi-threaded sync: {str(e)}")
+            return {'success': False, 'error': str(e)}
+    
+    def _sync_contacts_thread(self, customer_ids: List[str], config: Dict[str, Any]) -> Dict[str, Any]:
+        """Sync contacts in a separate thread with dedicated HubSpot client"""
+        try:
+            logger.info(f"Starting contacts sync thread for {len(customer_ids)} customers")
+            
+            # Create dedicated integration service instance for this thread
+            thread_integration_service = IntegrationService()
+            
+            # Run contacts sync
+            result = thread_integration_service._sync_contacts_batch(customer_ids, config)
+            logger.info(f"Contacts sync thread completed: {result}")
+            return result
+            
+        except Exception as e:
+            logger.error(f"Error in contacts sync thread: {str(e)}")
+            return {'success': False, 'error': str(e)}
+    
+    def _sync_memberships_thread(self, customer_ids: List[str], config: Dict[str, Any]) -> Dict[str, Any]:
+        """Sync memberships in a separate thread with dedicated HubSpot client"""
+        try:
+            logger.info(f"Starting memberships sync thread for {len(customer_ids)} customers")
+            
+            # Create dedicated integration service instance for this thread
+            thread_integration_service = IntegrationService()
+            
+            # Run memberships sync
+            result = thread_integration_service._sync_memberships_batch(customer_ids, config)
+            logger.info(f"Memberships sync thread completed: {result}")
+            return result
+            
+        except Exception as e:
+            logger.error(f"Error in memberships sync thread: {str(e)}")
+            return {'success': False, 'error': str(e)}
+    
+    def _sync_orders_thread(self, customer_ids: List[str], config: Dict[str, Any]) -> Dict[str, Any]:
+        """Sync orders in a separate thread with dedicated HubSpot client"""
+        try:
+            logger.info(f"Starting orders sync thread for {len(customer_ids)} customers")
+            
+            # Create dedicated integration service instance for this thread
+            thread_integration_service = IntegrationService()
+            
+            # Run orders sync
+            result = thread_integration_service._sync_orders_batch(customer_ids, config)
+            logger.info(f"Orders sync thread completed: {result}")
+            return result
+            
+        except Exception as e:
+            logger.error(f"Error in orders sync thread: {str(e)}")
+            return {'success': False, 'error': str(e)}
+    
+    def _sync_events_thread(self, customer_ids: List[str], config: Dict[str, Any]) -> Dict[str, Any]:
+        """Sync events in a separate thread with dedicated HubSpot client"""
+        try:
+            logger.info(f"Starting events sync thread for {len(customer_ids)} customers")
+            
+            # Create dedicated integration service instance for this thread
+            thread_integration_service = IntegrationService()
+            
+            # Run events sync
+            result = thread_integration_service._sync_events_batch(customer_ids, config)
+            logger.info(f"Events sync thread completed: {result}")
+            return result
+            
+        except Exception as e:
+            logger.error(f"Error in events sync thread: {str(e)}")
+            return {'success': False, 'error': str(e)}
     
     def update_config(self, config_data):
         """Update the scheduling configuration"""
@@ -174,7 +326,8 @@ class SchedulerService:
                 'frequency': config.get('frequency', None) if config else None,
                 'last_sync': config.get('last_sync', None) if config else None,
                 'active_jobs': len(jobs),
-                'next_run': None
+                'next_run': None,
+                'thread_pool_size': self.thread_pool._max_workers
             }
             
             logger.info(f"Scheduler status - final status: {status}")
@@ -272,7 +425,9 @@ class SchedulerService:
             
             logger.info("Starting manual sync")
             logger.info(f"Manual sync configuration: {config}")
-            result = self.integration_service.run_sync(config)
+            
+            # Use multi-threaded sync for manual sync as well
+            result = self._run_multi_threaded_sync(config)
             
             if result.get('success'):
                 SchedulingConfig.update_last_sync()

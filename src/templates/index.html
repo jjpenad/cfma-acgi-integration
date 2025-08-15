@@ -221,8 +221,41 @@
                         </div>
                     </div>
                     <div class="mb-3">
-                        <label for="hubspot_api_key" class="form-label">HubSpot API Key</label>
-                        <input type="password" class="form-control" id="hubspot_api_key" name="hubspot_api_key" required>
+                        <label for="hubspot_api_key" class="form-label">HubSpot API Key (General)</label>
+                        <input type="password" class="form-control" id="hubspot_api_key" name="hubspot_api_key" 
+                               placeholder="General API key (fallback for all object types)">
+                        <div class="form-text">This is the main API key used as fallback if specific keys are not set.</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Object-Specific HubSpot API Keys (Optional)</label>
+                        <div class="form-text mb-2">Set different API keys for each object type to avoid rate limits during concurrent syncing.</div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <label for="hubspot_api_key_contacts" class="form-label">Contacts API Key</label>
+                                <input type="password" class="form-control" id="hubspot_api_key_contacts" name="hubspot_api_key_contacts" 
+                                       placeholder="API key for contacts sync">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="hubspot_api_key_memberships" class="form-label">Memberships API Key</label>
+                                <input type="password" class="form-control" id="hubspot_api_key_memberships" name="hubspot_api_key_memberships" 
+                                       placeholder="API key for memberships sync">
+                            </div>
+                        </div>
+                        
+                        <div class="row mt-2">
+                            <div class="col-md-6">
+                                <label for="hubspot_api_key_orders" class="form-label">Orders API Key</label>
+                                <input type="password" class="form-control" id="hubspot_api_key_orders" name="hubspot_api_key_orders" 
+                                       placeholder="API key for orders sync">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="hubspot_api_key_events" class="form-label">Events API Key</label>
+                                <input type="password" class="form-control" id="hubspot_api_key_events" name="hubspot_api_key_events" 
+                                       placeholder="API key for events sync">
+                            </div>
+                        </div>
                     </div>
                     <div class="d-flex gap-2">
                         <button type="submit" class="btn btn-primary">
@@ -303,8 +336,8 @@
                             </label>
                         </div>
                         <div class="form-check">
-                            <input class="form-check-input" type="checkbox" id="sync_orders" name="sync_orders" checked>
-                            <label class="form-check-label" for="sync_orders">
+                            <input class="form-check-input" type="checkbox" id="sync_purchased_products" name="sync_purchased_products" checked>
+                            <label class="form-check-label" for="sync_purchased_products">
                                 Sync Purchased Products
                             </label>
                         </div>
@@ -354,7 +387,11 @@
                         document.getElementById('acgi_password').value = data.credentials.acgi_password || '';
                         document.getElementById('acgi_environment').value = data.credentials.acgi_environment || 'test';
                         document.getElementById('hubspot_api_key').value = data.credentials.hubspot_api_key || '';
-        }
+                        document.getElementById('hubspot_api_key_contacts').value = data.credentials.hubspot_api_key_contacts || '';
+                        document.getElementById('hubspot_api_key_memberships').value = data.credentials.hubspot_api_key_memberships || '';
+                        document.getElementById('hubspot_api_key_orders').value = data.credentials.hubspot_api_key_orders || '';
+                        document.getElementById('hubspot_api_key_events').value = data.credentials.hubspot_api_key_events || '';
+                    }
                 })
                 .catch(error => {
                     console.error('Error loading credentials:', error);
@@ -392,7 +429,11 @@
                 acgi_username: document.getElementById('acgi_username').value,
                 acgi_password: document.getElementById('acgi_password').value,
                 acgi_environment: document.getElementById('acgi_environment').value,
-                hubspot_api_key: document.getElementById('hubspot_api_key').value
+                hubspot_api_key: document.getElementById('hubspot_api_key').value,
+                hubspot_api_key_contacts: document.getElementById('hubspot_api_key_contacts').value,
+                hubspot_api_key_memberships: document.getElementById('hubspot_api_key_memberships').value,
+                hubspot_api_key_orders: document.getElementById('hubspot_api_key_orders').value,
+                hubspot_api_key_events: document.getElementById('hubspot_api_key_events').value
             };
 
             fetch('/save-credentials', {
@@ -582,7 +623,7 @@
                         document.getElementById('customer_ids').value = config.customer_ids || '';
                         document.getElementById('sync_contacts').checked = config.sync_contacts === true;
                         document.getElementById('sync_memberships').checked = config.sync_memberships === true;
-                        document.getElementById('sync_orders').checked = config.sync_orders === true;
+                        document.getElementById('sync_purchased_products').checked = config.sync_purchased_products === true;
                         document.getElementById('sync_events').checked = config.sync_events === true;
                         
                         // Load status separately for display
@@ -614,7 +655,7 @@
                 customer_ids: document.getElementById('customer_ids').value,
                 sync_contacts: document.getElementById('sync_contacts').checked,
                 sync_memberships: document.getElementById('sync_memberships').checked,
-                sync_orders: document.getElementById('sync_orders').checked,
+                sync_purchased_products: document.getElementById('sync_purchased_products').checked,
                 sync_events: document.getElementById('sync_events').checked
             };
 
