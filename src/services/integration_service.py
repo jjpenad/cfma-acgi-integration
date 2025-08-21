@@ -1,4 +1,5 @@
 import logging
+import re
 from typing import Dict, List, Any
 from src.services.acgi_client import ACGIClient
 from src.services.hubspot_client import HubSpotClient
@@ -924,6 +925,17 @@ class IntegrationService:
                                     # Create date at midnight UTC (month is 0-indexed in Python)
                                     date_obj = datetime.now(timezone.utc).replace(year=year, month=month, day=day, hour=0, minute=0, second=0, microsecond=0)
                                     value = int(date_obj.timestamp() * 1000)  # HubSpot expects milliseconds
+                            elif re.match(r'^\d{14}$', value):
+                                # handle format 20121004800000 (YYYYMMDDHHMMSS)
+                                year = int(value[:4])
+                                month = int(value[4:6]) - 1  # Month is 0-indexed in Python
+                                day = int(value[6:8])
+                                hours = int(value[8:10])
+                                minutes = int(value[10:12])
+                                seconds = int(value[12:14])
+                                date_obj = datetime.now(timezone.utc).replace(year=year, month=month, day=day, hour=hours, minute=minutes, second=seconds, microsecond=0)
+                                value = int(date_obj.timestamp() * 1000)  # HubSpot expects milliseconds
+                            
                     except Exception as e:
                         logger.warning(f"Could not parse date {value}: {str(e)}")
                 

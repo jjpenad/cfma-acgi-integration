@@ -3169,14 +3169,26 @@
 
         // Helper function to convert various date formats to HTML date input format (yyyy-MM-dd)
         function convertToDateInputFormat(value) {
+            console.log("value TTT", value)
             if (!value || value.trim() === '') return '';
+            
             
             try {
                 // Try to parse the value as a date
                 let date;
                 
                 // Handle different possible formats
-                if (typeof value === 'number' || /^\d+$/.test(value)) {
+                if (value.match(/^\d{12}$/)) {
+                    console.log("Condition 3")
+                    // handle format 20121004800000 (YYYYMMDDHHMMSS)
+                    const year = parseInt(value.substring(0, 4));
+                    const month = parseInt(value.substring(4, 6)) - 1; // Month is 0-indexed in Date constructor
+                    const day = parseInt(value.substring(6, 8));
+                    const hours = parseInt(value.substring(8, 10));
+                    const minutes = parseInt(value.substring(10, 12));
+                    date = new Date(year, month, day, hours, minutes);
+                }
+                else if (typeof value === 'number' || /^\d+$/.test(value)) {
                     // Unix timestamp (seconds or milliseconds)
                     const timestamp = parseInt(value);
                     date = new Date(timestamp > 1000000000000 ? timestamp : timestamp * 1000);
@@ -3190,7 +3202,8 @@
                     const day = parseInt(parts[1]);
                     const year = parseInt(parts[2]);
                     date = new Date(year, month, day);
-                } else {
+                }
+                else {
                     // Try parsing as regular date string
                     date = new Date(value);
                 }
@@ -3214,20 +3227,35 @@
         // Helper function to convert various date formats to HTML datetime-local input format (YYYY-MM-DDTHH:MM)
         function convertToDateTimeInputFormat(value) {
             if (!value || value.trim() === '') return '';
+            console.log("value TTT", value, typeof value, value.match(/^\d{14}$/))
             
             try {
                 // Try to parse the value as a date
                 let date;
                 
                 // Handle different possible formats
-                if (typeof value === 'number' || /^\d+$/.test(value)) {
+                if (value.match(/^\d{14}$/)) {
+                    console.log("Condition 3")
+                    // handle format 20121004800000 (YYYYMMDDHHMMSS)
+                    const year = parseInt(value.substring(0, 4));
+                    const month = parseInt(value.substring(4, 6)) - 1; // Month is 0-indexed in Date constructor
+                    const day = parseInt(value.substring(6, 8));
+                    const hours = parseInt(value.substring(8, 10));
+                    const minutes = parseInt(value.substring(10, 12));
+                    const seconds = parseInt(value.substring(12, 14));
+                    date = new Date(year, month, day, hours, minutes, seconds);
+                }
+                else if (typeof value === 'number' || /^\d+$/.test(value)) {
+                    console.log("Condition 1")
                     // Unix timestamp (seconds or milliseconds)
                     const timestamp = parseInt(value);
                     date = new Date(timestamp > 1000000000000 ? timestamp : timestamp * 1000);
                 } else if (value.includes('T') || value.includes('Z')) {
+                    console.log("Condition 2")
                     // ISO string format
                     date = new Date(value);
                 } else {
+                    console.log("Condition 4")
                     // Try parsing as regular date string
                     date = new Date(value);
                 }
