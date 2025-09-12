@@ -1013,9 +1013,9 @@ class IntegrationService:
             "registration_date": registration_date,
             "acgi_event_id": registration['eventId'],
             "representing_company": registration['representing'],
-            "total_charges": float(registration['totalCharges']),
-            "total_payment": abs(float(registration['totalPayment'])),
-            "balance": float(registration['balance']),    
+            "total_charges": float(registration['totalCharges']) if registration['totalCharges'] else None,
+            "total_payment": abs(float(registration['totalPayment'])) if registration['totalPayment'] else None,
+            "balance": float(registration['balance']) if registration['balance'] else None,    
         }
 
         return result
