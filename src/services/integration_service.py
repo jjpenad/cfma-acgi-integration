@@ -543,7 +543,7 @@ class IntegrationService:
                         hubspot_event = self._map_event_data(acgi_event, events_mapping)
                         hubspot_events[hubspot_event['acgi_event_id']] = hubspot_event
                     else:
-                        logger.error(f"Failed to fetch event data for registration {acgi_registration['registrationId']}: {acgi_event_result.get('error')}")
+                        logger.error(f"Failed to fetch event data for registration {acgi_registration['regiSerno']}: {acgi_event_result.get('error')}")
             
             hubspot_events = list(hubspot_events.values())
             print("HUBSPOT REGISTRATIONS",hubspot_registrations)
