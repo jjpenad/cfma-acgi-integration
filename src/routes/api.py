@@ -481,6 +481,7 @@ def init_api_routes(app):
         events_data = result['events']
         print("events_data",events_data)
         events_list = events_data.get("events", [])
+        events_list = events_list[:4]
         print("events_list",events_list)
         return jsonify({'fields': events_list})
 
