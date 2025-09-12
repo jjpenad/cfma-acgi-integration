@@ -970,13 +970,17 @@ class IntegrationService:
                                     year, month, day = int(date_parts[0]), int(date_parts[1]), int(date_parts[2])
                                     # Use UTC to ensure midnight UTC (matching HubSpot form logic)
                                     
-                                    # Create date at midnight UTC (month is 0-indexed in Python)
+                                    # Create date at midnight UTC (month is 1-indexed in Python)
                                     date_obj = datetime.now(timezone.utc).replace(year=year, month=month, day=day, hour=0, minute=0, second=0, microsecond=0)
                                     value = int(date_obj.timestamp() * 1000)  # HubSpot expects milliseconds
                             elif re.match(r'^\d{14}$', value):
                                 # handle format 20121004800000 (YYYYMMDDHHMMSS)
+                                # Validate year is within reasonable range (1900-2099)
                                 year = int(value[:4])
-                                month = int(value[4:6]) - 1  # Month is 0-indexed in Python
+                                if year < 1900 or year > 2099:
+                                    logger.warning(f"Invalid year {year} in date {value}, skipping date parsing")
+                                    continue
+                                month = int(value[4:6])  # Month is 1-indexed in Python datetime
                                 day = int(value[6:8])
                                 hours = int(value[8:10])
                                 minutes = int(value[10:12])
