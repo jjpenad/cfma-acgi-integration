@@ -2,10 +2,10 @@ import logging
 import re
 from typing import Dict, List, Any
 from src.services.acgi_client import ACGIClient
+from datetime import datetime, timezone
 from src.services.hubspot_client import HubSpotClient
 from src.services.data_mapper import DataMapper
 from src.models import ContactFieldMapping, MembershipFieldMapping, get_app_credentials
-
 logger = logging.getLogger(__name__)
 
 class IntegrationService:
@@ -519,22 +519,36 @@ class IntegrationService:
         """Sync events for a single customer from ACGI to HubSpot"""
         try:
             # Get events data from ACGI
-            acgi_result = self.acgi_client.get_customer_events(acgi_credentials, customer_id)
-            if not acgi_result.get('success') or not acgi_result.get('events'):
-                return {'success': False, 'error': 'Failed to fetch events data from ACGI'}
+            acgi_registrations_result = self.acgi_client.get_customer_registrations_to_events(acgi_credentials, customer_id)
+            acgi_registrations = acgi_registrations_result['registrations']['registrations']
+            if not acgi_registrations:
+                print(f"No registrations found for customer {customer_id}")
+                logger.info(f"No registrations found for customer {customer_id}")
+                return {'success': False, 'error': f'No registrations found for customer {customer_id}'}
+            logger.info(f"Found {len(acgi_registrations)} registrations for customer {customer_id}")
             
-            acgi_events = acgi_result['events']['events']
-            logger.info(f"Found {len(acgi_events)} events for customer {customer_id}")
-            print( "acgi_events", acgi_events)
             # Map ACGI data to HubSpot format using saved mapping
-            hubspot_events = []
-            for acgi_event in acgi_events:
-                hubspot_event = self._map_event_data(acgi_event, events_mapping)
-                if hubspot_event:
-                    hubspot_events.append(hubspot_event)
+            hubspot_registrations = []
+            hubspot_events = {}
+            for acgi_registration in acgi_registrations:
+                hubspot_registration = self._map_registration_data(acgi_registration)
+                if hubspot_registration:
+                    hubspot_registrations.append(hubspot_registration)
+
+                # get event data from acgi only if not already in hubspot_events
+                if acgi_registration['eventId'] not in hubspot_events:
+                    acgi_event_result = self.acgi_client.get_event_by_id(acgi_credentials, acgi_registration['eventId'])
+                    if acgi_event_result.get('success'):
+                        acgi_event = acgi_event_result['event']
+                        hubspot_event = self._map_event_data(acgi_event, events_mapping)
+                        hubspot_events[hubspot_event['acgi_event_id']] = hubspot_event
+                    else:
+                        logger.error(f"Failed to fetch event data for registration {acgi_registration['registrationId']}: {acgi_event_result.get('error')}")
             
-            print( "hubspot_events", hubspot_events)
-            
+            hubspot_events = list(hubspot_events.values())
+            print("HUBSPOT REGISTRATIONS",hubspot_registrations)
+            print("HUBSPOT EVENTS",hubspot_events)
+
             if not hubspot_events:
                 return {'success': False, 'error': 'No valid events data to sync'}
             
@@ -545,15 +559,18 @@ class IntegrationService:
             for hubspot_event in hubspot_events:
                 try:
                     # Search for existing event to avoid duplicates
-                    existing_event = self.hubspot_client.search_custom_object('2-48134484', 'event_id', hubspot_event.get('event_id'))
-                    
+                    logger.info( "hubspot_event", hubspot_event)
+                    print("hubspot_event", hubspot_event)
+                    existing_event = self.hubspot_client.search_custom_object('2-48134484', 'acgi_event_id', hubspot_event.get('acgi_event_id'))
+                    logger.info( "existing_event", existing_event)
+                    print("existing_event", existing_event)
                     if existing_event:
                         # Update existing event
-                        event_id = existing_event['id']
-                        update_result = self.hubspot_client.update_custom_object('2-48134484', event_id, hubspot_event)
+                        acgi_event_id = existing_event['id']
+                        update_result = self.hubspot_client.update_custom_object('2-48134484', acgi_event_id, hubspot_event)
                         if update_result.get('success'):
                             synced_count += 1
-                            logger.info(f"Updated event {event_id} for customer {customer_id}")
+                            logger.info(f"Updated event {acgi_event_id} for customer {customer_id}")
                         else:
                             errors.append(f"Failed to update event: {update_result.get('error')}")
                     else:
@@ -569,14 +586,46 @@ class IntegrationService:
                     error_msg = f"Error syncing event: {str(e)}"
                     logger.error(error_msg)
                     errors.append(error_msg)
-            
+
+            for hubspot_registration in hubspot_registrations:
+                try:
+                    # Search for existing registration to avoid duplicates
+                    logger.info( "hubspot_registration", hubspot_registration)
+                    existing_registration = self.hubspot_client.search_custom_object('2-49619799', 'registration_id', hubspot_registration.get('registration_id'))
+                    logger.info( "existing_registration", existing_registration)
+                    if existing_registration:
+                        # Update existing registration
+                        registration_id = existing_registration['id']
+                        update_result = self.hubspot_client.update_custom_object('2-49619799', registration_id, hubspot_registration)
+                        if update_result.get('success'):
+                            synced_count += 1
+                            logger.info(f"Updated registration {registration_id} for customer {customer_id}")
+                        else:
+                            errors.append(f"Failed to update registration: {update_result.get('error')}")
+                    else:
+                        # Create new registration
+                        create_result = self.hubspot_client.create_custom_object('2-49619799', hubspot_registration)
+                        if create_result.get('success'):
+                            synced_count += 1
+                            logger.info(f"Created new registration for customer {customer_id}")
+                        else:
+                            errors.append(f"Failed to create registration: {create_result.get('error')}")
+                except Exception as e:
+                    error_msg = f"Error syncing registration: {str(e)}"
+                    logger.error(error_msg)
+                    errors.append(error_msg)
+
             if errors:
                 logger.warning(f"Completed events sync with {len(errors)} errors: {errors}")
             
             return {
                 'success': True,
-                'total_processed': len(hubspot_events),
+                'total_processed': len(hubspot_events) + len(hubspot_registrations),
+                "total_events_processed": len(hubspot_events),
+                "total_registrations_processed": len(hubspot_registrations),
                 'synced_count': synced_count,
+                "synced_events_count": synced_events_count,
+                "synced_registrations_count": synced_registrations_count,
                 'errors': errors
             }
             
@@ -911,7 +960,6 @@ class IntegrationService:
                                 if len(parts) == 3:
                                     month, day, year = int(parts[0]), int(parts[1]), int(parts[2])
                                     # Use UTC to ensure midnight UTC (matching HubSpot form logic)
-                                    from datetime import datetime, timezone
                                     # Create date at midnight UTC (month is 0-indexed in Python)
                                     date_obj = datetime.now(timezone.utc).replace(year=year, month=month, day=day, hour=0, minute=0, second=0, microsecond=0)
                                     value = int(date_obj.timestamp() * 1000)  # HubSpot expects milliseconds
@@ -921,7 +969,7 @@ class IntegrationService:
                                 if len(date_parts) == 3:
                                     year, month, day = int(date_parts[0]), int(date_parts[1]), int(date_parts[2])
                                     # Use UTC to ensure midnight UTC (matching HubSpot form logic)
-                                    from datetime import datetime, timezone
+                                    
                                     # Create date at midnight UTC (month is 0-indexed in Python)
                                     date_obj = datetime.now(timezone.utc).replace(year=year, month=month, day=day, hour=0, minute=0, second=0, microsecond=0)
                                     value = int(date_obj.timestamp() * 1000)  # HubSpot expects milliseconds
@@ -942,3 +990,32 @@ class IntegrationService:
                 hubspot_event[hubspot_field] = value
         
         return hubspot_event 
+
+
+    def _map_registration_data(self, registration: Dict) -> Dict[str, Any]:
+        """Map ACGI registration data to HubSpot format using saved mapping"""
+        hubspot_registration = {}
+
+        # convert registration['registration-date'] to milisenconds in at midnight UTC. Comes in format 02/01/2011
+        # Ensure registration date is set to midnight UTC
+        registration_date = datetime.strptime(registration['registrationDate'], '%m/%d/%Y')
+        # Convert to UTC timezone
+        registration_date = registration_date.replace(tzinfo=timezone.utc)
+        # Set to midnight UTC
+        registration_date = registration_date.replace(hour=0, minute=0, second=0, microsecond=0)
+        registration_date = int(registration_date.timestamp() * 1000)
+        
+        # Apply the saved mapping
+        result = {
+            "name": registration['registrationName'] + "-" + registration['eventName'],
+            "registration_id": registration['regiSerno'],
+            "customer_id": registration['customerId'],
+            "registration_date": registration_date,
+            "acgi_event_id": registration['eventId'],
+            "representing_company": registration['representing'],
+            "total_charges": float(registration['totalCharges']),
+            "total_payment": abs(float(registration['totalPayment'])),
+            "balance": float(registration['balance']),    
+        }
+
+        return result

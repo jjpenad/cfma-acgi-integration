@@ -4,6 +4,7 @@ from typing import Dict, List, Optional
 from datetime import datetime
 import uuid
 import time
+import random
 
 logger = logging.getLogger(__name__)
 
@@ -19,6 +20,85 @@ class HubSpotClient:
             'User-Agent': 'ACGI-HubSpot-Integration/1.0'
         })
     
+    def make_request(self, method: str, url: str, **kwargs) -> requests.Response:
+        """
+        Make HTTP request with automatic retry logic for 429 errors (rate limiting)
+        
+        Args:
+            method: HTTP method (GET, POST, PUT, PATCH, DELETE)
+            url: Full URL to make request to
+            **kwargs: Additional arguments to pass to requests (headers, json, data, etc.)
+        
+        Returns:
+            requests.Response object
+            
+        Raises:
+            requests.exceptions.RequestException: If all retries are exhausted
+        """
+        max_retries = 4
+        base_timeout = kwargs.pop('timeout', 5)
+        
+        for attempt in range(max_retries + 1):
+            try:
+                # Calculate timeout for this attempt (exponential backoff)
+                if attempt == 0:
+                    timeout = base_timeout
+                else:
+                    # Exponential backoff: 2^attempt * base_timeout + jitter
+                    backoff_multiplier = 2 ** attempt
+                    jitter = random.uniform(0.1, 0.3)  # 10-30% random jitter
+                    timeout = int(base_timeout * backoff_multiplier * (1 + jitter))
+                
+                logger.debug(f"Making {method} request to {url} (attempt {attempt + 1}/{max_retries + 1}, timeout: {timeout}s)")
+                
+                response = self.session.request(
+                    method=method,
+                    url=url,
+                    timeout=timeout,
+                    **kwargs
+                )
+                
+                # If we get a 429 (rate limit), retry with backoff
+                if response.status_code == 429:
+                    if attempt < max_retries:
+                        retry_after = response.headers.get('Retry-After')
+                        if retry_after:
+                            try:
+                                wait_time = int(retry_after)
+                            except ValueError:
+                                wait_time = timeout
+                        else:
+                            wait_time = timeout
+                        
+                        logger.warning(f"Rate limited (429) on attempt {attempt + 1}. Retrying in {wait_time}s...")
+                        time.sleep(wait_time)
+                        continue
+                    else:
+                        logger.error(f"Rate limited (429) after {max_retries + 1} attempts. Giving up.")
+                        return response
+                
+                # For any other status code, return immediately (no retry)
+                return response
+                
+            except requests.exceptions.Timeout:
+                if attempt < max_retries:
+                    logger.warning(f"Request timeout on attempt {attempt + 1}. Retrying with increased timeout...")
+                    continue
+                else:
+                    logger.error(f"Request timeout after {max_retries + 1} attempts. Giving up.")
+                    raise
+                    
+            except requests.exceptions.RequestException as e:
+                if attempt < max_retries:
+                    logger.warning(f"Request failed on attempt {attempt + 1}: {str(e)}. Retrying...")
+                    continue
+                else:
+                    logger.error(f"Request failed after {max_retries + 1} attempts. Giving up.")
+                    raise
+        
+        # This should never be reached, but just in case
+        raise requests.exceptions.RequestException("Max retries exceeded unexpectedly")
+    
     def test_credentials(self, credentials: Dict[str, str]) -> Dict[str, any]:
         """Test HubSpot API key by making a simple API call"""
         try:
@@ -31,7 +111,7 @@ class HubSpotClient:
                 'Content-Type': 'application/json'
             }
             
-            response = self.session.get(url, headers=headers, timeout=30)
+            response = self.make_request('GET', url, headers=headers, timeout=5)
             
             if response.status_code == 200:
                 return {
@@ -76,6 +156,8 @@ class HubSpotClient:
         except Exception as e:
             logger.error(f"Failed to initialize HubSpot client: {str(e)}")
             return False
+        
+        
     
     def get_contact_properties(self) -> List[Dict[str, any]]:
         """Get all available contact properties from HubSpot"""
@@ -84,7 +166,7 @@ class HubSpotClient:
                 return []
             
             url = f"{self.base_url}/crm/v3/properties/contacts"
-            response = self.session.get(url, timeout=30)
+            response = self.make_request('GET', url, timeout=5)
             
             if response.status_code == 200:
                 data = response.json()
@@ -137,7 +219,7 @@ class HubSpotClient:
             create_url = f"{self.base_url}/crm/v3/objects/orders"
             create_data = {'properties': properties}
             print("CREATE DATA",create_data)
-            create_response = self.session.post(create_url, json=create_data, timeout=30)
+            create_response = self.make_request('POST', create_url, json=create_data, timeout=5)
             print("CREATE RESPONSE",create_response)
             
             if create_response.status_code == 201:
@@ -209,7 +291,7 @@ class HubSpotClient:
             create_url = f"{self.base_url}/crm/v3/objects/2-46896622"
             create_data = {'properties': properties}
             print("CREATE DATA",create_data)
-            create_response = self.session.post(create_url, json=create_data, timeout=30)
+            create_response = self.make_request('POST', create_url, json=create_data, timeout=5)
             print("CREATE RESPONSE",create_response)
             
             if create_response.status_code == 201:
@@ -244,7 +326,7 @@ class HubSpotClient:
                 return []
             
             url = f"{self.base_url}/crm/v3/properties/2-48134484"
-            response = self.session.get(url, timeout=30)
+            response = self.make_request('GET', url, timeout=5)
             print("RESPONSE",response)
             if response.status_code == 200:
                 data = response.json()
@@ -280,7 +362,7 @@ class HubSpotClient:
                 return []
             
             url = f"{self.base_url}/crm/v3/properties/orders"
-            response = self.session.get(url, timeout=30)
+            response = self.make_request('GET', url, timeout=5)
             print("RESPONSE",response)
             if response.status_code == 200:
                 data = response.json()
@@ -316,7 +398,7 @@ class HubSpotClient:
                 return []
             
             url = f"{self.base_url}/crm/v3/properties/2-46896622"
-            response = self.session.get(url, timeout=30)
+            response = self.make_request('GET', url, timeout=5)
             print("RESPONSE",response)
             if response.status_code == 200:
                 data = response.json()
@@ -352,7 +434,7 @@ class HubSpotClient:
                 return []
             
             url = f"{self.base_url}/crm/v3/properties/{object_type}"
-            response = self.session.get(url, timeout=30)
+            response = self.make_request('GET', url, timeout=5)
             
             if response.status_code == 200:
                 data = response.json()
@@ -387,7 +469,7 @@ class HubSpotClient:
                 return []
             
             url = f"{self.base_url}/crm/v3/properties/deals"
-            response = self.session.get(url, timeout=30)
+            response = self.make_request('GET', url, timeout=5)
             
             if response.status_code == 200:
                 data = response.json()
@@ -423,7 +505,7 @@ class HubSpotClient:
                 return []
             
             url = f"{self.base_url}/crm/v3/objects/contacts?limit={limit}"
-            response = self.session.get(url, timeout=30)
+            response = self.make_request('GET', url, timeout=5)
             
             if response.status_code == 200:
                 data = response.json()
@@ -526,7 +608,7 @@ class HubSpotClient:
                 update_url = f"{self.base_url}/crm/v3/objects/contacts/{contact_id}"
                 update_data = {'properties': properties}
                 
-                update_response = self.session.patch(update_url, json=update_data, timeout=30)
+                update_response = self.make_request('PATCH', update_url, json=update_data, timeout=5)
                 
                 if update_response.status_code == 200:
                     updated_contact = update_response.json()
@@ -555,7 +637,7 @@ class HubSpotClient:
                 create_url = f"{self.base_url}/crm/v3/objects/contacts"
                 create_data = {'properties': properties}
                 
-                create_response = self.session.post(create_url, json=create_data, timeout=30)
+                create_response = self.make_request('POST', create_url, json=create_data, timeout=5)
                 
                 if create_response.status_code == 201:
                     new_contact = create_response.json()
@@ -605,7 +687,7 @@ class HubSpotClient:
                 'limit': 1
             }
             
-            search_response = self.session.post(search_url, json=search_data, timeout=30)
+            search_response = self.make_request('POST', search_url, json=search_data, timeout=5)
             if search_response.status_code == 200:
                 search_results = search_response.json()
                 if search_results.get('results'):
@@ -630,7 +712,7 @@ class HubSpotClient:
                 'limit': 1
             }
             
-            search_response = self.session.post(search_url, json=search_data, timeout=30)
+            search_response = self.make_request('POST', search_url, json=search_data, timeout=5)
             if search_response.status_code == 200:
                 search_results = search_response.json()
                 if search_results.get('results'):
@@ -686,7 +768,7 @@ class HubSpotClient:
             create_url = f"{self.base_url}/crm/v3/objects/deals"
             create_data = {'properties': properties}
             
-            create_response = self.session.post(create_url, json=create_data, timeout=30)
+            create_response = self.make_request('POST', create_url, json=create_data, timeout=5)
             
             if create_response.status_code == 201:
                 new_deal = create_response.json()
@@ -696,7 +778,7 @@ class HubSpotClient:
                 if deal_data.get('contact_id'):
                     try:
                         association_url = f"{self.base_url}/crm/v3/objects/deals/{deal_id}/associations/contacts/{deal_data['contact_id']}/deal_to_contact"
-                        association_response = self.session.put(association_url, timeout=30)
+                        association_response = self.make_request('PUT', association_url, timeout=5)
                         
                         if association_response.status_code != 200:
                             logger.warning(f"Failed to associate deal with contact: {association_response.status_code} - {association_response.text}")
@@ -781,7 +863,7 @@ class HubSpotClient:
                 'limit': 1
             }
             
-            response = self.session.post(search_url, json=search_data, timeout=30)
+            response = self.make_request('POST', search_url, json=search_data, timeout=5)
             
             if response.status_code == 200:
                 search_results = response.json()
@@ -816,7 +898,7 @@ class HubSpotClient:
                 'limit': 1
             }
             
-            response = self.session.post(search_url, json=search_data, timeout=30)
+            response = self.make_request('POST', search_url, json=search_data, timeout=5)
             
             if response.status_code == 200:
                 search_results = response.json()
@@ -872,7 +954,7 @@ class HubSpotClient:
                 "limit": 1
             }
             
-            response = self.session.post(url, json=payload, timeout=30)
+            response = self.make_request('POST', url, json=payload, timeout=5)
             
             if response.status_code == 200:
                 data = response.json()
@@ -922,7 +1004,7 @@ class HubSpotClient:
             
             payload = {"properties": properties}
             
-            response = self.session.patch(url, json=payload, timeout=30)
+            response = self.make_request('PATCH', url, json=payload, timeout=5)
             
             if response.status_code == 200:
                 result = response.json()
@@ -1032,7 +1114,7 @@ class HubSpotClient:
             
             payload = {"properties": properties}
             
-            response = self.session.post(url, json=payload, timeout=30)
+            response = self.make_request('POST', url, json=payload, timeout=5)
             
             if response.status_code == 201:
                 result = response.json()
@@ -1075,7 +1157,7 @@ class HubSpotClient:
                 'limit': 1
             }
             
-            response = self.session.post(url, json=payload, timeout=30)
+            response = self.make_request('POST', url, json=payload, timeout=5)
             
             if response.status_code == 200:
                 result = response.json()
@@ -1109,7 +1191,7 @@ class HubSpotClient:
                 'properties': properties
             }
             
-            response = self.session.patch(url, json=payload, timeout=30)
+            response = self.make_request('PATCH', url, json=payload, timeout=5)
             
             if response.status_code == 200:
                 result = response.json()

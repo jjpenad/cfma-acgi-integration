@@ -2,20 +2,56 @@ import requests
 import logging
 import xml.etree.ElementTree as ET
 from typing import Dict, List, Optional
-from datetime import datetime
+from datetime import datetime, timedelta
+from .cache_manager import events_cache
 
 logger = logging.getLogger(__name__)
+
 
 class ACGIClient:
     """Client for interacting with ACGI API"""
     
-    def __init__(self):
+    def __init__(self, cache_manager=None):
         self.base_url = "https://ams.cfma.org"
         self.session = requests.Session()
         self.session.headers.update({
             'Content-Type': 'application/x-www-form-urlencoded',
             'User-Agent': 'ACGI-HubSpot-Integration/1.0'
         })
+        # Use provided cache manager or global events cache
+        self.cache_manager = cache_manager or events_cache
+    
+    def _get_cache_key(self, credentials: Dict[str, str]) -> str:
+        """Generate a cache key based on credentials"""
+        return f"events_{credentials['environment']}_{credentials['userid']}"
+    
+    def clear_events_cache(self, credentials: Dict[str, str] = None):
+        """Clear the events cache for specific credentials or all cached data"""
+        if credentials:
+            cache_key = self._get_cache_key(credentials)
+            self.cache_manager.clear(cache_key)
+            logger.info(f"Cleared events cache for {credentials['userid']}")
+        else:
+            self.cache_manager.clear()
+            logger.info("Cleared all events cache")
+    
+    def get_cache_info(self) -> Dict[str, any]:
+        """Get information about the current cache state"""
+        return self.cache_manager.get_info()
+    
+    def get_cache_stats(self) -> Dict[str, any]:
+        """Get cache statistics"""
+        return self.cache_manager.get_stats()
+    
+    def cleanup_expired_cache(self) -> int:
+        """Clean up expired cache entries"""
+        return self.cache_manager.cleanup_expired()
+    
+    def set_cache_expiry(self, minutes: int) -> None:
+        """Set custom cache expiry time for this client instance"""
+        from .cache_manager import CacheManager
+        self.cache_manager = CacheManager(default_expiry_minutes=minutes)
+        logger.info(f"Cache expiry set to {minutes} minutes")
     
     def test_credentials(self, credentials: Dict[str, str]) -> Dict[str, any]:
         """Test ACGI credentials by making a simple queue request"""
@@ -352,6 +388,105 @@ class ACGIClient:
                 'purchased_products': []
             }
 
+    def get_all_events(self, credentials: Dict[str, str]) -> Dict[str, any]:
+        """Get all events for a specific customer with 30-minute caching"""
+        try:
+            # Check if we have valid cached data
+            cache_key = self._get_cache_key(credentials)
+            cached_data = self.cache_manager.get(cache_key)
+            
+            if cached_data is not None:
+                logger.info("Returning cached events data")
+                return cached_data
+            
+            print("Getting all events (cache miss or expired)")
+            
+            events_xml = f"""p_input_xml_doc=<?xml version="1.0" encoding="UTF-8" ?>
+                <event-request>           
+                    <vendor-id>{credentials['userid']}</vendor-id>               
+                    <vendor-password>{credentials['password']}</vendor-password>    
+                </event-request>"""
+            url = f"{self.base_url}/{credentials['environment']}/EVTSSAWEBSVCLIB.GET_EVENT_INFO_XML"
+            
+            response = self.session.post(
+                url,
+                data=events_xml,
+                timeout=30
+            )
+            
+            if response.status_code == 200:
+                try:
+                    root = ET.fromstring(response.text)
+                    
+                    # Parse all events data
+                    events_data = self._parse_customer_events_xml(root)
+                    print("ALL EVENTS DATA:", events_data)
+                    
+                    result = {
+                        'success': True,
+                        'events': events_data
+                    }
+                    
+                    # Cache the successful result
+                    self.cache_manager.set(cache_key, result)
+                    logger.info("Cached events data for 30 minutes")
+                    
+                    return result
+                    
+                except ET.ParseError as e:
+                    logger.error(f"Failed to parse all events XML: {str(e)}")
+                    return {
+                        'success': False,
+                        'message': f"XML parsing failed: {str(e)}",
+                        'raw_response': response.text
+                    }
+            else:
+                return {
+                    'success': False,
+                    'message': f"HTTP {response.status_code}: {response.text}",
+                    'raw_response': response.text
+                }
+            
+        except Exception as e:
+            return {
+                'success': False,
+                'message': f"Error getting all events: {str(e)}",
+                'events': []
+            }
+
+
+    def get_event_by_id(self, credentials: Dict[str, str], acgi_event_id: str) -> Dict[str, any]:
+        """Get event by id"""
+        try:
+            print("Getting event by id:", acgi_event_id)
+            
+            all_events = self.get_all_events(credentials)
+            if not all_events['success']:
+                return {
+                    'success': False,
+                    'message': f"Error getting all events: {all_events['message']}",
+                    'events': []
+                }
+            events = all_events['events']['events']
+            for event in events:
+                if event.get("id") == acgi_event_id:
+                    return {
+                        'success': True,
+                        'event': event
+                    }
+            return {
+                'success': False,
+                'message': f"Event not found with id: {acgi_event_id}",
+                'events': []
+            }
+            
+        except Exception as e:
+            return {
+                'success': False,
+                'message': f"Error getting event by id: {str(e)}",
+                'events': []
+            }
+
     def get_customer_events(self, credentials: Dict[str, str], customer_id: str) -> Dict[str, any]:
         """Get customer events for a specific customer"""
         try:
@@ -407,6 +542,67 @@ class ACGIClient:
                 'message': f"Error getting customer events: {str(e)}",
                 'events': []
             }
+
+    def get_customer_registrations_to_events(self, credentials: Dict[str, str], customer_id: str) -> Dict[str, any]:
+        """Get customer registrations to events for a specific customer"""
+        try:
+            print("Getting customer registrations to events for customer_id:", customer_id)
+            
+            eventreg_xml = f"""p_input_xml_doc=<?xml version="1.0"?>
+<eventreg-request>
+    <vendor-id>{credentials['userid']}</vendor-id>
+    <vendor-password>{credentials['password']}</vendor-password>
+    <cust-id>{customer_id}</cust-id> 
+</eventreg-request>"""
+            
+            print("eventreg_xml:", eventreg_xml)
+            
+            url = f"{self.base_url}/{credentials['environment']}/EVTSSAWEBSVCLIB.GET_EVENTREG_INFO_XML"
+            
+            response = self.session.post(
+                url,
+                data=eventreg_xml,
+                timeout=30
+            )
+            print("URL:", url)
+            print("Response status:", response.status_code)
+            print("Response text:", response.text)
+            
+            if response.status_code == 200:
+                try:
+                    root = ET.fromstring(response.text)
+                    
+                    # Parse customer event registrations data
+                    registrations_data = self._parse_customer_event_registrations_xml(root)
+                    print("CUSTOMER EVENT REGISTRATIONS DATA:", registrations_data)
+                    for registration in registrations_data['registrations']:
+                        registration['customerId'] = customer_id
+                    return {
+                        'success': True,
+                        'registrations': registrations_data
+                    }
+                    
+                except ET.ParseError as e:
+                    logger.error(f"Failed to parse customer event registrations XML for customer {customer_id}: {str(e)}")
+                    return {
+                        'success': False,
+                        'message': f"XML parsing failed: {str(e)}",
+                        'raw_response': response.text
+                    }
+            else:
+                return {
+                    'success': False,
+                    'message': f"HTTP {response.status_code}: {response.text}",
+                    'raw_response': response.text
+                }
+            
+        except Exception as e:
+            return {
+                'success': False,
+                'message': f"Error getting customer event registrations: {str(e)}",
+                'registrations': []
+            }
+
 
     
     def _parse_customer_xml(self, root: ET.Element) -> Dict[str, any]:
@@ -718,6 +914,97 @@ class ACGIClient:
         
         return events_data
 
+    def _parse_customer_event_registrations_xml(self, root: ET.Element) -> Dict[str, any]:
+        """Parse customer event registrations XML data into a structured format"""
+        registrations_data = {}
+        
+        # Get status if available
+        status_elem = root.find('.//status')
+        if status_elem is not None:
+            registrations_data['status'] = status_elem.text
+        
+        # Registrations
+        registrations = []
+        limit = 1000
+        for reg_elem in root.findall('.//registration'):
+            reg_data = {
+                'regiSerno': self._get_element_text(reg_elem, 'regi-serno'),
+                'customerId': self._get_element_text(reg_elem, 'customer-id'),
+                'eventId': self._get_element_text(reg_elem, 'event-id'),
+                'eventStatus': self._get_element_text(reg_elem, 'eventStatus'),
+                'registrationDate': self._get_element_text(reg_elem, 'registration-date'),
+                'registrationType': self._get_element_text(reg_elem, 'registration-type'),
+                'registrationName': self._get_element_text(reg_elem, 'registration-name'),
+                'representing': self._get_element_text(reg_elem, 'representing'),
+                'billtoId': self._get_element_text(reg_elem, 'billto-id'),
+                'promoCd': self._get_element_text(reg_elem, 'promo-cd'),
+                'purchaseOrder': self._get_element_text(reg_elem, 'purchase-order'),
+                'primItemId': self._get_element_text(reg_elem, 'prim-item-id'),
+                'primRegStatus': self._get_element_text(reg_elem, 'prim-reg-status'),
+                'totalCharges': self._get_element_text(reg_elem, 'total-charges'),
+                'totalPayment': self._get_element_text(reg_elem, 'total-payment'),
+                'balance': self._get_element_text(reg_elem, 'balance'),
+                'eventName': self._get_element_text(reg_elem, 'event-name'),
+                'programName': self._get_element_text(reg_elem, 'program-name'),
+                'primaryItemDescr': self._get_element_text(reg_elem, 'primary-item-descr'),
+                'eventStartDt': self._get_element_text(reg_elem, 'event-start-dt'),
+                'eventEndDt': self._get_element_text(reg_elem, 'event-end-dt'),
+                'locationName': self._get_element_text(reg_elem, 'location-name'),
+                'locationStreet1': self._get_element_text(reg_elem, 'location-street1'),
+                'locationStreet2': self._get_element_text(reg_elem, 'location-street2'),
+                'locationCity': self._get_element_text(reg_elem, 'location-city'),
+                'locationState': self._get_element_text(reg_elem, 'location-state'),
+                'locationZip': self._get_element_text(reg_elem, 'location-zip'),
+                'locationCountry': self._get_element_text(reg_elem, 'location-country'),
+                'locationCountryDescr': self._get_element_text(reg_elem, 'location-country-descr'),
+                'firstName': self._get_element_text(reg_elem, 'first-name'),
+                'lastName': self._get_element_text(reg_elem, 'last-name'),
+                'companyName': self._get_element_text(reg_elem, 'company-name'),
+                'email': self._get_element_text(reg_elem, 'email'),
+                'evtRegStreet1': self._get_element_text(reg_elem, 'evt-reg-street1'),
+                'evtRegStreet2': self._get_element_text(reg_elem, 'evt-reg-street2'),
+                'evtRegStreet3': self._get_element_text(reg_elem, 'evt-reg-street3'),
+                'evtRegCity': self._get_element_text(reg_elem, 'evt-reg-city'),
+                'evtRegState': self._get_element_text(reg_elem, 'evt-reg-state'),
+                'evtRegZip': self._get_element_text(reg_elem, 'evt-reg-zip'),
+                'evtRegCountry': self._get_element_text(reg_elem, 'evt-reg-country')
+            }
+            
+            # Parse items
+            items = []
+            for item_elem in reg_elem.findall('.//items/item'):
+                item_data = {
+                    'id': self._get_element_text(item_elem, 'id'),
+                    'itemType': self._get_element_text(item_elem, 'item-type'),
+                    'descr': self._get_element_text(item_elem, 'descr'),
+                    'registrationType': self._get_element_text(item_elem, 'registration-type'),
+                    'registrationStatus': self._get_element_text(item_elem, 'registration-status'),
+                    'registrationDate': self._get_element_text(item_elem, 'registration-date'),
+                    'quantity': self._get_element_text(item_elem, 'quantity'),
+                    'attended': self._get_element_text(item_elem, 'attended')
+                }
+                items.append(item_data)
+            reg_data['items'] = items
+            
+            # Parse guests
+            guests = []
+            for guest_elem in reg_elem.findall('.//guests/guest'):
+                guest_data = {
+                    'guestId': self._get_element_text(guest_elem, 'guest-id'),
+                    'guestName': self._get_element_text(guest_elem, 'guest-name'),
+                    'guestEmail': self._get_element_text(guest_elem, 'guest-email')
+                }
+                guests.append(guest_data)
+            reg_data['guests'] = guests
+            
+            if len(registrations) >= limit:
+                break
+            registrations.append(reg_data)
+            
+        registrations_data['registrations'] = registrations
+        
+        return registrations_data
+
     def _parse_customer_xml_old(self, root: ET.Element) -> Dict[str, any]:
         """Parse customer XML data into a structured format"""
         customer = {}
@@ -808,6 +1095,7 @@ class ACGIClient:
         """Safely get text from an XML element"""
         elem = parent.find(tag)
         return elem.text if elem is not None else None
+    
     
     def purge_queue(self, credentials: Dict[str, str], customer_ids: List[str]) -> Dict[str, any]:
         """Purge processed customers from the queue"""
