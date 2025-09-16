@@ -35,6 +35,7 @@ class ACGIClient:
             self.cache_manager.clear()
             logger.info("Cleared all events cache")
     
+    
     def get_cache_info(self) -> Dict[str, any]:
         """Get information about the current cache state"""
         return self.cache_manager.get_info()
@@ -181,6 +182,7 @@ class ACGIClient:
                 'raw_response': None
             }
     
+
     def get_customer_data(self, credentials: Dict[str, str], customer_id: str) -> Dict[str, any]:
         """Get detailed customer data for given customer IDs"""
         try:
@@ -1005,6 +1007,222 @@ class ACGIClient:
         
         return registrations_data
 
+    def get_queue_customers(self, credentials: Dict[str, str]) -> Dict[str, any]:
+        """Get queued customers from ACGI (production mode) with 30-minute caching"""
+        try:
+            # Check if we have valid cached data
+            cache_key = f"queue_customers_{credentials['environment']}_{credentials['userid']}"
+            cached_data = self.cache_manager.get(cache_key)
+            
+            if cached_data is not None:
+                logger.info("Returning cached queue customers data")
+                return cached_data
+            
+            print("Getting queued customers from ACGI (cache miss or expired)")
+            
+            queue_xml = f"""p_input_xml_doc=<?xml version="1.0" encoding="UTF-8"?>
+<custRequest>
+    <vendorId>{credentials['userid']}</vendorId>
+    <vendorPassword>{credentials['password']}</vendorPassword>
+</custRequest>"""
+                
+            print("queue_xml:", queue_xml)
+                
+            url = f"{self.base_url}/{credentials['environment']}/CENCUSTINTEGRATESYNCWEBSVCLIB.GET_QUEUE_CUSTS_W_REASONS_XML"
+            
+            response = self.session.post(
+                url,
+                data=queue_xml,
+                timeout=60  # Longer timeout for queue request
+            )
+            print("URL:", url)
+            print("Response status:", response.status_code)
+            print("Response text:", response.text)
+            
+            if response.status_code == 200:
+                try:
+                    root = ET.fromstring(response.text)
+                    
+                    # Parse queue customers data
+                    queue_data = self._parse_queue_customers_xml(root)
+                    
+                    result = {
+                        'success': True,
+                        'queue_data': queue_data
+                    }
+                    
+                    # Cache the successful result
+                    self.cache_manager.set(cache_key, result)
+                    logger.info("Cached queue customers data for 30 minutes")
+                    
+                    return result
+                    
+                except ET.ParseError as e:
+                    logger.error(f"Failed to parse queue customers XML: {str(e)}")
+                    return {
+                        'success': False,
+                        'message': f"XML parsing failed: {str(e)}",
+                        'raw_response': response.text
+                    }
+            else:
+                return {
+                    'success': False,
+                    'message': f"HTTP {response.status_code}: {response.text}",
+                    'raw_response': response.text
+                }
+            
+        except Exception as e:
+            return {
+                'success': False,
+                'message': f"Error getting queue customers: {str(e)}",
+                'queue_data': {'customers': [], 'maxQueueNum': None, 'status': 'ERROR'}
+            }
+
+    def _parse_queue_customers_xml(self, root: ET.Element) -> Dict[str, any]:
+        """Parse queue customers XML data into a structured format"""
+        queue_data = {
+            'customers': [],
+            'maxQueueNum': None,
+            'status': 'UNKNOWN'
+        }
+        
+        # Get status
+        status_elem = root.find('status')
+        if status_elem is not None:
+            queue_data['status'] = status_elem.text
+        
+        # Get max queue number
+        max_queue_elem = root.find('maxQueueNum')
+        if max_queue_elem is not None:
+            queue_data['maxQueueNum'] = max_queue_elem.text
+        
+        # Parse customers
+        customers = []
+        for customer_elem in root.findall('.//customer'):
+            try:
+                customer_data = {
+                    'id': customer_elem.get('id'),
+                    'triggers': []
+                }
+                
+                # Parse triggers
+                for trigger_elem in customer_elem.findall('.//trigger'):
+                    trigger_data = {
+                        'tableName': trigger_elem.get('tableName'),
+                        'action': trigger_elem.get('action')
+                    }
+                    customer_data['triggers'].append(trigger_data)
+                
+                if customer_data['id']:
+                    customers.append(customer_data)
+                    
+            except Exception as e:
+                logger.error(f"Error parsing customer element: {str(e)}")
+                continue
+        
+        queue_data['customers'] = customers
+        logger.info(f"Parsed {len(customers)} queued customers")
+        return queue_data
+
+    def extract_customer_ids_from_queue(self, queue_data: Dict[str, any]) -> List[str]:
+        """Extract customer IDs from queue data"""
+        customer_ids = []
+        
+        if queue_data.get('success') and queue_data.get('queue_data'):
+            customers = queue_data['queue_data'].get('customers', [])
+            customer_ids = [customer.get('id') for customer in customers if customer.get('id')]
+        
+        logger.info(f"Extracted {len(customer_ids)} customer IDs from queue data")
+        return customer_ids
+
+    def purge_queue(self, credentials: Dict[str, str], max_queue_num: str) -> Dict[str, any]:
+        """Purge processed customers from the queue using max queue number"""
+        try:
+            print(f"Purging queue up to max queue number: {max_queue_num}")
+            
+            purge_xml = f"""p_input_xml_doc=<?xml version="1.0" encoding="UTF-8"?>
+<purge-request>
+    <vendor-id>{credentials['userid']}</vendor-id>
+    <vendor-password>{credentials['password']}</vendor-password>
+    <max-queue-num>{max_queue_num}</max-queue-num>
+</purge-request>"""
+            
+            print("purge_xml:", purge_xml)
+            
+            url = f"{self.base_url}/{credentials['environment']}/CENCUSTINTEGRATESYNCWEBSVCLIB.PURGE_QUEUE_XML"
+            
+            response = self.session.post(
+                url,
+                data=purge_xml,
+                timeout=30
+            )
+            print("URL:", url)
+            print("Response status:", response.status_code)
+            print("Response text:", response.text)
+            
+            if response.status_code == 200:
+                try:
+                    root = ET.fromstring(response.text)
+                    purge_result = self._parse_purge_queue_xml(root)
+                    
+                    return {
+                        'success': True,
+                        'purge_result': purge_result,
+                        'raw_response': response.text
+                    }
+                    
+                except ET.ParseError as e:
+                    logger.error(f"Failed to parse purge queue XML: {str(e)}")
+                    return {
+                        'success': False,
+                        'message': f"XML parsing failed: {str(e)}",
+                        'raw_response': response.text
+                    }
+            else:
+                return {
+                    'success': False,
+                    'message': f"HTTP {response.status_code}: {response.text}",
+                    'raw_response': response.text
+                }
+                
+        except Exception as e:
+            return {
+                'success': False,
+                'message': f"Error purging queue: {str(e)}",
+                'raw_response': None
+            }
+
+    def _parse_purge_queue_xml(self, root: ET.Element) -> Dict[str, any]:
+        """Parse purge queue XML response"""
+        result = {
+            'status': 'UNKNOWN',
+            'message': None
+        }
+        
+        # Get status
+        status_elem = root.find('status')
+        if status_elem is not None:
+            result['status'] = status_elem.text
+        
+        # Get message (only present if status is FAILURE)
+        message_elem = root.find('message')
+        if message_elem is not None:
+            result['message'] = message_elem.text
+        
+        return result
+
+    def clear_queue_cache(self, credentials: Dict[str, str] = None):
+        """Clear the queue customers cache for specific credentials or all cached data"""
+        if credentials:
+            cache_key = f"queue_customers_{credentials['environment']}_{credentials['userid']}"
+            self.cache_manager.clear(cache_key)
+            logger.info(f"Cleared queue customers cache for {credentials['userid']}")
+        else:
+            # Clear all cache entries (since we don't have pattern matching)
+            self.cache_manager.clear()
+            logger.info("Cleared all cache entries")
+
+
     def _parse_customer_xml_old(self, root: ET.Element) -> Dict[str, any]:
         """Parse customer XML data into a structured format"""
         customer = {}
@@ -1096,48 +1314,3 @@ class ACGIClient:
         elem = parent.find(tag)
         return elem.text if elem is not None else None
     
-    
-    def purge_queue(self, credentials: Dict[str, str], customer_ids: List[str]) -> Dict[str, any]:
-        """Purge processed customers from the queue"""
-        try:
-            # Build XML with customer IDs to purge
-            purge_xml = f"""<?xml version="1.0" encoding="UTF-8"?>
-<purgeRequest>
-    <vendorId>{credentials['userid']}</vendorId>
-    <vendorPassword>{credentials['password']}</vendorPassword>
-    <customers>"""
-            
-            for cust_id in customer_ids:
-                purge_xml += f"\n        <customer>{cust_id}</customer>"
-            
-            purge_xml += """
-    </customers>
-</purgeRequest>"""
-            
-            url = f"{self.base_url}/{credentials['environment']}/CENCUSTINTEGRATESYNCWEBSVCLIB.PURGE_QUEUE_XML"
-            
-            response = self.session.post(
-                url,
-                data={'p_input_xml_doc': purge_xml},
-                timeout=30
-            )
-            
-            if response.status_code == 200:
-                return {
-                    'success': True,
-                    'message': f"Successfully purged {len(customer_ids)} customers from queue",
-                    'raw_response': response.text
-                }
-            else:
-                return {
-                    'success': False,
-                    'message': f"HTTP {response.status_code}: {response.text}",
-                    'raw_response': response.text
-                }
-                
-        except Exception as e:
-            return {
-                'success': False,
-                'message': f"Error purging queue: {str(e)}",
-                'raw_response': None
-            } 

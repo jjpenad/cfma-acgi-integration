@@ -315,10 +315,20 @@
                     </div>
                     
                     <div class="mb-3">
+                        <div class="form-check mb-3">
+                            <input class="form-check-input" type="checkbox" id="production_mode" name="production_mode">
+                            <label class="form-check-label" for="production_mode">
+                                <strong>Production Mode</strong> - Sync all contacts from ACGI (ignores customer IDs list)
+                            </label>
+                        </div>
+                        <div class="form-text mb-3">When enabled, the system will fetch all customers from ACGI instead of using the specific customer IDs list below.</div>
+                    </div>
+
+                    <div class="mb-3" id="customer_ids_section">
                         <label for="customer_ids" class="form-label">Customer IDs to Sync <span class="text-danger">*</span></label>
                         <textarea class="form-control" id="customer_ids" name="customer_ids" rows="4" 
                                 placeholder="Enter customer IDs, one per line or separated by commas&#10;Example:&#10;12345&#10;67890&#10;11111" required></textarea>
-                        <div class="form-text">Enter the ACGI customer IDs that should be synchronized. One ID per line or separated by commas.</div>
+                        <div class="form-text">Enter the ACGI customer IDs that should be synchronized. One ID per line or separated by commas. This field is ignored when Production Mode is enabled.</div>
                     </div>
 
                     <div class="mb-3">
@@ -403,6 +413,9 @@
             loadCredentials();
             updateNavigationLinks();
             loadSchedulingConfig();
+            
+            // Add event listener for production mode checkbox
+            document.getElementById('production_mode').addEventListener('change', updateProductionModeUI);
         });
         
         function updateNavigationLinks() {
@@ -416,6 +429,26 @@
             const membershipsLink = document.querySelector('a[href="/memberships"]');
             if (membershipsLink) {
                 membershipsLink.href = `/memberships`;
+            }
+        }
+
+        function updateProductionModeUI() {
+            const productionMode = document.getElementById('production_mode').checked;
+            const customerIdsSection = document.getElementById('customer_ids_section');
+            const customerIdsField = document.getElementById('customer_ids');
+            
+            if (productionMode) {
+                // Disable customer IDs field and make it optional
+                customerIdsField.disabled = true;
+                customerIdsField.required = false;
+                customerIdsSection.style.opacity = '0.6';
+                customerIdsField.placeholder = 'This field is disabled in Production Mode - all customers will be synced from ACGI';
+            } else {
+                // Enable customer IDs field and make it required
+                customerIdsField.disabled = false;
+                customerIdsField.required = true;
+                customerIdsSection.style.opacity = '1';
+                customerIdsField.placeholder = 'Enter customer IDs, one per line or separated by commas\nExample:\n12345\n67890\n11111';
             }
         }
 
@@ -621,10 +654,14 @@
                         document.getElementById('sync_frequency').value = config.frequency || '';
                         document.getElementById('sync_enabled').checked = config.enabled || false;
                         document.getElementById('customer_ids').value = config.customer_ids || '';
+                        document.getElementById('production_mode').checked = config.production_mode === true;
                         document.getElementById('sync_contacts').checked = config.sync_contacts === true;
                         document.getElementById('sync_memberships').checked = config.sync_memberships === true;
                         document.getElementById('sync_purchased_products').checked = config.sync_purchased_products === true;
                         document.getElementById('sync_events').checked = config.sync_events === true;
+                        
+                        // Update UI based on production mode
+                        updateProductionModeUI();
                         
                         // Load status separately for display
                         loadSyncStatus();
@@ -653,6 +690,7 @@
                 frequency: parseInt(document.getElementById('sync_frequency').value),
                 enabled: document.getElementById('sync_enabled').checked,
                 customer_ids: document.getElementById('customer_ids').value,
+                production_mode: document.getElementById('production_mode').checked,
                 sync_contacts: document.getElementById('sync_contacts').checked,
                 sync_memberships: document.getElementById('sync_memberships').checked,
                 sync_purchased_products: document.getElementById('sync_purchased_products').checked,
@@ -664,8 +702,8 @@
                 showMessage('danger', 'Please select a sync frequency');
                 return;
             }
-            if (!formData.customer_ids.trim()) {
-                showMessage('danger', 'Please enter customer IDs to sync');
+            if (!formData.production_mode && !formData.customer_ids.trim()) {
+                showMessage('danger', 'Please enter customer IDs to sync or enable Production Mode');
                 return;
             }
 

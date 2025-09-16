@@ -227,6 +227,7 @@ class SchedulingConfig(Base):
     frequency = Column(Integer, nullable=False)  # 5, 10, or 15 minutes
     enabled = Column(String(10), default='false')  # true/false as string
     customer_ids = Column(Text, nullable=False)  # Comma or newline separated customer IDs
+    production_mode = Column(String(10), default='false')  # true/false as string - sync all customers from ACGI
     sync_contacts = Column(String(10), default='true')  # true/false as string
     sync_memberships = Column(String(10), default='true')  # true/false as string
     sync_orders = Column(String(10), default='true')  # true/false as string
@@ -245,6 +246,7 @@ class SchedulingConfig(Base):
                     'frequency': config.frequency,
                     'enabled': config.enabled == 'true',
                     'customer_ids': config.customer_ids,
+                    'production_mode': config.production_mode == 'true',
                     'sync_contacts': config.sync_contacts == 'true',
                     'sync_memberships': config.sync_memberships == 'true',
                     'sync_purchased_products': config.sync_orders == 'true',
@@ -269,6 +271,7 @@ class SchedulingConfig(Base):
             config.frequency = config_data.get('frequency')
             config.enabled = str(config_data.get('enabled', False)).lower()
             config.customer_ids = config_data.get('customer_ids', '')
+            config.production_mode = str(config_data.get('production_mode', False)).lower()
             config.sync_contacts = str(config_data.get('sync_contacts', True)).lower()
             config.sync_memberships = str(config_data.get('sync_memberships', True)).lower()
             config.sync_orders = str(config_data.get('sync_purchased_products', True)).lower()

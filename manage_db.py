@@ -36,7 +36,7 @@ def get_required_columns():
         'form_fields': ['id', 'object_type', 'field_name', 'field_label', 'field_type', 'is_enabled', 'is_important', 'order_index', 'created_at', 'field_source'],
         'search_preferences': ['id', 'object_type', 'search_strategy', 'created_at', 'updated_at'],
         'contact_field_mapping': ['id', 'mapping'],
-        'scheduling_config': ['id', 'frequency', 'enabled', 'customer_ids', 'sync_contacts', 'sync_memberships', 'sync_orders', 'sync_events', 'last_sync', 'created_at', 'updated_at'],
+        'scheduling_config': ['id', 'frequency', 'enabled', 'customer_ids', 'sync_contacts', 'sync_memberships', 'sync_orders', 'sync_events', 'last_sync', 'created_at', 'updated_at', 'production_mode'],
         'membership_field_mapping': ['id', 'mapping'],
         'event_field_mapping': ['id', 'mapping'],
         'purchased_products_field_mapping': ['id', 'mapping']

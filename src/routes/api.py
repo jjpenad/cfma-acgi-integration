@@ -890,8 +890,10 @@ def init_api_routes(app):
                 if not data.get('frequency') or data.get('frequency') not in [5, 10, 15]:
                     return jsonify({'success': False, 'error': 'Frequency must be 5, 10, or 15 minutes'}), 400
                 
-                if not data.get('customer_ids', '').strip():
-                    return jsonify({'success': False, 'error': 'Customer IDs are required'}), 400
+                # Check if production mode is enabled or customer IDs are provided
+                production_mode = data.get('production_mode', False)
+                if not production_mode and not data.get('customer_ids', '').strip():
+                    return jsonify({'success': False, 'error': 'Customer IDs are required when Production Mode is disabled'}), 400
                 
                 # Update configuration using scheduler service
                 success = scheduler_service.update_config(data)

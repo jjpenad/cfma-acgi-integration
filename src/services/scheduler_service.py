@@ -90,7 +90,19 @@ class SchedulerService:
             
             logger.info(f"Scheduled sync job to run every {frequency_minutes} minutes")
             
-            # Verify job was added
+            # Add purge queue job (runs every 30 minutes)
+            purge_job_id = 'purge_queue_job'
+            self.scheduler.add_job(
+                func=self._run_purge_job,
+                trigger=IntervalTrigger(minutes=30),
+                id=purge_job_id,
+                name='Purge ACGI Queue',
+                replace_existing=True
+            )
+            
+            logger.info("Scheduled purge queue job to run every 30 minutes")
+            
+            # Verify jobs were added
             jobs = self.scheduler.get_jobs()
             logger.info(f"Current jobs after adding: {len(jobs)}")
             
@@ -135,10 +147,40 @@ class SchedulerService:
         try:
             logger.info("Starting multi-threaded synchronization")
             
-            # Get customer IDs
-            customer_ids = self.integration_service._parse_customer_ids(config.get('customer_ids', ''))
-            if not customer_ids:
-                return {'success': False, 'error': 'No valid customer IDs provided'}
+            # Check if production mode is enabled
+            production_mode = config.get('production_mode', False)
+            
+            if production_mode:
+                logger.info("Production mode enabled - fetching queued customers from ACGI")
+                print("Production mode enabled - fetching queued customers from ACGI")
+                # Get queued customers from ACGI
+                from src.models import get_app_credentials
+                creds = get_app_credentials()
+                if not creds:
+                    return {'success': False, 'error': 'ACGI credentials not set'}
+                
+                acgi_credentials = {
+                    'userid': creds['acgi_username'],
+                    'password': creds['acgi_password'],
+                    'environment': "cetdigitdev" if creds['acgi_environment'] == "test" else "cetdigit"
+                }
+                
+                acgi_result = self.integration_service.acgi_client.get_queue_customers(acgi_credentials)
+                if not acgi_result.get('success'):
+                    return {'success': False, 'error': f"Failed to fetch queued customers from ACGI: {acgi_result.get('message', 'Unknown error')}"}
+                
+                # Extract customer IDs from the queue response
+                customer_ids = self.integration_service.acgi_client.extract_customer_ids_from_queue(acgi_result)
+                
+                if not customer_ids:
+                    return {'success': False, 'error': 'No customers found in ACGI queue'}
+                
+                logger.info(f"Found {len(customer_ids)} queued customers in production mode")
+            else:
+                # Get customer IDs from config
+                customer_ids = self.integration_service._parse_customer_ids(config.get('customer_ids', ''))
+                if not customer_ids:
+                    return {'success': False, 'error': 'No valid customer IDs provided'}
             
             # Prepare sync tasks for each object type
             sync_tasks = []
@@ -440,6 +482,52 @@ class SchedulerService:
             import traceback
             logger.error(f"Traceback: {traceback.format_exc()}")
             return {'success': False, 'error': str(e)}
+    
+    def _run_purge_job(self):
+        """Run the purge queue job to clear processed customers from ACGI queue"""
+        try:
+            from datetime import datetime
+            current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            logger.info(f"=== PURGE QUEUE JOB STARTED at {current_time} ===")
+            
+            # Get credentials
+            from src.models import get_app_credentials
+            creds = get_app_credentials()
+            if not creds:
+                logger.error("ACGI credentials not set for purge job")
+                return
+            
+            acgi_credentials = {
+                'userid': creds['acgi_username'],
+                'password': creds['acgi_password'],
+                'environment': "cetdigitdev" if creds['acgi_environment'] == "test" else "cetdigit"
+            }
+            
+            # First, get the current queue to find the max queue number
+            queue_result = self.integration_service.acgi_client.get_queue_customers(acgi_credentials)
+            if not queue_result.get('success'):
+                logger.error(f"Failed to get queue for purge: {queue_result.get('message', 'Unknown error')}")
+                return
+            
+            queue_data = queue_result.get('queue_data', {})
+            max_queue_num = queue_data.get('maxQueueNum')
+            
+            if not max_queue_num:
+                logger.info("No max queue number found, nothing to purge")
+                return
+            
+            # Purge the queue up to the max queue number
+            purge_result = self.integration_service.acgi_client.purge_queue(acgi_credentials, max_queue_num)
+            if purge_result.get('success'):
+                purge_status = purge_result.get('purge_result', {}).get('status', 'UNKNOWN')
+                logger.info(f"Successfully purged queue up to {max_queue_num}, status: {purge_status}")
+            else:
+                logger.error(f"Failed to purge queue: {purge_result.get('message', 'Unknown error')}")
+            
+        except Exception as e:
+            logger.error(f"Error in purge queue job: {str(e)}")
+            import traceback
+            logger.error(f"Traceback: {traceback.format_exc()}")
 
 # Global scheduler instance
 scheduler_service = SchedulerService() 

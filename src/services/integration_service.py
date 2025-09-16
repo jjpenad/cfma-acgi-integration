@@ -26,6 +26,7 @@ class IntegrationService:
         Args:
             config: Dictionary containing sync configuration
                 - customer_ids: Comma/newline separated customer IDs
+                - production_mode: Boolean to sync all customers from ACGI
                 - sync_contacts: Boolean to sync contacts
                 - sync_memberships: Boolean to sync memberships
                 
@@ -40,17 +41,45 @@ class IntegrationService:
             if not creds:
                 return {'success': False, 'error': 'ACGI credentials not set'}
             
-            # Parse customer IDs
-            customer_ids = self._parse_customer_ids(config.get('customer_ids', ''))
-            if not customer_ids:
-                return {'success': False, 'error': 'No valid customer IDs provided'}
+            # Check if production mode is enabled
+            production_mode = config.get('production_mode', False)
             
-            # Prepare credentials for ACGI
-            acgi_credentials = {
-                'userid': creds['acgi_username'],
-                'password': creds['acgi_password'],
-                'environment': "cetdigitdev" if creds['acgi_environment'] == "test" else "cetdigit"
-            }
+            if production_mode:
+                logger.info("Production mode enabled - fetching queued customers from ACGI")
+                print("Production mode enabled - fetching queued customers from ACGI")
+                # Get queued customers from ACGI
+                acgi_credentials = {
+                    'userid': creds['acgi_username'],
+                    'password': creds['acgi_password'],
+                    'environment': "cetdigitdev" if creds['acgi_environment'] == "test" else "cetdigit"
+                }
+                
+                acgi_result = self.acgi_client.get_queue_customers(acgi_credentials)
+                if not acgi_result.get('success'):
+                    return {'success': False, 'error': f"Failed to fetch queued customers from ACGI: {acgi_result.get('message', 'Unknown error')}"}
+                
+                # Extract customer IDs from the queue response
+                customer_ids = self.acgi_client.extract_customer_ids_from_queue(acgi_result)
+                
+                if not customer_ids:
+                    return {'success': False, 'error': 'No customers found in ACGI queue'}
+                
+                logger.info(f"Found {len(customer_ids)} queued customers in production mode")
+
+                return
+            else:
+                # Parse customer IDs from config
+                customer_ids = self._parse_customer_ids(config.get('customer_ids', ''))
+                if not customer_ids:
+                    return {'success': False, 'error': 'No valid customer IDs provided'}
+            
+            # Prepare credentials for ACGI (if not already prepared in production mode)
+            if not production_mode:
+                acgi_credentials = {
+                    'userid': creds['acgi_username'],
+                    'password': creds['acgi_password'],
+                    'environment': "cetdigitdev" if creds['acgi_environment'] == "test" else "cetdigit"
+                }
             
             # Initialize HubSpot client
             hubspot_api_key = creds.get('hubspot_api_key')
