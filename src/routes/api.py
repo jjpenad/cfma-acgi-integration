@@ -897,10 +897,14 @@ def init_api_routes(app):
                 
                 # Update configuration using scheduler service
                 success = scheduler_service.update_config(data)
+                error_message = None
+                if isinstance(success, tuple):
+                    success = success[0]
+                    error_message = success[1]
                 if success:
                     return jsonify({'success': True, 'message': 'Scheduling configuration saved successfully'})
                 else:
-                    return jsonify({'success': False, 'error': 'Failed to save configuration'}), 500
+                    return jsonify({'success': False, 'error': f'Failed to save configuration: {error_message}'}), 500
                     
             except Exception as e:
                 logger.error(f"Error saving scheduling config: {str(e)}")

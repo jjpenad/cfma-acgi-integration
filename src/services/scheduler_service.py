@@ -349,7 +349,7 @@ class SchedulerService:
             
         except Exception as e:
             logger.error(f"Error updating scheduling configuration: {str(e)}")
-            return False
+            return False, str(e)
     
     def get_status(self):
         """Get the current status of the scheduler"""
