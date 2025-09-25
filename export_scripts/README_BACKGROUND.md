@@ -4,10 +4,11 @@ This directory contains scripts to run export operations in the background with 
 
 ## 📁 Files
 
-- `run_export_background.py` - Python script to run exports in background
+- `run_export_background.py` - Python script to run exports in background (Cross-platform)
 - `run_export_background.bat` - Windows batch file for background execution
 - `run_export_background.ps1` - PowerShell script for background execution
-- `monitor_exports.py` - Monitor running export processes
+- `run_export_background.sh` - Linux/Unix shell script for background execution
+- `monitor_exports.py` - Monitor running export processes (Cross-platform)
 
 ## 🚀 Usage
 
@@ -37,7 +38,7 @@ run_export_background.bat export_event_registrations.py contacts_export.csv
 run_export_background.bat export_event_registrations.py contacts_export.csv my_output.csv
 ```
 
-### Method 3: PowerShell
+### Method 3: PowerShell (Windows)
 
 ```powershell
 # Run export in background
@@ -48,6 +49,19 @@ run_export_background.bat export_event_registrations.py contacts_export.csv my_o
 
 # Run with custom log file
 .\run_export_background.ps1 -ScriptName "export_event_registrations.py" -CsvFile "contacts_export.csv" -LogFile "my_export.log"
+```
+
+### Method 4: Shell Script (Linux/Unix)
+
+```bash
+# Make executable first
+chmod +x run_export_background.sh
+
+# Run export in background
+./run_export_background.sh export_event_registrations.py contacts_export.csv
+
+# Run with output file
+./run_export_background.sh export_event_registrations.py contacts_export.csv my_output.csv
 ```
 
 ## 📊 Monitoring
@@ -65,6 +79,8 @@ python monitor_exports.py --log export_event_registrations_background_20240925_1
 ```
 
 ### Manual Process Monitoring
+
+**Windows:**
 ```bash
 # Check Python processes
 tasklist | findstr python
@@ -74,6 +90,18 @@ tasklist /FI "PID eq 12345"
 
 # Stop specific process
 taskkill /PID 12345
+```
+
+**Linux/Unix:**
+```bash
+# Check Python processes
+ps aux | grep python
+
+# Check specific process
+ps -p 12345
+
+# Stop specific process
+kill 12345
 ```
 
 ## 📝 Log Files

@@ -62,10 +62,18 @@ def run_export_background(script_name, csv_file, output_file=None, id_column='cu
                 bufsize=1
             )
         
-        print(f"Process started with PID: {process.pid}")
+    print(f"Process started with PID: {process.pid}")
+    
+    # Platform-specific monitoring commands
+    import platform
+    if platform.system() == "Windows":
         print(f"Check progress with: Get-Content {log_file} -Wait")
         print(f"Check if running with: tasklist | findstr python")
         print(f"To stop: taskkill /PID {process.pid}")
+    else:
+        print(f"Check progress with: tail -f {log_file}")
+        print(f"Check if running with: ps aux | grep python")
+        print(f"To stop: kill {process.pid}")
         
         return True
         
@@ -136,8 +144,16 @@ def run_all_exports_background(csv_file, output_dir=None, log_file=None):
             print(f"Warning: {script} not found, skipping...")
     
     print(f"\nAll processes started!")
-    print(f"Check progress with: Get-Content {log_file} -Wait")
-    print(f"Check if running with: tasklist | findstr python")
+    
+    # Platform-specific monitoring commands
+    import platform
+    if platform.system() == "Windows":
+        print(f"Check progress with: Get-Content {log_file} -Wait")
+        print(f"Check if running with: tasklist | findstr python")
+    else:
+        print(f"Check progress with: tail -f {log_file}")
+        print(f"Check if running with: ps aux | grep python")
+    
     print(f"Process PIDs: {[p[1].pid for p in processes]}")
     
     return processes

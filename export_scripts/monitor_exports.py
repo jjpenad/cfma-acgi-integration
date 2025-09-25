@@ -15,20 +15,39 @@ from pathlib import Path
 
 def get_python_processes():
     """Get all running Python processes"""
+    import platform
+    
     try:
-        result = subprocess.run(['tasklist', '/FI', 'IMAGENAME eq python.exe'], 
-                              capture_output=True, text=True)
-        lines = result.stdout.strip().split('\n')
-        processes = []
-        
-        for line in lines[3:]:  # Skip header lines
-            if 'python.exe' in line:
-                parts = line.split()
-                if len(parts) >= 2:
-                    pid = parts[1]
-                    processes.append(pid)
-        
-        return processes
+        if platform.system() == "Windows":
+            # Windows: use tasklist
+            result = subprocess.run(['tasklist', '/FI', 'IMAGENAME eq python.exe'], 
+                                  capture_output=True, text=True)
+            lines = result.stdout.strip().split('\n')
+            processes = []
+            
+            for line in lines[3:]:  # Skip header lines
+                if 'python.exe' in line:
+                    parts = line.split()
+                    if len(parts) >= 2:
+                        pid = parts[1]
+                        processes.append(pid)
+            
+            return processes
+        else:
+            # Linux/macOS: use ps
+            result = subprocess.run(['ps', 'aux'], capture_output=True, text=True)
+            lines = result.stdout.strip().split('\n')
+            processes = []
+            
+            for line in lines[1:]:  # Skip header line
+                if 'python' in line and 'monitor_exports.py' not in line:
+                    parts = line.split()
+                    if len(parts) >= 2:
+                        pid = parts[1]
+                        processes.append(pid)
+            
+            return processes
+            
     except Exception as e:
         print(f"Error getting processes: {e}")
         return []
