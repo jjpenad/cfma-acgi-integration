@@ -31,7 +31,7 @@ class ExportConfig:
     
     # Logging Settings
     LOG_LEVEL = os.getenv('EXPORT_LOG_LEVEL', 'INFO')
-    LOG_FILE = os.getenv('EXPORT_LOG_FILE', 'export_scripts/contact_export.log')
+    LOG_FILE = os.getenv('EXPORT_LOG_FILE', 'contact_export.log')
     
     @classmethod
     def validate(cls):
