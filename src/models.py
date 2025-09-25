@@ -24,7 +24,14 @@ def get_database_url():
     else:
         return Config.IN_MEMORY_DATABASE_URL
     
-engine = create_engine(get_database_url(), echo=True)
+# Create engine with connection pooling and error handling
+engine = create_engine(
+    get_database_url(), 
+    echo=True,
+    pool_pre_ping=True,  # Verify connections before use
+    pool_recycle=300,    # Recycle connections every 5 minutes
+    connect_args={'check_same_thread': False} if 'sqlite' in get_database_url() else {}
+)
 Base = declarative_base()
 Session = sessionmaker(bind=engine)
 
@@ -304,6 +311,14 @@ class SchedulingConfig(Base):
 def init_db():
     """Initialize database tables"""
     try:
+        logger.info("Checking database connection...")
+        
+        # Test database connection first
+        if not validate_database_connection():
+            logger.warning("Skipping database initialization due to connection failure")
+            return
+        logger.info("Database connection successful")
+        
         logger.info("Checking database tables...")
         
         # Check if tables already exist
@@ -350,9 +365,15 @@ def reset_db():
 
 def create_default_admin():
     """Create default admin user if it doesn't exist"""
+    session = None
     try:
         from werkzeug.security import generate_password_hash
         from config import Config
+        
+        # Test database connection first
+        if not validate_database_connection():
+            logger.error("Database connection failed, skipping admin user creation")
+            return
         
         session = get_session()
         try:
@@ -371,12 +392,28 @@ def create_default_admin():
             else:
                 logger.info(f"Admin user already exists: {Config.ADMIN_USERNAME}")
         except Exception as e:
-            session.rollback()
+            if session:
+                session.rollback()
             logger.error(f"Error creating admin user: {str(e)}")
-        finally:
-            session.close()
     except Exception as e:
         logger.error(f"Error in create_default_admin: {str(e)}")
+    finally:
+        if session:
+            try:
+                session.close()
+            except Exception as close_error:
+                logger.error(f"Error closing session: {str(close_error)}")
+
+def validate_database_connection():
+    """Validate database connection and return True if successful"""
+    try:
+        session = Session()
+        session.execute("SELECT 1")
+        session.close()
+        return True
+    except Exception as e:
+        logger.error(f"Database connection validation failed: {str(e)}")
+        return False
 
 def get_session():
     """Get a new database session"""
