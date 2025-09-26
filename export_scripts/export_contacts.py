@@ -335,7 +335,7 @@ class ContactExporter:
         
         # Create batches of customer IDs
         batch_size = ExportConfig.BATCH_SIZE
-        all_customers = []
+        batch_count = 0
         
         for start_id in range(ExportConfig.START_CUSTOMER_ID, ExportConfig.END_CUSTOMER_ID + 1, batch_size):
             end_id = min(start_id + batch_size - 1, ExportConfig.END_CUSTOMER_ID)
@@ -347,19 +347,20 @@ class ContactExporter:
             
             if result['success']:
                 customers = result['customers']
-                all_customers.extend(customers)
                 self.total_processed += result['batch_size']
                 self.total_with_emails += len(customers)
                 logger.info(f"Batch {start_id}-{end_id}: Found {len(customers)} customers with emails")
+                
+                # Write batch to CSV immediately
+                if customers:
+                    self.write_customers_batch_to_csv(customers, output_file, is_first_batch=(batch_count == 0))
+                    batch_count += 1
             else:
                 self.total_errors += result['batch_size']
                 logger.error(f"Batch {start_id}-{end_id} failed: {result.get('error', 'Unknown error')}")
             
             # Add a delay between requests to be respectful to the API
             time.sleep(ExportConfig.REQUEST_DELAY)
-        
-        # Write to CSV
-        self.write_customers_to_csv(all_customers, output_file)
         
         # Print summary
         self.print_summary()
@@ -494,6 +495,134 @@ class ContactExporter:
                 writer.writerow(row)
         
         logger.info(f"Exported {len(customers)} customers to {output_file}")
+    
+    def write_customers_batch_to_csv(self, customers: List[Dict[str, Any]], output_file: str, is_first_batch: bool = False):
+        """
+        Write a batch of customers to CSV file incrementally
+        
+        Args:
+            customers: List of customer dictionaries
+            output_file: Output file path
+            is_first_batch: Whether this is the first batch (write header)
+        """
+        if not customers:
+            return
+        
+        # Define CSV columns
+        fieldnames = [
+            'custId', 'custType', 'loginId',
+            'prefixName', 'firstName', 'middleName', 'lastName', 'suffixName', 
+            'degreeName', 'informalName', 'displayName',
+            'Email', 'Additional_Emails',
+            'primary_phone', 'primary_phone_type', 'primary_phone_number',
+            'primary_address_street1', 'primary_address_street2', 'primary_address_city',
+            'primary_address_state', 'primary_address_postalCode', 'primary_address_country',
+            'primary_job_employer', 'primary_job_title',
+            'total_emails', 'total_phones', 'total_addresses', 'total_jobs'
+        ]
+        
+        # Prepare batch data
+        batch_data = []
+        for customer in customers:
+            # Extract preferred email and additional emails
+            preferred_email = None
+            additional_emails = []
+            
+            if customer.get('emails'):
+                # Find preferred email (preferred=True)
+                preferred_email_data = next((email for email in customer['emails'] if email.get('preferred')), None)
+                if preferred_email_data:
+                    preferred_email = preferred_email_data.get('address')
+                
+                # If no preferred email, use the first email as primary
+                if not preferred_email and customer['emails']:
+                    preferred_email = customer['emails'][0].get('address')
+                
+                # Collect all other emails (excluding the preferred one)
+                for email in customer['emails']:
+                    email_address = email.get('address')
+                    if email_address and email_address != preferred_email:
+                        additional_emails.append(email_address)
+            
+            # Extract primary phone (best or first)
+            primary_phone = None
+            primary_phone_type = None
+            primary_phone_number = None
+            
+            if customer.get('phones'):
+                best_phone = next((phone for phone in customer['phones'] if phone.get('best')), None)
+                primary_phone_data = best_phone or customer['phones'][0]
+                
+                primary_phone = primary_phone_data.get('phoneTypeDescr')
+                primary_phone_type = primary_phone_data.get('phoneType')
+                primary_phone_number = primary_phone_data.get('number')
+            
+            # Extract primary address (best or first)
+            primary_address_street1 = None
+            primary_address_street2 = None
+            primary_address_city = None
+            primary_address_state = None
+            primary_address_postalCode = None
+            primary_address_country = None
+            
+            if customer.get('addresses'):
+                best_address = next((addr for addr in customer['addresses'] if addr.get('best')), None)
+                primary_address_data = best_address or customer['addresses'][0]
+                
+                primary_address_street1 = primary_address_data.get('street1')
+                primary_address_street2 = primary_address_data.get('street2')
+                primary_address_city = primary_address_data.get('city')
+                primary_address_state = primary_address_data.get('state')
+                primary_address_postalCode = primary_address_data.get('postalCode')
+                primary_address_country = primary_address_data.get('countryDescr')
+            
+            # Extract primary job (best or first)
+            primary_job_employer = None
+            primary_job_title = None
+            
+            if customer.get('jobs'):
+                best_job = next((job for job in customer['jobs'] if job.get('best')), None)
+                primary_job_data = best_job or customer['jobs'][0]
+                
+                primary_job_employer = primary_job_data.get('employer')
+                primary_job_title = primary_job_data.get('title')
+            
+            # Create row data
+            row_data = {
+                'custId': customer.get('custId', ''),
+                'custType': customer.get('custType', ''),
+                'loginId': customer.get('loginId', ''),
+                'prefixName': customer.get('prefixName', ''),
+                'firstName': customer.get('firstName', ''),
+                'middleName': customer.get('middleName', ''),
+                'lastName': customer.get('lastName', ''),
+                'suffixName': customer.get('suffixName', ''),
+                'degreeName': customer.get('degreeName', ''),
+                'informalName': customer.get('informalName', ''),
+                'displayName': customer.get('displayName', ''),
+                'Email': preferred_email or '',
+                'Additional_Emails': '; '.join(additional_emails) if additional_emails else '',
+                'primary_phone': primary_phone or '',
+                'primary_phone_type': primary_phone_type or '',
+                'primary_phone_number': primary_phone_number or '',
+                'primary_address_street1': primary_address_street1 or '',
+                'primary_address_street2': primary_address_street2 or '',
+                'primary_address_city': primary_address_city or '',
+                'primary_address_state': primary_address_state or '',
+                'primary_address_postalCode': primary_address_postalCode or '',
+                'primary_address_country': primary_address_country or '',
+                'primary_job_employer': primary_job_employer or '',
+                'primary_job_title': primary_job_title or '',
+                'total_emails': len(customer.get('emails', [])),
+                'total_phones': len(customer.get('phones', [])),
+                'total_addresses': len(customer.get('addresses', [])),
+                'total_jobs': len(customer.get('jobs', []))
+            }
+            
+            batch_data.append(row_data)
+        
+        # Write batch to CSV using the base class method
+        self.write_batch_to_csv(batch_data, output_file, fieldnames, is_first_batch)
     
     def print_summary(self):
         """Print export summary"""

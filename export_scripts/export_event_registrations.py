@@ -222,7 +222,7 @@ class EventRegistrationsExporter(BaseExporter):
             logger.warning("No customer IDs found in CSV file")
             return output_file
         
-        all_registrations = []
+        batch_count = 0
         
         for i, customer_id in enumerate(customer_ids, 1):
             logger.info(f"Processing customer {i}/{len(customer_ids)}: {customer_id}")
@@ -232,9 +232,24 @@ class EventRegistrationsExporter(BaseExporter):
             
             if reg_result['success']:
                 registrations = reg_result['registrations']
-                all_registrations.extend(registrations)
                 self.total_exported += len(registrations)
                 logger.info(f"  Found {len(registrations)} event registrations")
+                
+                # Write registrations batch to CSV immediately
+                if registrations:
+                    parsed_registrations = [self.parse_registration_data(registration) for registration in registrations]
+                    registration_fieldnames = [
+                        'customerId', 'registrationSerno', 'eventId', 'eventStatus', 'registrationDate',
+                        'registrationType', 'registrationName', 'representing', 'billtoId', 'promoCode',
+                        'purchaseOrder', 'primaryItemId', 'primaryRegStatus', 'totalCharges', 'totalPayment',
+                        'balance', 'eventName', 'programName', 'primaryItemDescription', 'eventStartDate',
+                        'eventEndDate', 'locationName', 'locationStreet1', 'locationStreet2', 'locationCity',
+                        'locationState', 'locationZip', 'locationCountry', 'locationCountryDescr',
+                        'firstName', 'lastName', 'companyName', 'email', 'registrationStreet1',
+                        'registrationStreet2', 'registrationStreet3', 'registrationCity', 'registrationState',
+                        'registrationZip', 'registrationCountry', 'totalItems', 'totalGuests'
+                    ]
+                    self.write_batch_to_csv(parsed_registrations, output_file, registration_fieldnames, is_first_batch=(batch_count == 0))
             else:
                 self.total_errors += 1
                 logger.error(f"  Registration error: {reg_result.get('error', 'Unknown error')}")
@@ -249,43 +264,22 @@ class EventRegistrationsExporter(BaseExporter):
                 logger.error(f"  Events error: {events_result.get('error', 'Unknown error')}")
             
             self.total_processed += 1
+            batch_count += 1
             
             # Add delay between requests
             time.sleep(ExportConfig.REQUEST_DELAY)
         
-        # Parse registrations for CSV
-        parsed_registrations = [self.parse_registration_data(registration) for registration in all_registrations]
-        
-        # Parse events for CSV (from cache to avoid duplicates)
-        parsed_events = [self.parse_event_data(event) for event in self.events_cache.values()]
-        
-        # Define CSV columns for registrations
-        registration_fieldnames = [
-            'customerId', 'registrationSerno', 'eventId', 'eventStatus', 'registrationDate',
-            'registrationType', 'registrationName', 'representing', 'billtoId', 'promoCode',
-            'purchaseOrder', 'primaryItemId', 'primaryRegStatus', 'totalCharges', 'totalPayment',
-            'balance', 'eventName', 'programName', 'primaryItemDescription', 'eventStartDate',
-            'eventEndDate', 'locationName', 'locationStreet1', 'locationStreet2', 'locationCity',
-            'locationState', 'locationZip', 'locationCountry', 'locationCountryDescr',
-            'firstName', 'lastName', 'companyName', 'email', 'registrationStreet1',
-            'registrationStreet2', 'registrationStreet3', 'registrationCity', 'registrationState',
-            'registrationZip', 'registrationCountry', 'totalItems', 'totalGuests'
-        ]
-        
-        # Define CSV columns for events
-        event_fieldnames = [
-            'eventId', 'programName', 'eventName', 'eventType', 'eventTypeDescr',
-            'status', 'startDate', 'endDate', 'deadlineDate', 'requireSecondaryItem',
-            'locationName', 'locationStreet1', 'locationStreet2', 'locationCity', 'locationState',
-            'locationZip', 'locationCountry', 'locationCountryDescr', 'registerUrl',
-            'registrationStatus', 'lastChangeDate', 'totalAttributes', 'totalRegistrationTypes', 'totalSponsors'
-        ]
-        
-        # Write registrations to CSV
-        self.write_to_csv(parsed_registrations, output_file, registration_fieldnames)
-        
-        # Write events to CSV
-        self.write_to_csv(parsed_events, events_output_file, event_fieldnames)
+        # Write cached events to CSV (all unique events)
+        if self.events_cache:
+            parsed_events = [self.parse_event_data(event) for event in self.events_cache.values()]
+            event_fieldnames = [
+                'eventId', 'programName', 'eventName', 'eventType', 'eventTypeDescr',
+                'status', 'startDate', 'endDate', 'deadlineDate', 'requireSecondaryItem',
+                'locationName', 'locationStreet1', 'locationStreet2', 'locationCity', 'locationState',
+                'locationZip', 'locationCountry', 'locationCountryDescr', 'registerUrl',
+                'registrationStatus', 'lastChangeDate', 'totalAttributes', 'totalRegistrationTypes', 'totalSponsors'
+            ]
+            self.write_to_csv(parsed_events, events_output_file, event_fieldnames)
         
         # Print summary
         logger.info("=" * 60)

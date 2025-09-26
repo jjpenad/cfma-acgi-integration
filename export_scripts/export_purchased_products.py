@@ -116,7 +116,7 @@ class PurchasedProductsExporter(BaseExporter):
             logger.warning("No customer IDs found in CSV file")
             return output_file
         
-        all_products = []
+        batch_count = 0
         
         for i, customer_id in enumerate(customer_ids, 1):
             logger.info(f"Processing customer {i}/{len(customer_ids)}: {customer_id}")
@@ -126,9 +126,21 @@ class PurchasedProductsExporter(BaseExporter):
             
             if result['success']:
                 products = result['purchased_products']
-                all_products.extend(products)
                 self.total_exported += len(products)
                 logger.info(f"  Found {len(products)} purchased products")
+                
+                # Write products batch to CSV immediately
+                if products:
+                    parsed_products = [self.parse_purchased_product_data(product) for product in products]
+                    fieldnames = [
+                        'customerId', 'productSerno', 'productId', 'productName', 'length', 'width',
+                        'height', 'weight', 'activeFlag', 'internalOrderFlag', 'firstAvailableDate',
+                        'defaultUnitCost', 'showProductRelativeURL', 'imageThumbnail', 'imageFullsize',
+                        'orderDate', 'orderStatus', 'orderSerno', 'productType', 'priceProfile',
+                        'quantity', 'unitPrice', 'totalPrice', 'shippingAddress', 'billingAddress'
+                    ]
+                    self.write_batch_to_csv(parsed_products, output_file, fieldnames, is_first_batch=(batch_count == 0))
+                    batch_count += 1
             else:
                 self.total_errors += 1
                 logger.error(f"  Error: {result.get('error', 'Unknown error')}")
@@ -138,20 +150,6 @@ class PurchasedProductsExporter(BaseExporter):
             # Add delay between requests
             time.sleep(ExportConfig.REQUEST_DELAY)
         
-        # Parse products for CSV
-        parsed_products = [self.parse_purchased_product_data(product) for product in all_products]
-        
-        # Define CSV columns
-        fieldnames = [
-            'customerId', 'productSerno', 'productId', 'productName', 'length', 'width',
-            'height', 'weight', 'activeFlag', 'internalOrderFlag', 'firstAvailableDate',
-            'defaultUnitCost', 'showProductRelativeURL', 'imageThumbnail', 'imageFullsize',
-            'orderDate', 'orderStatus', 'orderSerno', 'productType', 'priceProfile',
-            'invoiceBalanceStatus', 'invoiceBalance', 'quantity'
-        ]
-        
-        # Write to CSV
-        self.write_to_csv(parsed_products, output_file, fieldnames)
         
         # Print summary
         self.print_summary("Purchased Products")

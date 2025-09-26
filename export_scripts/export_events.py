@@ -118,7 +118,7 @@ class EventsExporter(BaseExporter):
             logger.warning("No customer IDs found in CSV file")
             return output_file
         
-        all_events = []
+        batch_count = 0
         
         for i, customer_id in enumerate(customer_ids, 1):
             logger.info(f"Processing customer {i}/{len(customer_ids)}: {customer_id}")
@@ -128,9 +128,21 @@ class EventsExporter(BaseExporter):
             
             if result['success']:
                 events = result['events']
-                all_events.extend(events)
                 self.total_exported += len(events)
                 logger.info(f"  Found {len(events)} events")
+                
+                # Write events batch to CSV immediately
+                if events:
+                    parsed_events = [self.parse_event_data(event) for event in events]
+                    fieldnames = [
+                        'customerId', 'eventId', 'programName', 'eventName', 'eventType', 'eventTypeDescr',
+                        'status', 'startDate', 'endDate', 'deadlineDate', 'requireSecondaryItem',
+                        'locationName', 'locationStreet1', 'locationStreet2', 'locationCity', 'locationState',
+                        'locationZip', 'locationCountry', 'locationCountryDescr', 'registerUrl',
+                        'registrationStatus', 'lastChangeDate', 'totalAttributes', 'totalRegistrationTypes', 'totalSponsors'
+                    ]
+                    self.write_batch_to_csv(parsed_events, output_file, fieldnames, is_first_batch=(batch_count == 0))
+                    batch_count += 1
             else:
                 self.total_errors += 1
                 logger.error(f"  Error: {result.get('error', 'Unknown error')}")
@@ -140,20 +152,6 @@ class EventsExporter(BaseExporter):
             # Add delay between requests
             time.sleep(ExportConfig.REQUEST_DELAY)
         
-        # Parse events for CSV
-        parsed_events = [self.parse_event_data(event) for event in all_events]
-        
-        # Define CSV columns
-        fieldnames = [
-            'customerId', 'eventId', 'programName', 'eventName', 'eventType', 'eventTypeDescr',
-            'status', 'startDate', 'endDate', 'deadlineDate', 'requireSecondaryItem',
-            'locationName', 'locationStreet1', 'locationStreet2', 'locationCity', 'locationState',
-            'locationZip', 'locationCountry', 'locationCountryDescr', 'registerUrl',
-            'registrationStatus', 'lastChangeDate', 'totalAttributes', 'totalRegistrationTypes', 'totalSponsors'
-        ]
-        
-        # Write to CSV
-        self.write_to_csv(parsed_events, output_file, fieldnames)
         
         # Print summary
         self.print_summary("Events")

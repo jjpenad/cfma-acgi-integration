@@ -137,6 +137,40 @@ class BaseExporter:
         
         logger.info(f"Exported {len(data)} records to {output_file}")
     
+    def write_batch_to_csv(self, data: List[Dict[str, Any]], output_file: str, fieldnames: List[str], is_first_batch: bool = False):
+        """
+        Write batch data to CSV file incrementally
+        
+        Args:
+            data: List of dictionaries to write
+            output_file: Output file path
+            fieldnames: List of column names
+            is_first_batch: Whether this is the first batch (write header)
+        """
+        if not data:
+            return
+        
+        # Ensure output directory exists
+        os.makedirs(os.path.dirname(output_file), exist_ok=True)
+        
+        # Check if file exists to determine write mode
+        file_exists = os.path.exists(output_file)
+        write_mode = 'w' if is_first_batch or not file_exists else 'a'
+        
+        with open(output_file, write_mode, newline='', encoding='utf-8') as csvfile:
+            writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+            
+            # Write header only for first batch or new file
+            if is_first_batch or not file_exists:
+                writer.writeheader()
+            
+            for row in data:
+                # Ensure all fieldnames are present in the row
+                complete_row = {field: row.get(field, '') for field in fieldnames}
+                writer.writerow(complete_row)
+        
+        logger.info(f"Batch of {len(data)} records written to {output_file}")
+    
     def print_summary(self, export_type: str):
         """Print export summary"""
         if self.start_time:

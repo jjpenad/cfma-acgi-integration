@@ -106,7 +106,7 @@ class MembershipsExporter(BaseExporter):
             logger.warning("No customer IDs found in CSV file")
             return output_file
         
-        all_memberships = []
+        batch_count = 0
         
         for i, customer_id in enumerate(customer_ids, 1):
             logger.info(f"Processing customer {i}/{len(customer_ids)}: {customer_id}")
@@ -116,9 +116,19 @@ class MembershipsExporter(BaseExporter):
             
             if result['success']:
                 memberships = result['memberships']
-                all_memberships.extend(memberships)
                 self.total_exported += len(memberships)
                 logger.info(f"  Found {len(memberships)} memberships")
+                
+                # Write memberships batch to CSV immediately
+                if memberships:
+                    parsed_memberships = [self.parse_membership_data(membership) for membership in memberships]
+                    fieldnames = [
+                        'customerId', 'subgroupId', 'subgroupName', 'classCode', 'subclassCode',
+                        'status', 'isActive', 'joinDate', 'expireDate', 'currentStatusReasonCode',
+                        'currentStatusReasonNote', 'reinstateDate', 'terminateDate'
+                    ]
+                    self.write_batch_to_csv(parsed_memberships, output_file, fieldnames, is_first_batch=(batch_count == 0))
+                    batch_count += 1
             else:
                 self.total_errors += 1
                 logger.error(f"  Error: {result.get('error', 'Unknown error')}")
@@ -127,19 +137,6 @@ class MembershipsExporter(BaseExporter):
             
             # Add delay between requests
             time.sleep(ExportConfig.REQUEST_DELAY)
-        
-        # Parse memberships for CSV
-        parsed_memberships = [self.parse_membership_data(membership) for membership in all_memberships]
-        
-        # Define CSV columns
-        fieldnames = [
-            'customerId', 'subgroupId', 'subgroupName', 'classCode', 'subclassCode',
-            'status', 'isActive', 'joinDate', 'expireDate', 'currentStatusReasonCode',
-            'currentStatusReasonNote', 'reinstateDate', 'terminateDate'
-        ]
-        
-        # Write to CSV
-        self.write_to_csv(parsed_memberships, output_file, fieldnames)
         
         # Print summary
         self.print_summary("Memberships")
