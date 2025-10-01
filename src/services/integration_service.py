@@ -1061,8 +1061,8 @@ class IntegrationService:
             "balance": float(registration['balance']) if registration['balance'] else None,    
             "event_name": registration['eventName'],
             "program_name": registration['programName'],
-            "event_start_dt": registration['eventStartDt'],
-            "event_end_dt": registration['eventEndDt'],
+            # "event_start_dt": registration['eventStartDt'],
+            # "event_end_dt": registration['eventEndDt'],
             "event_status": registration['eventStatus'],
         }
 
