@@ -1059,6 +1059,11 @@ class IntegrationService:
             "total_charges": float(registration['totalCharges']) if registration['totalCharges'] else None,
             "total_payment": abs(float(registration['totalPayment'])) if registration['totalPayment'] else None,
             "balance": float(registration['balance']) if registration['balance'] else None,    
+            "event_name": registration['eventName'],
+            "program_name": registration['programName'],
+            "event_start_dt": registration['eventStartDt'],
+            "event_end_dt": registration['eventEndDt'],
+            "event_status": registration['eventStatus'],
         }
 
         return result
