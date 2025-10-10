@@ -25,6 +25,9 @@ sys.path.insert(0, os.path.dirname(__file__))
 # Import local config module
 from config import ExportConfig
 
+# Import shared utilities
+from shared_utils import BaseExporter
+
 # Add src directory to Python path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
 
@@ -46,7 +49,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
-class ContactExporter:
+class ContactExporter(BaseExporter):
     """Export contacts from ACGI to CSV"""
     
     def __init__(self, credentials: Dict[str, str]):
@@ -59,20 +62,11 @@ class ContactExporter:
                 - password: ACGI password
                 - environment: 'test' or 'prod'
         """
-        self.credentials = credentials
-        self.acgi_client = ACGIClient()
-        self.base_url = "https://ams.cfma.org"
-        self.session = requests.Session()
-        self.session.headers.update({
-            'Content-Type': 'application/x-www-form-urlencoded',
-            'User-Agent': 'ACGI-Contact-Export/1.0'
-        })
+        # Initialize parent class
+        super().__init__(credentials)
         
-        # Statistics
-        self.total_processed = 0
+        # Additional statistics specific to contacts
         self.total_with_emails = 0
-        self.total_errors = 0
-        self.start_time = None
         
     def create_bulk_request_xml(self, customer_ids: List[int]) -> str:
         """
@@ -367,6 +361,64 @@ class ContactExporter:
         
         return output_file
     
+    def export_contacts_from_csv(self, csv_file_path: str, id_column: str = 'custId', output_file: str = None) -> str:
+        """
+        Export contacts from ACGI for customer IDs read from a CSV file
+        
+        Args:
+            csv_file_path: Path to CSV file containing customer IDs
+            id_column: Name of the column containing customer IDs
+            output_file: Optional output file path
+            
+        Returns:
+            Path to the created CSV file
+        """
+        if output_file is None:
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S") if ExportConfig.INCLUDE_TIMESTAMP else ""
+            filename = f"contacts_export_{timestamp}.csv" if timestamp else "contacts_export.csv"
+            output_file = os.path.join(ExportConfig.OUTPUT_DIRECTORY, filename)
+        
+        self.start_time = datetime.now()
+        logger.info(f"Starting contact export from CSV to {output_file}")
+        logger.info(f"Reading customer IDs from {csv_file_path}")
+        
+        # Read customer IDs from CSV
+        customer_ids = self.read_customer_ids_from_csv(csv_file_path, id_column)
+        
+        if not customer_ids:
+            logger.warning("No customer IDs found in CSV file")
+            return output_file
+        
+        batch_count = 0
+        
+        for i, customer_id in enumerate(customer_ids, 1):
+            logger.info(f"Processing customer {i}/{len(customer_ids)}: {customer_id}")
+            
+            # Get customer data for this customer ID
+            result = self.get_customer_batch([int(customer_id)])
+            
+            if result['success']:
+                customers = result['customers']
+                self.total_processed += result['batch_size']
+                self.total_with_emails += len(customers)
+                logger.info(f"  Found {len(customers)} customers with emails")
+                
+                # Write batch to CSV immediately
+                if customers:
+                    self.write_customers_batch_to_csv(customers, output_file, is_first_batch=(batch_count == 0))
+                    batch_count += 1
+            else:
+                self.total_errors += result['batch_size']
+                logger.error(f"  Error: {result.get('error', 'Unknown error')}")
+            
+            # Add delay between requests
+            time.sleep(ExportConfig.REQUEST_DELAY)
+        
+        # Print summary
+        self.print_summary()
+        
+        return output_file
+    
     def write_customers_to_csv(self, customers: List[Dict[str, Any]], output_file: str):
         """
         Write customers to CSV file
@@ -641,6 +693,16 @@ class ContactExporter:
 
 def main():
     """Main function to run the contact export"""
+    import argparse
+    
+    # Parse command line arguments
+    parser = argparse.ArgumentParser(description='Export contacts from ACGI to CSV')
+    parser.add_argument('csv_file', nargs='?', help='CSV file containing customer IDs (optional)')
+    parser.add_argument('--output', '-o', help='Output CSV file path')
+    parser.add_argument('--id-column', default='custId', help='Name of the column containing customer IDs')
+    
+    args = parser.parse_args()
+    
     # Validate configuration
     config_errors = ExportConfig.validate()
     if config_errors:
@@ -656,14 +718,22 @@ def main():
     logger.info("ACGI Contact Export Starting")
     logger.info(f"Environment: {credentials['environment']}")
     logger.info(f"Username: {credentials['userid']}")
-    logger.info(f"Customer ID Range: {ExportConfig.START_CUSTOMER_ID}-{ExportConfig.END_CUSTOMER_ID}")
-    logger.info(f"Batch Size: {ExportConfig.BATCH_SIZE}")
     
     # Create exporter and run export
     exporter = ContactExporter(credentials)
     
     try:
-        output_file = exporter.export_contacts_to_csv()
+        if args.csv_file:
+            # Export from CSV file
+            logger.info(f"Reading customer IDs from: {args.csv_file}")
+            logger.info(f"ID Column: {args.id_column}")
+            output_file = exporter.export_contacts_from_csv(args.csv_file, args.id_column, args.output)
+        else:
+            # Export from configured range
+            logger.info(f"Customer ID Range: {ExportConfig.START_CUSTOMER_ID}-{ExportConfig.END_CUSTOMER_ID}")
+            logger.info(f"Batch Size: {ExportConfig.BATCH_SIZE}")
+            output_file = exporter.export_contacts_to_csv(args.output)
+        
         logger.info(f"Export completed successfully: {output_file}")
     except KeyboardInterrupt:
         logger.info("Export interrupted by user")
