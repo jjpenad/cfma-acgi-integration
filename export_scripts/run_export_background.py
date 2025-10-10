@@ -13,13 +13,13 @@ import argparse
 from datetime import datetime
 from pathlib import Path
 
-def run_export_background(script_name, csv_file, output_file=None, id_column='custId', log_file=None):
+def run_export_background(script_name, csv_file=None, output_file=None, id_column='custId', log_file=None):
     """
     Run an export script in the background
     
     Args:
         script_name: Name of the export script to run
-        csv_file: Path to CSV file containing customer IDs
+        csv_file: Path to CSV file containing customer IDs (optional for contact export)
         output_file: Optional output file path
         id_column: Name of the column containing customer IDs
         log_file: Optional log file path
@@ -37,7 +37,11 @@ def run_export_background(script_name, csv_file, output_file=None, id_column='cu
         log_file = f"{script_name.replace('.py', '')}_background_{timestamp}.log"
     
     # Build command
-    cmd = [sys.executable, script_name, csv_file]
+    cmd = [sys.executable, script_name]
+    
+    # Add CSV file if provided
+    if csv_file:
+        cmd.append(csv_file)
     
     if output_file:
         cmd.extend(['--output', output_file])
@@ -81,12 +85,12 @@ def run_export_background(script_name, csv_file, output_file=None, id_column='cu
         print(f"Error starting background process: {e}")
         return False
 
-def run_all_exports_background(csv_file, output_dir=None, log_file=None):
+def run_all_exports_background(csv_file=None, output_dir=None, log_file=None):
     """
     Run all export scripts in background
     
     Args:
-        csv_file: Path to CSV file containing customer IDs
+        csv_file: Path to CSV file containing customer IDs (optional for contact export)
         output_dir: Directory for output files
         log_file: Optional log file path
     """
@@ -113,7 +117,9 @@ def run_all_exports_background(csv_file, output_dir=None, log_file=None):
     
     for script in scripts:
         if Path(script).exists():
-            cmd = [sys.executable, script, csv_file]
+            cmd = [sys.executable, script]
+            if csv_file:
+                cmd.append(csv_file)
             if output_dir:
                 cmd.extend(['--output', os.path.join(output_dir, f"{script.replace('.py', '')}_export.csv")])
             
@@ -162,7 +168,7 @@ def main():
     """Main function"""
     parser = argparse.ArgumentParser(description='Run export scripts in background')
     parser.add_argument('script', help='Export script to run (or "all" for all scripts)')
-    parser.add_argument('csv_file', help='Path to CSV file containing customer IDs')
+    parser.add_argument('csv_file', nargs='?', help='Path to CSV file containing customer IDs (optional for contact export)')
     parser.add_argument('--output', help='Output file path (for single script)')
     parser.add_argument('--output-dir', help='Output directory (for all scripts)')
     parser.add_argument('--id-column', default='custId', help='Name of the column containing customer IDs')
